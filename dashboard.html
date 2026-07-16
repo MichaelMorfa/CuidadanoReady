@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Dashboard — Cuidadano Ready</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ===== Member Area theme =====
+     Distinct from the marketing site on purpose: soft grey background, flatter
+     cards (no hover shadow), and a forest-green accent instead of ocean blue —
+     so blue always means "public site" and green always means "your account." */
+  body { background: var(--paper-dim); }
+  .app-sidebar { background: var(--paper-dim); border-right: 1px solid var(--line); }
+  .app-nav a.active { color: var(--forest); background: var(--white); border-left-color: var(--forest); }
+  .app-nav a:hover { color: var(--forest); }
+  .app-topbar { background: var(--paper-dim); border-bottom: 1px solid var(--line); }
+  .app-content .card { box-shadow: none; }
+  .app-content .card:hover { box-shadow: none; }
+  .progress-bar-fill { background: var(--forest); }
+  .btn-primary { background: var(--forest); }
+  .btn-primary:hover { background: #244F3B; }
+  .stamp-circle.done { background: var(--forest); border-color: var(--forest); }
+  .stamp-connector.done { background: var(--forest); }
+  .badge-ocean { border-color: var(--forest); color: var(--forest); }
+</style>
+</head>
+<body data-auth-required="true">
+
+<div class="app-shell">
+  <div class="sidebar-backdrop"></div>
+  <aside class="app-sidebar">
+    <a href="index.html" class="logo">Cuidadano<span class="dot"> Ready</span></a>
+    <ul class="app-nav">
+      <li class="app-nav-group">
+        <h4>Overview</h4>
+        <a href="#" class="active">Continue Learning</a>
+        <a href="#">My Progress</a>
+        <a href="#">Study Plan</a>
+      </li>
+      <li class="app-nav-group">
+        <h4>Modules</h4>
+        <a href="lesson.html">1. Eligibility</a>
+        <a href="lesson.html">2. N-400</a>
+        <a href="lesson.html">3. Biometrics</a>
+        <a href="lesson.html">4. English Test</a>
+        <a href="lesson.html">5. Civics Test</a>
+        <a href="lesson.html">6. Interview</a>
+        <a href="lesson.html">7. Oath Ceremony</a>
+      </li>
+      <li class="app-nav-group">
+        <h4>Practice Center</h4>
+        <a href="#">Civics Questions</a>
+        <a href="#">English Reading</a>
+        <a href="#">English Writing</a>
+        <a href="#">Flashcards</a>
+        <a href="#">Interview Simulator</a>
+        <a href="#">Timed Exams</a>
+      </li>
+      <li class="app-nav-group">
+        <h4>More</h4>
+        <a href="#">Downloads</a>
+        <a href="#">Community</a>
+        <a href="#">Certificates</a>
+        <a href="#">Account</a>
+        <a href="contact.html">Support</a>
+      </li>
+    </ul>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-topbar">
+      <div class="flex gap-16 items-center">
+        <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
+        <div>
+          <span class="eyebrow" style="margin-bottom:0;">WELCOME BACK</span>
+          <h3 style="margin:0;" id="dashboard-user-name">…</h3>
+        </div>
+      </div>
+      <div class="flex gap-16 items-center">
+        <div class="lang-toggle">
+          <button data-lang-btn="en" class="active">EN</button>
+          <button data-lang-btn="es">ES</button>
+        </div>
+        <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link">Log Out</a>
+      </div>
+    </div>
+
+    <div class="app-content">
+      <div class="grid grid-3" style="margin-bottom:28px;">
+        <div class="card stat-card"><span class="eyebrow">OVERALL PROGRESS</span><div class="stat-value">27%</div><div class="progress-bar" style="margin-top:10px;"><div class="progress-bar-fill" style="width:27%;"></div></div></div>
+        <div class="card stat-card"><span class="eyebrow">CURRENT STAGE</span><div class="stat-value" style="font-size:1.4rem;">Stage 2: N-400</div><span class="stat-delta">Lesson 1 of 4</span></div>
+        <div class="card stat-card"><span class="eyebrow">PRACTICE STREAK</span><div class="stat-value">4 days</div><span class="stat-delta">Placeholder data</span></div>
+      </div>
+
+      <div class="card card-pad" style="margin-bottom:28px;">
+        <span class="eyebrow">CONTINUE LEARNING</span>
+        <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:16px;">
+          <div>
+            <h3 style="margin-bottom:4px;">Filling Out Part 1–3</h3>
+            <p class="small" style="margin:0;">Stage 2: N-400 · Lesson 1 of 4</p>
+          </div>
+          <a href="lesson.html" class="btn btn-primary">Resume Lesson →</a>
+        </div>
+      </div>
+
+      <h3>Your Path</h3>
+      <div class="stamp-path" style="margin-bottom:32px; row-gap:16px;">
+        <div class="stamp-item"><div class="stamp-circle done">1</div><span class="stamp-label">Eligibility</span></div>
+        <div class="stamp-connector done"></div>
+        <div class="stamp-item"><div class="stamp-circle current">2</div><span class="stamp-label">N-400</span></div>
+        <div class="stamp-connector"></div>
+        <div class="stamp-item"><div class="stamp-circle">3</div><span class="stamp-label">Biometrics</span></div>
+        <div class="stamp-connector"></div>
+        <div class="stamp-item"><div class="stamp-circle">4</div><span class="stamp-label">English Test</span></div>
+        <div class="stamp-connector"></div>
+        <div class="stamp-item"><div class="stamp-circle">5</div><span class="stamp-label">Civics Test</span></div>
+        <div class="stamp-connector"></div>
+        <div class="stamp-item"><div class="stamp-circle">6</div><span class="stamp-label">Interview</span></div>
+        <div class="stamp-connector"></div>
+        <div class="stamp-item"><div class="stamp-circle">7</div><span class="stamp-label">Oath</span></div>
+      </div>
+
+      <h3>Practice Center</h3>
+      <div class="grid grid-3" style="margin-bottom:12px;">
+        <div class="card card-pad"><span class="badge badge-ocean">CIVICS</span><h3 style="margin-top:10px; font-size:1.05rem;">Civics Questions</h3><p class="small">Placeholder — 100-question bank.</p></div>
+        <div class="card card-pad"><span class="badge">ENGLISH</span><h3 style="margin-top:10px; font-size:1.05rem;">English Reading</h3><p class="small">Placeholder — reading practice set.</p></div>
+        <div class="card card-pad"><span class="badge">ENGLISH</span><h3 style="margin-top:10px; font-size:1.05rem;">English Writing</h3><p class="small">Placeholder — writing practice set.</p></div>
+        <div class="card card-pad"><span class="badge">STUDY</span><h3 style="margin-top:10px; font-size:1.05rem;">Flashcards</h3><p class="small">Placeholder — flip-card review deck.</p></div>
+        <div class="card card-pad"><span class="badge">INTERVIEW</span><h3 style="margin-top:10px; font-size:1.05rem;">Interview Simulator</h3><p class="small">Placeholder — mock interview flow.</p></div>
+        <div class="card card-pad"><span class="badge">EXAM</span><h3 style="margin-top:10px; font-size:1.05rem;">Timed Exams</h3><p class="small">Placeholder — full timed practice exam.</p></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Get Started — Cuidadano Ready</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .flow-wrap { max-width: 620px; margin: 0 auto; padding: 56px 24px 80px; }
+  .plan-option { display:flex; justify-content:space-between; align-items:center; border:1px solid var(--line); border-radius: var(--radius); padding:18px 20px; margin-bottom:14px; cursor:pointer; }
+  .plan-option.selected { border-color: var(--ocean); box-shadow: 0 0 0 2px var(--ocean); }
+  .plan-option input { display:none; }
+  .card-field-icons { display:flex; gap:6px; font-family: var(--font-mono); font-size:0.7rem; color: var(--slate); }
+  .success-check {
+    width:64px; height:64px; border-radius:50%; background: var(--forest); color:var(--white);
+    display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin: 0 auto 20px;
+  }
+  .sim-note { font-family: var(--font-mono); font-size:0.72rem; color: var(--slate); background: var(--paper-dim); padding:10px 14px; border-radius: var(--radius-sm); margin-bottom:20px; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav">
+    <a href="index.html" class="logo">Cuidadano<span class="dot"> Ready</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html" data-en="Home" data-es="Inicio">Home</a></li>
+      <li><a href="course.html" data-en="Course" data-es="Curso">Course</a></li>
+      <li><a href="blog.html" data-en="Blog" data-es="Blog">Blog</a></li>
+      <li><a href="faq.html" data-en="FAQ" data-es="Preguntas">FAQ</a></li>
+      <li><a href="contact.html" data-en="Contact" data-es="Contacto">Contact</a></li>
+    </ul>
+    <div class="nav-right">
+      <div class="lang-toggle">
+        <button data-lang-btn="en" class="active">EN</button>
+        <button data-lang-btn="es">ES</button>
+      </div>
+      <button class="nav-toggle" aria-label="Menu">☰</button>
+    </div>
+  </nav>
+</header>
+
+<div class="flow-wrap">
+  <div class="stamp-path text-center" style="justify-content:center; margin-bottom:40px;">
+    <div class="stamp-item"><div class="stamp-circle current" data-step-stamp="1">1</div><span class="stamp-label" data-en="Plan" data-es="Plan">Plan</span></div>
+    <div class="stamp-connector" data-connector="1"></div>
+    <div class="stamp-item"><div class="stamp-circle" data-step-stamp="2">2</div><span class="stamp-label" data-en="Payment" data-es="Pago">Payment</span></div>
+    <div class="stamp-connector" data-connector="2"></div>
+    <div class="stamp-item"><div class="stamp-circle" data-step-stamp="3">3</div><span class="stamp-label" data-en="Done" data-es="Listo">Done</span></div>
+  </div>
+
+  <!-- STEP 1: Plan selection -->
+  <div data-step="1">
+    <h2 class="text-center" data-en="Choose your plan" data-es="Elige tu plan">Choose your plan</h2>
+    <p class="text-center" data-en="Placeholder pricing — subject to change." data-es="Precios provisionales, sujetos a cambio.">Placeholder pricing — subject to change.</p>
+
+    <label class="plan-option selected" data-plan="2year" onclick="document.querySelectorAll('.plan-option').forEach(p=>p.classList.remove('selected'));this.classList.add('selected')">
+      <input type="radio" name="plan" checked>
+      <div>
+        <strong data-en="2-Year Plan" data-es="Plan de 2 años">2-Year Plan</strong>
+        <div class="small muted" data-en="Save $279 vs. monthly" data-es="Ahorra $279 vs. mensual">Save $279 vs. monthly</div>
+      </div>
+      <div class="flex flex-col" style="text-align:right;">
+        <strong>$200</strong>
+        <span class="badge badge-ocean small">BEST VALUE</span>
+      </div>
+    </label>
+
+    <label class="plan-option" data-plan="monthly" onclick="document.querySelectorAll('.plan-option').forEach(p=>p.classList.remove('selected'));this.classList.add('selected')">
+      <input type="radio" name="plan">
+      <div>
+        <strong data-en="Monthly Plan" data-es="Plan mensual">Monthly Plan</strong>
+        <div class="small muted" data-en="Cancel anytime" data-es="Cancela cuando quieras">Cancel anytime</div>
+      </div>
+      <strong>$19.99<span class="small muted">/mo</span></strong>
+    </label>
+
+    <button class="btn btn-primary btn-block" style="margin-top:20px;" onclick="goToStep(2)" data-en="Continue to Payment" data-es="Continuar al pago">Continue to Payment</button>
+  </div>
+
+  <!-- STEP 2: Payment -->
+  <div data-step="2" style="display:none;">
+    <h2 class="text-center" data-en="Payment details" data-es="Detalles de pago">Payment details</h2>
+    <div class="sim-note" data-en="⚠ Simulation only — no real payment processor is connected yet. No charge will occur. Your login is real and will be saved." data-es="⚠ Solo simulación de pago: no se realizará ningún cargo. Tu inicio de sesión es real y quedará guardado.">⚠ Simulation only — no real payment processor is connected yet. No charge will occur. Your login is real and will be saved.</div>
+    <form id="signup-form">
+      <label data-en="Full Name" data-es="Nombre completo">Full Name</label>
+      <input type="text" id="signup-name" placeholder="Jane Doe" required>
+
+      <label>Email</label>
+      <input type="email" id="signup-email" placeholder="jane@example.com" required>
+
+      <label data-en="Password" data-es="Contraseña">Password</label>
+      <input type="password" id="signup-password" placeholder="At least 6 characters" minlength="6" required>
+
+      <h2 class="text-center" style="margin-top:28px;" data-en="Payment details" data-es="Detalles de pago">Payment details</h2>
+
+      <label data-en="Name on Card" data-es="Nombre en la tarjeta">Name on Card</label>
+      <input type="text" placeholder="Jane Doe" required>
+
+      <label data-en="Card Number" data-es="Número de tarjeta">Card Number</label>
+      <input type="text" placeholder="4242 4242 4242 4242" required>
+
+      <div class="form-row">
+        <div>
+          <label data-en="Expiry" data-es="Vencimiento">Expiry</label>
+          <input type="text" placeholder="MM / YY" required>
+        </div>
+        <div>
+          <label>CVC</label>
+          <input type="text" placeholder="123" required>
+        </div>
+      </div>
+
+      <label data-en="Billing ZIP" data-es="Código postal">Billing ZIP</label>
+      <input type="text" placeholder="90210" required>
+
+      <p id="signup-error" class="small" style="color: var(--danger); display:none;"></p>
+
+      <div class="flex justify-between" style="margin-top:12px;">
+        <button type="button" class="btn btn-ghost" onclick="goToStep(1)" data-en="← Back" data-es="← Atrás">← Back</button>
+        <button type="submit" class="btn btn-primary" id="signup-submit" data-en="Complete Purchase" data-es="Completar compra">Complete Purchase</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- STEP 3: Success -->
+  <div data-step="3" style="display:none;" class="text-center">
+    <div class="success-check">✓</div>
+    <h2 data-en="Welcome to Cuidadano Ready!" data-es="¡Bienvenido a Cuidadano Ready!">Welcome to Cuidadano Ready!</h2>
+    <p id="signup-success-message" data-en="Your account is set up. You're ready to start Stage 1: Eligibility." data-es="Tu cuenta está lista. Estás listo para comenzar la Etapa 1: Elegibilidad.">Your account is set up. You're ready to start Stage 1: Eligibility.</p>
+    <a href="dashboard.html" class="btn" style="background:var(--forest); color:var(--white);" data-en="Go to My Dashboard →" data-es="Ir a mi panel →">Go to My Dashboard →</a>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-disclaimer">
+      <strong>Legal disclaimer:</strong> Cuidadano Ready is an independent test-prep resource and is not a law firm. Nothing on this site constitutes legal advice. For legal advice about your immigration case, please contact the Law Offices of Ingrid Morfa or another licensed immigration attorney.
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Cuidadano Ready. All rights reserved.</span>
+      <span><a href="terms.html">Terms</a> · <a href="privacy-policy.html">Privacy</a></span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

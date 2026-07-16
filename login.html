@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log In — Cuidadano Ready</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .login-wrap { max-width: 420px; margin: 0 auto; padding: 64px 24px 100px; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav">
+    <a href="index.html" class="logo">Cuidadano<span class="dot"> Ready</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html" data-en="Home" data-es="Inicio">Home</a></li>
+      <li><a href="course.html" data-en="Course" data-es="Curso">Course</a></li>
+      <li><a href="blog.html" data-en="Blog" data-es="Blog">Blog</a></li>
+      <li><a href="faq.html" data-en="FAQ" data-es="Preguntas">FAQ</a></li>
+      <li><a href="contact.html" data-en="Contact" data-es="Contacto">Contact</a></li>
+    </ul>
+    <div class="nav-right">
+      <div class="lang-toggle">
+        <button data-lang-btn="en" class="active">EN</button>
+        <button data-lang-btn="es">ES</button>
+      </div>
+      <a href="account.html" class="btn btn-primary btn-sm" data-en="Get Started" data-es="Comenzar">Get Started</a>
+      <button class="nav-toggle" aria-label="Menu">☰</button>
+    </div>
+  </nav>
+</header>
+
+<div class="login-wrap">
+  <span class="eyebrow text-center" style="display:block; text-align:center;" data-en="WELCOME BACK" data-es="BIENVENIDO DE NUEVO">WELCOME BACK</span>
+  <h2 class="text-center" data-en="Log in to your account" data-es="Inicia sesión en tu cuenta">Log in to your account</h2>
+
+  <form id="login-form" class="card card-pad" style="margin-top:24px;">
+    <label>Email</label>
+    <input type="email" id="login-email" placeholder="jane@example.com" required>
+
+    <label data-en="Password" data-es="Contraseña">Password</label>
+    <input type="password" id="login-password" placeholder="••••••••" required>
+
+    <p id="login-error" class="small" style="color: var(--danger); display:none;"></p>
+
+    <button type="submit" class="btn btn-primary btn-block" id="login-submit" style="margin-top:8px;" data-en="Log In" data-es="Iniciar sesión">Log In</button>
+  </form>
+
+  <p class="small text-center" style="margin-top:20px;" data-en="Don't have an account yet?" data-es="¿Aún no tienes una cuenta?">Don't have an account yet?</p>
+  <a href="account.html" class="btn btn-ghost btn-block" data-en="Create an Account" data-es="Crear una cuenta">Create an Account</a>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-disclaimer">
+      <strong>Legal disclaimer:</strong> Cuidadano Ready is an independent test-prep resource and is not a law firm. Nothing on this site constitutes legal advice. For legal advice about your immigration case, please contact the Law Offices of Ingrid Morfa or another licensed immigration attorney.
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Cuidadano Ready. All rights reserved.</span>
+      <span><a href="terms.html">Terms</a> · <a href="privacy-policy.html">Privacy</a></span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

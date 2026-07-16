@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — Cuidadano Ready</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-admin-required="true">
+
+<div class="app-shell">
+  <div class="sidebar-backdrop"></div>
+  <aside class="app-sidebar">
+    <a href="index.html" class="logo">Cuidadano<span class="dot"> Ready</span> <span class="badge small" style="margin-left:6px;">ADMIN</span></a>
+    <ul class="app-nav">
+      <li class="app-nav-group">
+        <h4>Overview</h4>
+        <a href="#" class="active">Analytics</a>
+      </li>
+      <li class="app-nav-group">
+        <h4>People</h4>
+        <a href="#">Users</a>
+        <a href="#">Memberships</a>
+      </li>
+      <li class="app-nav-group">
+        <h4>Content</h4>
+        <a href="#">Lessons</a>
+        <a href="#">Quizzes</a>
+        <a href="#">Videos</a>
+        <a href="#">Blog</a>
+      </li>
+      <li class="app-nav-group">
+        <h4>Revenue</h4>
+        <a href="#">Payments</a>
+        <a href="#">Coupons</a>
+      </li>
+      <li class="app-nav-group">
+        <h4>More</h4>
+        <a href="#">Support</a>
+      </li>
+    </ul>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-topbar">
+      <div class="flex gap-16 items-center">
+        <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
+        <div>
+          <span class="eyebrow" style="margin-bottom:0;">ADMIN PANEL</span>
+          <h3 style="margin:0;">Analytics</h3>
+        </div>
+      </div>
+      <a href="index.html" class="btn btn-ghost btn-sm">Exit Admin</a>
+    </div>
+
+    <div class="app-content">
+      <div class="grid grid-4" style="margin-bottom:28px;">
+        <div class="card stat-card"><span class="eyebrow">TOTAL USERS</span><div class="stat-value">1,284</div><span class="stat-delta">↑ 6.2% (placeholder)</span></div>
+        <div class="card stat-card"><span class="eyebrow">ACTIVE MEMBERSHIPS</span><div class="stat-value">742</div><span class="stat-delta">↑ 3.1% (placeholder)</span></div>
+        <div class="card stat-card"><span class="eyebrow">MRR</span><div class="stat-value">$8,410</div><span class="stat-delta">↑ 4.8% (placeholder)</span></div>
+        <div class="card stat-card"><span class="eyebrow">CHURN</span><div class="stat-value">2.4%</div><span class="stat-delta down">↓ 0.3% (placeholder)</span></div>
+      </div>
+
+      <div class="card" style="margin-bottom:28px;">
+        <div class="card-pad" style="padding-bottom:0;">
+          <span class="eyebrow">RECENT USERS</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Plan</th><th>Stage</th><th>Joined</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Jane Doe</td><td>jane@example.com</td><td>2-Year</td><td>N-400</td><td>Placeholder</td><td><span class="badge badge-forest">Active</span></td></tr>
+              <tr><td>Carlos Ruiz</td><td>carlos@example.com</td><td>Monthly</td><td>Civics Test</td><td>Placeholder</td><td><span class="badge badge-forest">Active</span></td></tr>
+              <tr><td>Aiko Tanaka</td><td>aiko@example.com</td><td>Monthly</td><td>Eligibility</td><td>Placeholder</td><td><span class="badge">Trial</span></td></tr>
+              <tr><td>Sam Patel</td><td>sam@example.com</td><td>2-Year</td><td>Interview</td><td>Placeholder</td><td><span class="badge badge-forest">Active</span></td></tr>
+              <tr><td>Maria Lopez</td><td>maria@example.com</td><td>Monthly</td><td>English Test</td><td>Placeholder</td><td><span class="badge" style="color:var(--danger); border-color:var(--danger);">Past Due</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="card card-pad">
+          <span class="eyebrow">CONTENT AT A GLANCE</span>
+          <h3 style="margin-top:8px;">7 Modules · 28 Lessons · 34 Quizzes</h3>
+          <p class="small">Placeholder counts — real content pending from Law Offices of Ingrid Morfa.</p>
+        </div>
+        <div class="card card-pad">
+          <span class="eyebrow">SUPPORT QUEUE</span>
+          <h3 style="margin-top:8px;">3 Open Tickets</h3>
+          <p class="small">Placeholder — support tooling not yet connected.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

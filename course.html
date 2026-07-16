@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Course Curriculum — Cuidadano Ready</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .lock-badge {
+    position: absolute; top: 14px; right: 14px;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--white); border: 1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-size:0.9rem;
+  }
+  .stage-card { position: relative; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav">
+    <a href="index.html" class="logo">Cuidadano<span class="dot"> Ready</span></a>
+    <ul class="nav-links">
+      <li><a href="index.html" data-en="Home" data-es="Inicio">Home</a></li>
+      <li><a href="course.html" class="active" data-en="Course" data-es="Curso">Course</a></li>
+      <li><a href="blog.html" data-en="Blog" data-es="Blog">Blog</a></li>
+      <li><a href="faq.html" data-en="FAQ" data-es="Preguntas">FAQ</a></li>
+      <li><a href="contact.html" data-en="Contact" data-es="Contacto">Contact</a></li>
+    </ul>
+    <div class="nav-right">
+      <div class="lang-toggle">
+        <button data-lang-btn="en" class="active">EN</button>
+        <button data-lang-btn="es">ES</button>
+      </div>
+      <a href="login.html" class="btn btn-ghost btn-sm" data-en="Log In" data-es="Ingresar">Log In</a>
+      <a href="account.html" class="btn btn-primary btn-sm" data-en="Get Started" data-es="Comenzar">Get Started</a>
+      <button class="nav-toggle" aria-label="Menu">☰</button>
+    </div>
+  </nav>
+</header>
+
+<section class="section">
+  <div class="container">
+    <span class="eyebrow" data-en="THE COURSE" data-es="EL CURSO">THE COURSE</span>
+    <h1 data-en="Seven stages, one clear path to citizenship." data-es="Siete etapas, un camino claro hacia la ciudadanía.">Seven stages, one clear path to citizenship.</h1>
+    <p style="max-width:540px;" data-en="Here's everything the course covers. Lessons, videos, and practice quizzes unlock once you create your account." data-es="Esto es todo lo que cubre el curso. Las lecciones, videos y cuestionarios de práctica se desbloquean al crear tu cuenta.">Here's everything the course covers. Lessons, videos, and practice quizzes unlock once you create your account.</p>
+
+    <div class="card card-pad" style="margin:28px 0;">
+      <div class="stamp-path" style="row-gap:20px;">
+        <div class="stamp-item"><div class="stamp-circle">1</div><span class="stamp-label">Eligibility</span></div>
+        <div class="stamp-connector"></div>
+        <div class="stamp-item"><div class="stamp-circle">2</div><span class="stamp-label">N-400</span></div>
+        <div class="stamp-connector"></div>
+        <div class="stamp-item"><div class="stamp-circle">3</div><span class="stamp-label">Biometrics</span></div>
+        <div class="stamp-connector"></div>
+        <div class="stamp-item"><div class="stamp-circle">4</div><span class="stamp-label">English Test</span></div>
+        <div class="stamp-connector"></div>
+        <div class="stamp-item"><div class="stamp-circle">5</div><span class="stamp-label">Civics Test</span></div>
+        <div class="stamp-connector"></div>
+        <div class="stamp-item"><div class="stamp-circle">6</div><span class="stamp-label">Interview</span></div>
+        <div class="stamp-connector"></div>
+        <div class="stamp-item"><div class="stamp-circle">7</div><span class="stamp-label">Oath</span></div>
+      </div>
+    </div>
+
+    <div class="grid grid-3">
+      <div class="card card-pad stage-card">
+        <div class="lock-badge">🔒</div>
+        <span class="badge">STAGE 1</span>
+        <h3 style="margin-top:14px;">Eligibility</h3>
+        <p class="small">Confirm you qualify to apply — residency length, age, and good moral character basics.</p>
+        <p class="small muted" style="font-family:var(--font-mono);">3 lessons · 1 quiz</p>
+      </div>
+      <div class="card card-pad stage-card">
+        <div class="lock-badge">🔒</div>
+        <span class="badge">STAGE 2</span>
+        <h3 style="margin-top:14px;">N-400</h3>
+        <p class="small">Line-by-line guidance for filling out the Application for Naturalization correctly.</p>
+        <p class="small muted" style="font-family:var(--font-mono);">4 lessons · 1 quiz</p>
+      </div>
+      <div class="card card-pad stage-card">
+        <div class="lock-badge">🔒</div>
+        <span class="badge">STAGE 3</span>
+        <h3 style="margin-top:14px;">Biometrics</h3>
+        <p class="small">What to expect at your biometrics appointment — documents, timing, and what gets collected.</p>
+        <p class="small muted" style="font-family:var(--font-mono);">2 lessons · 1 quiz</p>
+      </div>
+      <div class="card card-pad stage-card">
+        <div class="lock-badge">🔒</div>
+        <span class="badge">STAGE 4</span>
+        <h3 style="margin-top:14px;">English Test</h3>
+        <p class="small">Reading, writing, and speaking practice styled after the real test format.</p>
+        <p class="small muted" style="font-family:var(--font-mono);">5 lessons · 2 quizzes</p>
+      </div>
+      <div class="card card-pad stage-card">
+        <div class="lock-badge">🔒</div>
+        <span class="badge">STAGE 5</span>
+        <h3 style="margin-top:14px;">Civics Test</h3>
+        <p class="small">The full 2025 civics question set with explanations, not just a list to memorize.</p>
+        <p class="small muted" style="font-family:var(--font-mono);">6 lessons · 3 quizzes</p>
+      </div>
+      <div class="card card-pad stage-card">
+        <div class="lock-badge">🔒</div>
+        <span class="badge">STAGE 6</span>
+        <h3 style="margin-top:14px;">Interview</h3>
+        <p class="small">What actually happens at the interview, and how to prepare for it with confidence.</p>
+        <p class="small muted" style="font-family:var(--font-mono);">3 lessons · 1 simulator</p>
+      </div>
+    </div>
+    <p class="small text-center" style="margin-top:20px;" data-en="Stage 7: Oath Ceremony unlocks after your interview stage. All lesson content requires an account to access." data-es="La Etapa 7: Ceremonia de Juramento se desbloquea después de la etapa de entrevista. Todo el contenido de las lecciones requiere una cuenta para acceder.">Stage 7: Oath Ceremony unlocks after your interview stage. All lesson content requires an account to access.</p>
+
+    <div class="card card-pad text-center" style="margin-top:40px; border-color:var(--ocean);">
+      <span class="eyebrow" style="margin-bottom:6px;" data-en="READY TO START?" data-es="¿LISTO PARA EMPEZAR?">READY TO START?</span>
+      <h2 style="margin-bottom:12px;" data-en="Create your account to unlock Stage 1." data-es="Crea tu cuenta para desbloquear la Etapa 1.">Create your account to unlock Stage 1.</h2>
+      <a href="account.html" class="btn btn-primary" data-en="Sign Up to Unlock the Course" data-es="Regístrate para desbloquear el curso">Sign Up to Unlock the Course</a>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-disclaimer">
+      <strong>Legal disclaimer:</strong> Cuidadano Ready is an independent test-prep resource and is not a law firm. Nothing on this site constitutes legal advice. For legal advice about your immigration case, please contact the Law Offices of Ingrid Morfa or another licensed immigration attorney.
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Cuidadano Ready. All rights reserved.</span>
+      <span><a href="terms.html">Terms</a> · <a href="privacy-policy.html">Privacy</a></span>
+    </div>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
