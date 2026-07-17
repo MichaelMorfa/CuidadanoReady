@@ -1,6 +1,6 @@
 {
-  "name": "Cuidadano Ready",
-  "short_name": "Cuidadano Ready",
+  "name": "Ciudadano Ready",
+  "short_name": "Ciudadano Ready",
   "description": "U.S. naturalization test prep — from eligibility to your oath ceremony.",
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },

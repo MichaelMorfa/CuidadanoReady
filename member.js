@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Cuidadano Ready — Member area logic (dashboard.html + lesson.html)
+   Ciudadano Ready — Member area logic (dashboard.html + lesson.html)
    Reads real course content + progress from Supabase; no more hardcoded
    placeholder numbers. Loaded after app.js, which handles the auth guard.
    ========================================================================== */
@@ -178,7 +178,7 @@ async function initLessonPage() {
 
   document.querySelector('#lesson-stage-eyebrow').textContent = `STAGE ${lesson.module_number} OF 7`;
   document.querySelector('#lesson-stage-title').textContent = MODULE_NAMES[lesson.module_number];
-  document.title = `Stage ${lesson.module_number}: ${MODULE_NAMES[lesson.module_number]} — Cuidadano Ready`;
+  document.title = `Stage ${lesson.module_number}: ${MODULE_NAMES[lesson.module_number]} — Ciudadano Ready`;
 
   renderStampPath('#lesson-stamp-path', lessons, completedIds, lesson, true);
 

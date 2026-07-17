@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Cuidadano Ready — shared front-end behavior
+   Ciudadano Ready — shared front-end behavior
    Language toggle, mobile nav, accordion, quiz interactions.
    ========================================================================== */
 
@@ -15,7 +15,7 @@ function setLang(lang) {
     btn.classList.toggle('active', btn.getAttribute('data-lang-btn') === lang);
   });
   document.documentElement.setAttribute('lang', lang);
-  try { localStorage.setItem('cuidadanoready-lang', lang); } catch (e) {}
+  try { localStorage.setItem('ciudadanoready-lang', lang); } catch (e) {}
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -201,6 +201,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ---- Password show/hide toggle -----------------------------------------
+  // Auto-applies to every password field on the page — no per-page markup needed.
+  const EYE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const EYE_OFF_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a20.3 20.3 0 0 1 5.06-5.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 7 11 7a20.5 20.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>';
+  document.querySelectorAll('input[type="password"]').forEach((input) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'password-field-wrap';
+    input.parentNode.insertBefore(wrap, input);
+    wrap.appendChild(input);
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'password-toggle-btn';
+    btn.setAttribute('aria-label', 'Show password');
+    btn.innerHTML = EYE_ICON;
+    wrap.appendChild(btn);
+
+    btn.addEventListener('click', () => {
+      const nowShowing = input.type === 'password';
+      input.type = nowShowing ? 'text' : 'password';
+      btn.innerHTML = nowShowing ? EYE_OFF_ICON : EYE_ICON;
+      btn.setAttribute('aria-label', nowShowing ? 'Hide password' : 'Show password');
+    });
+  });
+
   // ---- Accordion (FAQ) --------------------------------------------------
   document.querySelectorAll('.accordion-trigger').forEach((trigger) => {
     trigger.addEventListener('click', () => {
@@ -274,11 +299,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorEl = document.querySelector('#signup-error');
     const original = btn.textContent;
     if (errorEl) errorEl.style.display = 'none';
-    btn.disabled = true;
-    btn.textContent = 'Processing…';
 
     const name = document.querySelector('#signup-name').value;
     const email = document.querySelector('#signup-email').value;
+    const emailConfirmField = document.querySelector('#signup-email-confirm');
+    const emailConfirm = emailConfirmField ? emailConfirmField.value : email;
+    const mismatchEl = document.querySelector('#signup-email-mismatch');
+
+    if (emailConfirmField && email.trim().toLowerCase() !== emailConfirm.trim().toLowerCase()) {
+      if (mismatchEl) mismatchEl.style.display = 'block';
+      emailConfirmField.classList.add('field-error');
+      emailConfirmField.focus();
+      return;
+    }
+    if (mismatchEl) mismatchEl.style.display = 'none';
+    if (emailConfirmField) emailConfirmField.classList.remove('field-error');
+
+    btn.disabled = true;
+    btn.textContent = 'Processing…';
+
     const password = document.querySelector('#signup-password').value;
     const selectedPlan = document.querySelector('.plan-option.selected');
     const plan = selectedPlan ? selectedPlan.getAttribute('data-plan') : 'monthly';

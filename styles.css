@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Cuidadano Ready — Shared Design System
+   Ciudadano Ready — Shared Design System
    Colors, type, and components used across every page of the prototype.
    ========================================================================== */
 
@@ -336,6 +336,19 @@ textarea { resize: vertical; min-height: 120px; }
 
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+/* --------------------------------------------------------------------
+   Password show/hide toggle (auto-applied to any input[type=password])
+   -------------------------------------------------------------------- */
+.password-field-wrap { position: relative; margin-bottom: 18px; }
+.password-field-wrap input { margin-bottom: 0 !important; padding-right: 42px; }
+.password-toggle-btn {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; color: var(--slate);
+  padding: 6px; display: flex; align-items: center; justify-content: center;
+}
+.password-toggle-btn:hover { color: var(--ink); }
+.password-toggle-btn svg { width: 18px; height: 18px; display: block; }
 
 /* --------------------------------------------------------------------
    Footer

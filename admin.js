@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Cuidadano Ready — Admin panel logic
+   Ciudadano Ready — Admin panel logic
    Only loaded on admin/index.html. Assumes supabaseClient + the
    data-admin-required guard in app.js have already run.
    ========================================================================== */
