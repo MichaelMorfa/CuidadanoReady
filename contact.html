@@ -6,6 +6,21 @@
 <title>Contact — Cuidadano Ready</title>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<meta name="description" content="Get in touch with Cuidadano Ready course support.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Cuidadano Ready">
+<meta property="og:title" content="Contact — Cuidadano Ready">
+<meta property="og:description" content="Get in touch with Cuidadano Ready course support.">
+<meta property="og:image" content="https://cuidadanoready.com/og-image.png">
+<meta property="og:url" content="https://cuidadanoready.com/contact.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Contact — Cuidadano Ready">
+<meta name="twitter:description" content="Get in touch with Cuidadano Ready course support.">
+<meta name="twitter:image" content="https://cuidadanoready.com/og-image.png">
 </head>
 <body>
 
@@ -31,7 +46,35 @@
   </nav>
 </header>
 
-<section class="section">
+<section class="section hero">
+  <div class="hero-flag-bg" aria-hidden="true">
+    <svg viewBox="0 0 190 100" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="flagWave" x="-20%" y="-20%" width="140%" height="140%">
+          <feTurbulence type="fractalNoise" numOctaves="2" seed="7" result="noise">
+            <animate attributeName="baseFrequency" dur="9s" values="0.009 0.025;0.014 0.032;0.009 0.025" repeatCount="indefinite" />
+          </feTurbulence>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="9" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+        <polygon id="flag-star" points="0,-3 0.71,-0.97 2.85,-0.97 1.15,0.37 1.76,2.43 0,1.15 -1.76,2.43 -1.15,0.37 -2.85,-0.97 -0.71,-0.97" fill="#FFFFFF" />
+        <pattern id="flag-stars" x="0" y="0" width="12.5" height="10.77" patternUnits="userSpaceOnUse">
+          <use href="#flag-star" x="3" y="3" />
+          <use href="#flag-star" x="9.5" y="8" />
+        </pattern>
+      </defs>
+      <g filter="url(#flagWave)">
+        <rect x="0" y="0" width="190" height="100" fill="#B22234" />
+        <rect x="0" y="7.69" width="190" height="7.69" fill="#FFFFFF" />
+        <rect x="0" y="23.08" width="190" height="7.69" fill="#FFFFFF" />
+        <rect x="0" y="38.46" width="190" height="7.69" fill="#FFFFFF" />
+        <rect x="0" y="53.85" width="190" height="7.69" fill="#FFFFFF" />
+        <rect x="0" y="69.23" width="190" height="7.69" fill="#FFFFFF" />
+        <rect x="0" y="84.62" width="190" height="7.69" fill="#FFFFFF" />
+        <rect x="0" y="0" width="76" height="53.85" fill="#3C3B6E" />
+        <rect x="0" y="0" width="76" height="53.85" fill="url(#flag-stars)" />
+      </g>
+    </svg>
+  </div>
   <div class="container">
     <span class="eyebrow" data-en="GET IN TOUCH" data-es="PONTE EN CONTACTO">GET IN TOUCH</span>
     <h1 data-en="Contact Cuidadano Ready" data-es="Contacta a Cuidadano Ready">Contact Cuidadano Ready</h1>
@@ -62,7 +105,7 @@
         </div>
         <div class="card card-pad" style="border-color: var(--ocean);">
           <span class="badge badge-ocean" style="margin-bottom:10px; display:inline-block;">LEGAL QUESTIONS</span>
-          <p class="small" data-en="For questions about your specific immigration case, please contact the Law Offices of Ingrid Morfa directly rather than course support — we are not attorneys and can't provide legal advice." data-es="Para preguntas sobre tu caso de inmigración específico, comunícate directamente con el despacho de la abogada Ingrid Morfa; no somos abogados y no podemos brindar asesoría legal.">For questions about your specific immigration case, please contact the Law Offices of Ingrid Morfa directly rather than course support — we are not attorneys and can't provide legal advice.</p>
+          <p class="small" data-en="For questions about your specific immigration case, please contact a licensed immigration attorney directly rather than course support — we are not attorneys and can't provide legal advice." data-es="Para preguntas sobre tu caso de inmigración específico, comunícate directamente con un abogado de inmigración con licencia; no somos abogados y no podemos brindar asesoría legal.">For questions about your specific immigration case, please contact a licensed immigration attorney directly rather than course support — we are not attorneys and can't provide legal advice.</p>
         </div>
       </div>
     </div>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — Cuidadano Ready</title>
+<meta name="robots" content="noindex">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+  .admin-panel { display: none; }
+  .admin-panel.active { display: block; }
+  .admin-add-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin-bottom: 20px; }
+  .admin-add-form label { margin-bottom: 2px; }
+  .admin-add-form .span-2 { grid-column: 1 / -1; }
+  .admin-add-form textarea { min-height: 80px; }
+  @media (max-width: 700px) { .admin-add-form { grid-template-columns: 1fr; } }
+  .row-save-msg { font-size: 0.78rem; color: var(--forest); margin-left: 8px; display: none; }
+  .row-save-msg.show { display: inline; }
+  td select, td input { margin-bottom: 0; padding: 7px 10px; font-size: 0.85rem; }
+  .accuracy-pill { font-family: var(--font-mono); font-size: 0.72rem; padding: 2px 8px; border-radius: 20px; background: var(--paper-dim); color: var(--slate); }
+  .accuracy-pill.low { color: var(--danger); }
+  .module-heading { font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--slate); margin: 24px 0 8px; }
+  .module-heading:first-child { margin-top: 0; }
+  .status-select-open { color: var(--danger); }
+  .empty-state { color: var(--slate); font-size: 0.9rem; padding: 24px; text-align: center; }
+  .search-row { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; }
+  .search-row input { margin-bottom: 0; max-width: 320px; }
+</style>
+</head>
+<body data-admin-required="true">
+
+<div class="app-shell">
+  <div class="sidebar-backdrop"></div>
+  <aside class="app-sidebar">
+    <a href="/index.html" class="logo">Cuidadano<span class="dot"> Ready</span> <span class="badge small" style="margin-left:6px;">ADMIN</span></a>
+    <ul class="app-nav">
+      <li class="app-nav-group">
+        <h4>Overview</h4>
+        <a href="#" data-panel-link="overview" class="active">Analytics</a>
+      </li>
+      <li class="app-nav-group">
+        <h4>People</h4>
+        <a href="#" data-panel-link="users">Users</a>
+      </li>
+      <li class="app-nav-group">
+        <h4>Content</h4>
+        <a href="#" data-panel-link="lessons">Course Editor</a>
+        <a href="#" data-panel-link="quizzes">Quiz Editor</a>
+      </li>
+      <li class="app-nav-group">
+        <h4>Revenue</h4>
+        <a href="#" data-panel-link="revenue">Payments</a>
+      </li>
+      <li class="app-nav-group">
+        <h4>More</h4>
+        <a href="#" data-panel-link="support">Support</a>
+      </li>
+    </ul>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-topbar">
+      <div class="flex gap-16 items-center">
+        <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
+        <div>
+          <span class="eyebrow" style="margin-bottom:0;" id="admin-panel-eyebrow">ADMIN PANEL</span>
+          <h3 style="margin:0;" id="admin-panel-title">Analytics</h3>
+        </div>
+      </div>
+      <a href="/index.html" class="btn btn-ghost btn-sm">Exit Admin</a>
+    </div>
+
+    <div class="app-content">
+
+      <!-- ================= OVERVIEW ================= -->
+      <section class="admin-panel active" data-panel="overview">
+        <div class="grid grid-4" style="margin-bottom:28px;">
+          <div class="card stat-card"><span class="eyebrow">TOTAL USERS</span><div class="stat-value" id="stat-total-users">—</div></div>
+          <div class="card stat-card"><span class="eyebrow">ACTIVE SUBSCRIPTIONS</span><div class="stat-value" id="stat-active-subs">—</div></div>
+          <div class="card stat-card"><span class="eyebrow">NEW THIS WEEK</span><div class="stat-value" id="stat-new-week">—</div></div>
+          <div class="card stat-card"><span class="eyebrow">OPEN SUPPORT TICKETS</span><div class="stat-value" id="stat-open-tickets">—</div></div>
+        </div>
+        <div class="grid grid-3" style="margin-bottom:28px;">
+          <div class="card stat-card"><span class="eyebrow">NEW THIS MONTH</span><div class="stat-value" id="stat-new-month">—</div></div>
+          <div class="card stat-card"><span class="eyebrow">PUBLISHED LESSONS</span><div class="stat-value" id="stat-lessons">—</div></div>
+          <div class="card stat-card"><span class="eyebrow">QUIZ ACCURACY (ALL-TIME)</span><div class="stat-value" id="stat-quiz-accuracy">—</div></div>
+        </div>
+        <div class="card card-pad">
+          <span class="eyebrow">NOTE</span>
+          <p class="small" style="margin:0;">Revenue and billing metrics (MRR, failed payments, refunds) will appear here once a payment processor is connected — those numbers should come straight from Stripe/Square rather than being tracked separately.</p>
+        </div>
+      </section>
+
+      <!-- ================= USERS ================= -->
+      <section class="admin-panel" data-panel="users">
+        <div class="search-row">
+          <input type="text" id="user-search" placeholder="Search by name or email…">
+          <span class="small muted" id="user-count"></span>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>User</th><th>Plan</th><th>Status</th><th>Role</th><th>Joined</th><th>Actions</th></tr></thead>
+              <tbody id="users-tbody"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= COURSE EDITOR ================= -->
+      <section class="admin-panel" data-panel="lessons">
+        <div class="card card-pad" style="margin-bottom:24px;">
+          <span class="eyebrow">ADD LESSON</span>
+          <form class="admin-add-form" id="lesson-form">
+            <div>
+              <label>Module</label>
+              <select id="lesson-module" required>
+                <option value="1">1 — Eligibility</option>
+                <option value="2">2 — N-400</option>
+                <option value="3">3 — Biometrics</option>
+                <option value="4">4 — English Test</option>
+                <option value="5">5 — Civics Test</option>
+                <option value="6">6 — Interview</option>
+                <option value="7">7 — Oath</option>
+              </select>
+            </div>
+            <div>
+              <label>Sort Order</label>
+              <input type="number" id="lesson-sort" value="1" min="1">
+            </div>
+            <div class="span-2">
+              <label>Lesson Title</label>
+              <input type="text" id="lesson-title" placeholder="e.g. What counts as continuous residency" required>
+            </div>
+            <div class="span-2">
+              <label>Content</label>
+              <textarea id="lesson-content" placeholder="Lesson text/notes…"></textarea>
+            </div>
+            <div>
+              <label>Video URL (optional)</label>
+              <input type="text" id="lesson-video" placeholder="https://…">
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px; padding-bottom:11px;">
+              <input type="checkbox" id="lesson-published" style="width:auto; margin:0;">
+              <label style="margin:0;" for="lesson-published">Published</label>
+            </div>
+            <div class="span-2">
+              <button type="submit" class="btn btn-primary" id="lesson-submit">Add Lesson</button>
+              <button type="button" class="btn btn-ghost" id="lesson-cancel-edit" style="display:none;">Cancel Edit</button>
+            </div>
+          </form>
+        </div>
+        <div id="lessons-list"><p class="empty-state">Loading…</p></div>
+      </section>
+
+      <!-- ================= QUIZ EDITOR ================= -->
+      <section class="admin-panel" data-panel="quizzes">
+        <div class="card card-pad" style="margin-bottom:24px;">
+          <span class="eyebrow">ADD QUESTION</span>
+          <form class="admin-add-form" id="quiz-form">
+            <div>
+              <label>Module</label>
+              <select id="quiz-module" required>
+                <option value="1">1 — Eligibility</option>
+                <option value="2">2 — N-400</option>
+                <option value="3">3 — Biometrics</option>
+                <option value="4">4 — English Test</option>
+                <option value="5">5 — Civics Test</option>
+                <option value="6">6 — Interview</option>
+                <option value="7">7 — Oath</option>
+              </select>
+            </div>
+            <div>
+              <label>Sort Order</label>
+              <input type="number" id="quiz-sort" value="1" min="1">
+            </div>
+            <div class="span-2">
+              <label>Question</label>
+              <input type="text" id="quiz-question" placeholder="e.g. What is the supreme law of the land?" required>
+            </div>
+            <div>
+              <label>Choice A</label>
+              <input type="text" id="quiz-choice-a" required>
+            </div>
+            <div>
+              <label>Choice B</label>
+              <input type="text" id="quiz-choice-b" required>
+            </div>
+            <div>
+              <label>Choice C</label>
+              <input type="text" id="quiz-choice-c" required>
+            </div>
+            <div>
+              <label>Choice D</label>
+              <input type="text" id="quiz-choice-d" required>
+            </div>
+            <div>
+              <label>Correct Choice</label>
+              <select id="quiz-correct">
+                <option value="a">A</option>
+                <option value="b">B</option>
+                <option value="c">C</option>
+                <option value="d">D</option>
+              </select>
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px; padding-bottom:11px;">
+              <input type="checkbox" id="quiz-published" style="width:auto; margin:0;">
+              <label style="margin:0;" for="quiz-published">Published</label>
+            </div>
+            <div class="span-2">
+              <button type="submit" class="btn btn-primary" id="quiz-submit">Add Question</button>
+              <button type="button" class="btn btn-ghost" id="quiz-cancel-edit" style="display:none;">Cancel Edit</button>
+            </div>
+          </form>
+        </div>
+        <div id="quizzes-list"><p class="empty-state">Loading…</p></div>
+      </section>
+
+      <!-- ================= REVENUE (placeholder until Stripe/Square) ================= -->
+      <section class="admin-panel" data-panel="revenue">
+        <div class="card card-pad text-center">
+          <span class="eyebrow">PAYMENTS & MEMBERSHIPS</span>
+          <h3 style="margin-top:8px;">No payment processor connected yet</h3>
+          <p class="small" style="max-width:460px; margin:0 auto;">Once Stripe or Square is wired up, subscription management, payment history, failed payments, refunds, and coupons should be handled in their dashboards — this tab will show a summary pulled from their API rather than duplicating that system.</p>
+        </div>
+      </section>
+
+      <!-- ================= SUPPORT ================= -->
+      <section class="admin-panel" data-panel="support">
+        <div id="support-list"><p class="empty-state">Loading…</p></div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase-client.js"></script>
+<script src="../app.js"></script>
+<script src="../admin.js"></script>
+</body>
+</html>

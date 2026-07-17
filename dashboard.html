@@ -25,8 +25,24 @@
   .stamp-connector.done { background: var(--forest); }
   .badge-ocean { border-color: var(--forest); color: var(--forest); }
 </style>
+<meta name="description" content="Your Cuidadano Ready member dashboard.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Cuidadano Ready">
+<meta property="og:title" content="Member Dashboard — Cuidadano Ready">
+<meta property="og:description" content="Your Cuidadano Ready member dashboard.">
+<meta property="og:image" content="https://cuidadanoready.com/og-image.png">
+<meta property="og:url" content="https://cuidadanoready.com/dashboard.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Member Dashboard — Cuidadano Ready">
+<meta name="twitter:description" content="Your Cuidadano Ready member dashboard.">
+<meta name="twitter:image" content="https://cuidadanoready.com/og-image.png">
 </head>
-<body data-auth-required="true">
+<body data-auth-required="true" data-dashboard-page="true">
 
 <div class="app-shell">
   <div class="sidebar-backdrop"></div>
@@ -35,35 +51,16 @@
     <ul class="app-nav">
       <li class="app-nav-group">
         <h4>Overview</h4>
-        <a href="#" class="active">Continue Learning</a>
-        <a href="#">My Progress</a>
-        <a href="#">Study Plan</a>
+        <a href="dashboard.html" class="active">Continue Learning</a>
       </li>
       <li class="app-nav-group">
         <h4>Modules</h4>
-        <a href="lesson.html">1. Eligibility</a>
-        <a href="lesson.html">2. N-400</a>
-        <a href="lesson.html">3. Biometrics</a>
-        <a href="lesson.html">4. English Test</a>
-        <a href="lesson.html">5. Civics Test</a>
-        <a href="lesson.html">6. Interview</a>
-        <a href="lesson.html">7. Oath Ceremony</a>
-      </li>
-      <li class="app-nav-group">
-        <h4>Practice Center</h4>
-        <a href="#">Civics Questions</a>
-        <a href="#">English Reading</a>
-        <a href="#">English Writing</a>
-        <a href="#">Flashcards</a>
-        <a href="#">Interview Simulator</a>
-        <a href="#">Timed Exams</a>
+        <ul class="app-nav" id="dashboard-module-nav" style="padding:0;">
+          <li class="small muted" style="padding:10px 24px;">Loading…</li>
+        </ul>
       </li>
       <li class="app-nav-group">
         <h4>More</h4>
-        <a href="#">Downloads</a>
-        <a href="#">Community</a>
-        <a href="#">Certificates</a>
-        <a href="#">Account</a>
         <a href="contact.html">Support</a>
       </li>
     </ul>
@@ -88,49 +85,37 @@
     </div>
 
     <div class="app-content">
-      <div class="grid grid-3" style="margin-bottom:28px;">
-        <div class="card stat-card"><span class="eyebrow">OVERALL PROGRESS</span><div class="stat-value">27%</div><div class="progress-bar" style="margin-top:10px;"><div class="progress-bar-fill" style="width:27%;"></div></div></div>
-        <div class="card stat-card"><span class="eyebrow">CURRENT STAGE</span><div class="stat-value" style="font-size:1.4rem;">Stage 2: N-400</div><span class="stat-delta">Lesson 1 of 4</span></div>
-        <div class="card stat-card"><span class="eyebrow">PRACTICE STREAK</span><div class="stat-value">4 days</div><span class="stat-delta">Placeholder data</span></div>
-      </div>
 
-      <div class="card card-pad" style="margin-bottom:28px;">
-        <span class="eyebrow">CONTINUE LEARNING</span>
-        <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:16px;">
-          <div>
-            <h3 style="margin-bottom:4px;">Filling Out Part 1–3</h3>
-            <p class="small" style="margin:0;">Stage 2: N-400 · Lesson 1 of 4</p>
-          </div>
-          <a href="lesson.html" class="btn btn-primary">Resume Lesson →</a>
+      <div id="dashboard-empty-state" style="display:none;">
+        <div class="card card-pad text-center">
+          <span class="eyebrow">GETTING STARTED</span>
+          <h3 style="margin-top:8px;">Course content is on its way</h3>
+          <p class="small" style="max-width:420px; margin:0 auto;">Lessons haven't been published yet — check back soon, or reach out to support if you think this is a mistake.</p>
         </div>
       </div>
 
-      <h3>Your Path</h3>
-      <div class="stamp-path" style="margin-bottom:32px; row-gap:16px;">
-        <div class="stamp-item"><div class="stamp-circle done">1</div><span class="stamp-label">Eligibility</span></div>
-        <div class="stamp-connector done"></div>
-        <div class="stamp-item"><div class="stamp-circle current">2</div><span class="stamp-label">N-400</span></div>
-        <div class="stamp-connector"></div>
-        <div class="stamp-item"><div class="stamp-circle">3</div><span class="stamp-label">Biometrics</span></div>
-        <div class="stamp-connector"></div>
-        <div class="stamp-item"><div class="stamp-circle">4</div><span class="stamp-label">English Test</span></div>
-        <div class="stamp-connector"></div>
-        <div class="stamp-item"><div class="stamp-circle">5</div><span class="stamp-label">Civics Test</span></div>
-        <div class="stamp-connector"></div>
-        <div class="stamp-item"><div class="stamp-circle">6</div><span class="stamp-label">Interview</span></div>
-        <div class="stamp-connector"></div>
-        <div class="stamp-item"><div class="stamp-circle">7</div><span class="stamp-label">Oath</span></div>
+      <div id="dashboard-main-content" style="display:none;">
+        <div class="grid grid-3" style="margin-bottom:28px;">
+          <div class="card stat-card"><span class="eyebrow">OVERALL PROGRESS</span><div class="stat-value" id="stat-progress-pct">0%</div><div class="progress-bar" style="margin-top:10px;"><div class="progress-bar-fill" id="stat-progress-bar" style="width:0%;"></div></div></div>
+          <div class="card stat-card"><span class="eyebrow">CURRENT STAGE</span><div class="stat-value" style="font-size:1.4rem;" id="stat-current-stage">—</div><span class="stat-delta" id="stat-current-lesson-count"></span></div>
+          <div class="card stat-card"><span class="eyebrow">PRACTICE STREAK</span><div class="stat-value" id="stat-streak">0 days</div><span class="stat-delta" id="stat-streak-note">Complete a lesson to start your streak</span></div>
+        </div>
+
+        <div class="card card-pad" style="margin-bottom:28px;" id="dashboard-continue-card">
+          <span class="eyebrow">CONTINUE LEARNING</span>
+          <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:16px;">
+            <div>
+              <h3 style="margin-bottom:4px;" id="continue-lesson-title">—</h3>
+              <p class="small" style="margin:0;" id="continue-lesson-meta"></p>
+            </div>
+            <a href="#" class="btn btn-primary" id="continue-lesson-link">Resume Lesson →</a>
+          </div>
+        </div>
+
+        <h3>Your Path</h3>
+        <div class="stamp-path" style="margin-bottom:32px; row-gap:16px;" id="dashboard-stamp-path"></div>
       </div>
 
-      <h3>Practice Center</h3>
-      <div class="grid grid-3" style="margin-bottom:12px;">
-        <div class="card card-pad"><span class="badge badge-ocean">CIVICS</span><h3 style="margin-top:10px; font-size:1.05rem;">Civics Questions</h3><p class="small">Placeholder — 100-question bank.</p></div>
-        <div class="card card-pad"><span class="badge">ENGLISH</span><h3 style="margin-top:10px; font-size:1.05rem;">English Reading</h3><p class="small">Placeholder — reading practice set.</p></div>
-        <div class="card card-pad"><span class="badge">ENGLISH</span><h3 style="margin-top:10px; font-size:1.05rem;">English Writing</h3><p class="small">Placeholder — writing practice set.</p></div>
-        <div class="card card-pad"><span class="badge">STUDY</span><h3 style="margin-top:10px; font-size:1.05rem;">Flashcards</h3><p class="small">Placeholder — flip-card review deck.</p></div>
-        <div class="card card-pad"><span class="badge">INTERVIEW</span><h3 style="margin-top:10px; font-size:1.05rem;">Interview Simulator</h3><p class="small">Placeholder — mock interview flow.</p></div>
-        <div class="card card-pad"><span class="badge">EXAM</span><h3 style="margin-top:10px; font-size:1.05rem;">Timed Exams</h3><p class="small">Placeholder — full timed practice exam.</p></div>
-      </div>
     </div>
   </main>
 </div>
@@ -138,5 +123,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js"></script>
 <script src="app.js"></script>
+<script src="member.js"></script>
 </body>
 </html>

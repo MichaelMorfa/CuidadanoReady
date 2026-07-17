@@ -67,6 +67,25 @@ img { max-width: 100%; display: block; }
 .section-dim { background: var(--paper-dim); }
 
 /* --------------------------------------------------------------------
+   Hero flag background (waving, fades out on scroll)
+   -------------------------------------------------------------------- */
+.hero { position: relative; overflow: hidden; }
+.hero > .container { position: relative; z-index: 1; }
+.hero-flag-bg {
+  position: absolute;
+  inset: -15% -8%;
+  z-index: 0;
+  opacity: 0.16;
+  pointer-events: none;
+  will-change: opacity;
+}
+.hero-flag-bg svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* --------------------------------------------------------------------
    Eyebrow / mono labels
    -------------------------------------------------------------------- */
 .eyebrow {

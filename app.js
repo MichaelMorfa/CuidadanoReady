@@ -59,13 +59,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ---- Admin guard (admin.html only) ------------------------------------
+  // ---- Admin guard (admin/index.html only) -------------------------------
   // Signed-out visitors bounce to login; signed-in non-admins bounce to
   // their own dashboard instead of seeing the admin panel.
+  // Absolute paths here on purpose — this page lives one folder deep at /admin.
   if (document.body.hasAttribute('data-admin-required') && typeof supabaseClient !== 'undefined') {
     supabaseClient.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
-        window.location.href = 'login.html';
+        window.location.href = '/login.html';
         return;
       }
       const { data: profile } = await supabaseClient
@@ -74,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .eq('id', session.user.id)
         .single();
       if (!profile || profile.role !== 'admin') {
-        window.location.href = 'dashboard.html';
+        window.location.href = '/dashboard.html';
       }
     });
   }
@@ -118,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const email = document.querySelector('#login-email').value;
       const password = document.querySelector('#login-password').value;
-      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
       if (error) {
         btn.disabled = false;
@@ -129,7 +130,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return;
       }
-      window.location.href = 'dashboard.html';
+
+      // Admins land in the admin panel; everyone else goes to their dashboard.
+      let destination = 'dashboard.html';
+      if (data && data.user) {
+        const { data: profile } = await supabaseClient
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single();
+        if (profile && profile.role === 'admin') destination = '/admin';
+      }
+      window.location.href = destination;
     });
   }
 
@@ -166,6 +178,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ---- Hero flag background (waves; fades out on scroll) ----------------
+  const heroFlagBg = document.querySelector('.hero-flag-bg');
+  const heroSection = document.querySelector('.hero');
+  if (heroFlagBg && heroSection) {
+    const baseOpacity = 0.16;
+    const updateFlagOpacity = () => {
+      const heroHeight = heroSection.offsetHeight;
+      const scrolled = Math.min(Math.max(window.scrollY, 0), heroHeight);
+      const ratio = 1 - scrolled / heroHeight;
+      heroFlagBg.style.opacity = String(Math.max(ratio, 0) * baseOpacity);
+    };
+    updateFlagOpacity();
+    window.addEventListener('scroll', updateFlagOpacity, { passive: true });
+    window.addEventListener('resize', updateFlagOpacity);
+
+    // Respect reduced-motion preference by freezing the SMIL wave animation.
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      heroFlagBg.querySelectorAll('animate').forEach((anim) => {
+        if (typeof anim.setAttribute === 'function') anim.setAttribute('repeatCount', '0');
+      });
+    }
+  }
+
   // ---- Accordion (FAQ) --------------------------------------------------
   document.querySelectorAll('.accordion-trigger').forEach((trigger) => {
     trigger.addEventListener('click', () => {
@@ -175,28 +210,38 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ---- Quiz options -------------------------------------------------------
-  document.querySelectorAll('.quiz-box').forEach((box) => {
-    const options = box.querySelectorAll('.quiz-option');
-    const feedback = box.querySelector('.quiz-feedback');
-    options.forEach((opt) => {
-      opt.addEventListener('click', () => {
-        options.forEach((o) => (o.disabled = true));
-        const isCorrect = opt.getAttribute('data-correct') === 'true';
-        opt.classList.add(isCorrect ? 'correct' : 'incorrect');
-        if (!isCorrect) {
-          const correctOpt = box.querySelector('.quiz-option[data-correct="true"]');
-          if (correctOpt) correctOpt.classList.add('correct');
-        }
-        if (feedback) {
-          feedback.textContent = isCorrect
-            ? (feedback.getAttribute('data-correct-msg') || 'Correct!')
-            : (feedback.getAttribute('data-incorrect-msg') || 'Not quite — review the highlighted answer.');
-          feedback.classList.add(isCorrect ? 'correct' : 'incorrect');
-        }
-      });
+  document.querySelectorAll('.quiz-box').forEach((box) => window.bindQuizBox(box));
+});
+
+// ---- Quiz binding (shared by static quiz-boxes and dynamically-inserted
+// ones, e.g. the real quiz questions member.js loads on lesson.html) --------
+// If a quiz-box carries data-question-id, the attempt is also logged to
+// Supabase via the record_quiz_attempt RPC for the admin analytics panel.
+window.bindQuizBox = function bindQuizBox(box) {
+  const options = box.querySelectorAll('.quiz-option');
+  const feedback = box.querySelector('.quiz-feedback');
+  const questionId = box.getAttribute('data-question-id');
+  options.forEach((opt) => {
+    opt.addEventListener('click', () => {
+      options.forEach((o) => (o.disabled = true));
+      const isCorrect = opt.getAttribute('data-correct') === 'true';
+      opt.classList.add(isCorrect ? 'correct' : 'incorrect');
+      if (!isCorrect) {
+        const correctOpt = box.querySelector('.quiz-option[data-correct="true"]');
+        if (correctOpt) correctOpt.classList.add('correct');
+      }
+      if (feedback) {
+        feedback.textContent = isCorrect
+          ? (feedback.getAttribute('data-correct-msg') || 'Correct!')
+          : (feedback.getAttribute('data-incorrect-msg') || 'Not quite — review the highlighted answer.');
+        feedback.classList.add(isCorrect ? 'correct' : 'incorrect');
+      }
+      if (questionId && typeof supabaseClient !== 'undefined') {
+        supabaseClient.rpc('record_quiz_attempt', { p_question_id: questionId, p_correct: isCorrect });
+      }
     });
   });
-});
+};
 
 // ---- Step flow helper (used by account.html) ---------------------------
 function goToStep(stepNumber) {

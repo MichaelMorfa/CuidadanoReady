@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stage 2: N-400 — Cuidadano Ready</title>
+<title>Lesson — Cuidadano Ready</title>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <style>
@@ -29,14 +29,27 @@
   .lesson-sub-list li a.current { color: var(--forest); font-weight:600; }
   .check { width:16px; height:16px; border-radius:50%; border:2px solid var(--line); flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; font-size:0.6rem; }
   .check.done { background: var(--forest); border-color: var(--forest); color:var(--white); }
-  .video-placeholder {
-    aspect-ratio: 16/9; background: var(--ink); border-radius: var(--radius);
-    display:flex; align-items:center; justify-content:center; color:#98A0AC;
-    font-family: var(--font-mono); font-size:0.85rem; margin-bottom:28px;
-  }
+  .video-embed { aspect-ratio: 16/9; border-radius: var(--radius); overflow:hidden; margin-bottom:28px; }
+  .video-embed iframe { width:100%; height:100%; border:0; display:block; }
 </style>
+<meta name="description" content="A Cuidadano Ready lesson.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Cuidadano Ready">
+<meta property="og:title" content="Lesson — Cuidadano Ready">
+<meta property="og:description" content="A Cuidadano Ready lesson.">
+<meta property="og:image" content="https://cuidadanoready.com/og-image.png">
+<meta property="og:url" content="https://cuidadanoready.com/lesson.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Lesson — Cuidadano Ready">
+<meta name="twitter:description" content="A Cuidadano Ready lesson.">
+<meta name="twitter:image" content="https://cuidadanoready.com/og-image.png">
 </head>
-<body data-auth-required="true">
+<body data-auth-required="true" data-lesson-page="true">
 
 <div class="app-shell">
   <aside class="app-sidebar">
@@ -45,40 +58,15 @@
       <li class="app-nav-group">
         <h4>Overview</h4>
         <a href="dashboard.html">Continue Learning</a>
-        <a href="dashboard.html">My Progress</a>
-        <a href="dashboard.html">Study Plan</a>
       </li>
       <li class="app-nav-group">
         <h4>Modules</h4>
-        <a href="lesson.html"><span class="check done">✓</span>&nbsp;1. Eligibility</a>
-        <a href="lesson.html" class="active"><span class="check"></span>&nbsp;2. N-400</a>
-        <ul class="lesson-sub-list">
-          <li><a href="#" class="current"><span class="check done">✓</span> Filling Out Part 1–3</a></li>
-          <li><a href="#"><span class="check"></span> Filling Out Part 4–8</a></li>
-          <li><a href="#"><span class="check"></span> Common Mistakes to Avoid</a></li>
-          <li><a href="#"><span class="check"></span> Stage Quiz</a></li>
+        <ul class="app-nav" id="lesson-module-nav" style="padding:0;">
+          <li class="small muted" style="padding:10px 24px;">Loading…</li>
         </ul>
-        <a href="lesson.html">3. Biometrics</a>
-        <a href="lesson.html">4. English Test</a>
-        <a href="lesson.html">5. Civics Test</a>
-        <a href="lesson.html">6. Interview</a>
-        <a href="lesson.html">7. Oath Ceremony</a>
-      </li>
-      <li class="app-nav-group">
-        <h4>Practice Center</h4>
-        <a href="#">Civics Questions</a>
-        <a href="#">English Reading</a>
-        <a href="#">English Writing</a>
-        <a href="#">Flashcards</a>
-        <a href="#">Interview Simulator</a>
-        <a href="#">Timed Exams</a>
       </li>
       <li class="app-nav-group">
         <h4>More</h4>
-        <a href="#">Downloads</a>
-        <a href="#">Community</a>
-        <a href="#">Certificates</a>
-        <a href="#">Account</a>
         <a href="contact.html">Support</a>
       </li>
     </ul>
@@ -89,8 +77,8 @@
       <div class="flex gap-16 items-center">
         <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
         <div>
-          <span class="eyebrow" style="margin-bottom:0;">STAGE 2 OF 7</span>
-          <h3 style="margin:0;">N-400</h3>
+          <span class="eyebrow" style="margin-bottom:0;" id="lesson-stage-eyebrow">STAGE — OF 7</span>
+          <h3 style="margin:0;" id="lesson-stage-title">—</h3>
         </div>
       </div>
       <div class="flex gap-16 items-center">
@@ -103,48 +91,39 @@
     </div>
 
     <div class="app-content">
-      <div class="stamp-path small" style="margin-bottom: 28px;">
-        <div class="stamp-item"><div class="stamp-circle done">1</div></div>
-        <div class="stamp-connector done"></div>
-        <div class="stamp-item"><div class="stamp-circle current">2</div></div>
-        <div class="stamp-connector"></div>
-        <div class="stamp-item"><div class="stamp-circle">3</div></div>
-        <div class="stamp-connector"></div>
-        <div class="stamp-item"><div class="stamp-circle">4</div></div>
-        <div class="stamp-connector"></div>
-        <div class="stamp-item"><div class="stamp-circle">5</div></div>
-        <div class="stamp-connector"></div>
-        <div class="stamp-item"><div class="stamp-circle">6</div></div>
-        <div class="stamp-connector"></div>
-        <div class="stamp-item"><div class="stamp-circle">7</div></div>
+
+      <div id="lesson-empty-state" style="display:none;">
+        <div class="card card-pad text-center">
+          <span class="eyebrow">GETTING STARTED</span>
+          <h3 style="margin-top:8px;">No lessons available yet</h3>
+          <p class="small" style="max-width:420px; margin:0 auto;">Check back soon, or head back to your <a href="dashboard.html">dashboard</a>.</p>
+        </div>
       </div>
 
-      <span class="badge" style="border-color:var(--forest); color:var(--forest); margin-bottom:12px; display:inline-block;">LESSON 1 OF 4</span>
-      <h1 data-en="Filling Out Part 1–3" data-es="Completando la Parte 1–3">Filling Out Part 1–3</h1>
+      <div id="lesson-main-content" style="display:none;">
+        <div class="stamp-path small" style="margin-bottom: 28px;" id="lesson-stamp-path"></div>
 
-      <div class="video-placeholder" data-en="VIDEO PLACEHOLDER — embed pending (YouTube/Vimeo)" data-es="VIDEO DE MARCADOR — pendiente de incrustar (YouTube/Vimeo)">VIDEO PLACEHOLDER — embed pending (YouTube/Vimeo)</div>
+        <span class="badge" style="border-color:var(--forest); color:var(--forest); margin-bottom:12px; display:inline-block;" id="lesson-badge">LESSON</span>
+        <h1 id="lesson-title-h1">—</h1>
 
-      <div class="card card-pad" style="margin-bottom:28px;">
-        <h3 data-en="Study Guide" data-es="Guía de Estudio">Study Guide</h3>
-        <p data-en="This is placeholder study guide text. Real content covering how to complete Parts 1 through 3 of Form N-400 — including legal name, eligibility category, and biographic information — will be provided by the Law Offices of Ingrid Morfa before launch." data-es="Este es un texto de guía de estudio de marcador. El contenido real que cubre cómo completar las Partes 1 a 3 del Formulario N-400 será proporcionado por el despacho de la abogada Ingrid Morfa antes del lanzamiento.">This is placeholder study guide text. Real content covering how to complete Parts 1 through 3 of Form N-400 — including legal name, eligibility category, and biographic information — will be provided by the Law Offices of Ingrid Morfa before launch.</p>
-        <p data-en="Placeholder paragraph two: a checklist of documents you'll want on hand before starting this section will go here." data-es="Párrafo de marcador dos: aquí irá una lista de verificación de documentos que necesitarás antes de comenzar esta sección.">Placeholder paragraph two: a checklist of documents you'll want on hand before starting this section will go here.</p>
+        <div class="video-embed" id="lesson-video-wrap" style="display:none;"></div>
+
+        <div class="card card-pad" style="margin-bottom:28px;">
+          <h3>Study Guide</h3>
+          <div id="lesson-content"></div>
+        </div>
+
+        <div id="lesson-quiz-section" style="display:none;">
+          <h3>Stage Quiz</h3>
+          <div id="lesson-quiz-wrap" style="margin-bottom:28px;"></div>
+        </div>
+
+        <div class="flex justify-between">
+          <a href="#" class="btn btn-ghost" id="lesson-prev-link">← Previous Lesson</a>
+          <a href="#" class="btn btn-primary" id="lesson-next-link">Mark Complete & Continue →</a>
+        </div>
       </div>
 
-      <h3 data-en="Stage Quiz" data-es="Cuestionario de Etapa">Stage Quiz</h3>
-      <div class="quiz-box" style="margin-bottom:28px;">
-        <span class="badge" style="margin-bottom:12px; display:inline-block;">PLACEHOLDER QUESTION</span>
-        <h3 style="font-family:var(--font-sans); font-size:1.05rem;">Which form is used to apply for naturalization?</h3>
-        <button class="quiz-option" data-correct="false">Form I-485</button>
-        <button class="quiz-option" data-correct="true">Form N-400</button>
-        <button class="quiz-option" data-correct="false">Form I-130</button>
-        <button class="quiz-option" data-correct="false">Form N-600</button>
-        <div class="quiz-feedback" data-correct-msg="Correct — Form N-400 is the Application for Naturalization." data-incorrect-msg="Not quite — Form N-400 is the Application for Naturalization."></div>
-      </div>
-
-      <div class="flex justify-between">
-        <a href="#" class="btn btn-ghost" data-en="← Previous Lesson" data-es="← Lección anterior">← Previous Lesson</a>
-        <a href="#" class="btn btn-primary" data-en="Next Lesson →" data-es="Siguiente lección →">Next Lesson →</a>
-      </div>
     </div>
   </main>
 </div>
@@ -152,5 +131,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js"></script>
 <script src="app.js"></script>
+<script src="member.js"></script>
 </body>
 </html>
