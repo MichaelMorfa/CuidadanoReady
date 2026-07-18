@@ -19,11 +19,9 @@ function setLang(lang) {
 }
 
 // ---- Stripe checkout / billing portal helpers ---------------------------
-// Shared by account.html (right after signup), login.html (resuming a plan
-// choice once email confirmation is done), and dashboard.html (subscribe /
-// manage billing buttons).
-const PENDING_PLAN_KEY = 'ciudadanoready-pending-plan';
-
+// Used by dashboard.html's billing banner (resubscribe / upgrade for an
+// account that already exists — new signups go through
+// create-pending-checkout-session instead, since no account exists yet).
 window.startCheckoutRedirect = async function startCheckoutRedirect(plan, buttonEl) {
   if (typeof supabaseClient === 'undefined') return;
   const original = buttonEl ? buttonEl.textContent : null;
@@ -185,29 +183,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Admins land in the admin panel; everyone else goes to their dashboard.
       let destination = 'dashboard.html';
-      let isAdmin = false;
       if (data && data.user) {
         const { data: profile } = await supabaseClient
           .from('profiles')
           .select('role')
           .eq('id', data.user.id)
           .single();
-        if (profile && profile.role === 'admin') {
-          destination = '/admin';
-          isAdmin = true;
-        }
+        if (profile && profile.role === 'admin') destination = '/admin';
       }
-
-      // If they picked a plan before confirming their email, send them
-      // straight to Stripe Checkout now instead of the dashboard.
-      let pendingPlan = null;
-      try { pendingPlan = localStorage.getItem(PENDING_PLAN_KEY); } catch (e) {}
-      if (pendingPlan && !isAdmin) {
-        try { localStorage.removeItem(PENDING_PLAN_KEY); } catch (e) {}
-        window.startCheckoutRedirect(pendingPlan);
-        return;
-      }
-
       window.location.href = destination;
     });
   }
@@ -379,52 +362,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const name = document.querySelector('#signup-name').value;
     const email = document.querySelector('#signup-email').value;
-
-    btn.disabled = true;
-    btn.textContent = 'Processing…';
-
     const password = document.querySelector('#signup-password').value;
     const selectedPlan = document.querySelector('.plan-option.selected');
     const plan = selectedPlan ? selectedPlan.getAttribute('data-plan') : 'monthly';
 
-    const { data, error } = await supabaseClient.auth.signUp({ email, password });
+    btn.disabled = true;
+    btn.textContent = 'Redirecting to secure checkout…';
 
-    if (error) {
+    // Pay-first: no account is created yet. This just validates the
+    // details and starts a Stripe Checkout Session — the real account
+    // (with this email/password) only gets created by the webhook the
+    // instant payment succeeds. Nothing is created if payment doesn't.
+    const { data, error } = await supabaseClient.functions.invoke('create-pending-checkout-session', {
+      body: { full_name: name, email: email, password: password, plan: plan },
+    });
+
+    if (error || !data || !data.url) {
       btn.disabled = false;
       btn.textContent = original;
       if (errorEl) {
-        errorEl.textContent = error.message || 'Something went wrong creating your account.';
+        errorEl.textContent = (data && data.error) || (error && error.message) || 'Something went wrong starting checkout.';
         errorEl.style.display = 'block';
       }
       return;
     }
 
-    if (data.user) {
-      await supabaseClient.from('profiles').upsert({
-        id: data.user.id,
-        full_name: name,
-        plan: plan,
-      });
-    }
-
-    try { localStorage.setItem(PENDING_PLAN_KEY, plan); } catch (e) {}
-
-    // If email confirmation is off, Supabase hands back a live session
-    // immediately — skip straight to Stripe Checkout for the chosen plan.
-    if (data.session) {
-      try { localStorage.removeItem(PENDING_PLAN_KEY); } catch (e) {}
-      window.startCheckoutRedirect(plan, btn);
-      return;
-    }
-
-    btn.disabled = false;
-    btn.textContent = original;
-
-    const successMsg = document.querySelector('#signup-success-message');
-    if (successMsg) {
-      successMsg.textContent = 'Your account is set up. Check your email to confirm your address, then log in to complete payment and start Stage 1: Eligibility.';
-    }
-
-    goToStep(3);
+    window.location.href = data.url;
   });
 });
