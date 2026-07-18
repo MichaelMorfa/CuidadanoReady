@@ -11,14 +11,16 @@
    (no refetch) via the 'ciudadanoready:langchange' event app.js fires.
    ========================================================================== */
 
+const TOTAL_MODULES = 7;
+
 const MODULE_NAMES = {
-  1: { en: 'Eligibility', es: 'Elegibilidad' },
-  2: { en: 'N-400', es: 'N-400' },
-  3: { en: 'Biometrics', es: 'Datos Biométricos' },
-  4: { en: 'English Test', es: 'Examen de Inglés' },
-  5: { en: 'Civics Test', es: 'Examen Cívico' },
-  6: { en: 'Interview', es: 'Entrevista' },
-  7: { en: 'Oath', es: 'Juramento' },
+  1: { en: 'Welcome', es: 'Bienvenida' },
+  2: { en: 'Eligibility', es: 'Elegibilidad' },
+  3: { en: 'N-400 Application', es: 'Solicitud N-400' },
+  4: { en: 'Biometrics', es: 'Datos Biométricos' },
+  5: { en: 'Interview & Exam Prep', es: 'Preparación para la Entrevista y el Examen' },
+  6: { en: 'The Interview', es: 'La Entrevista' },
+  7: { en: 'Oath Ceremony', es: 'Ceremonia de Juramentación' },
 };
 
 function moduleName(m) {
@@ -45,21 +47,35 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
+// Turns any http(s) URLs in already-escaped text into clickable links.
+// Runs after escapeHtml, so it's safe to match on the escaped string directly.
+function linkifyEscaped(escapedText) {
+  return escapedText.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+}
+
 // Renders lesson body text into paragraphs, turning consecutive lines that
 // start with "•" into a proper bulleted list instead of running them all
-// together on one line.
+// together on one line. A block that's a single line starting with "## "
+// is rendered as a subheading instead of a paragraph — this lets longer,
+// multi-section lessons (like a step-by-step process overview) have real
+// visual structure instead of one long wall of text.
 function renderLessonBody(text) {
   const blocks = (text || '').split(/\n\n+/).map((b) => b.trim()).filter(Boolean);
   if (!blocks.length) return '<p class="small muted" style="margin:0;">No content yet for this lesson.</p>';
 
   return blocks.map((block) => {
     const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
+
+    if (lines.length === 1 && lines[0].startsWith('## ')) {
+      return `<h4 class="lesson-subhead">${escapeHtml(lines[0].slice(3))}</h4>`;
+    }
+
     const isBulletBlock = lines.length > 0 && lines.every((l) => l.startsWith('•'));
     if (isBulletBlock) {
-      const items = lines.map((l) => `<li>${escapeHtml(l.replace(/^•\s*/, ''))}</li>`).join('');
+      const items = lines.map((l) => `<li>${linkifyEscaped(escapeHtml(l.replace(/^•\s*/, '')))}</li>`).join('');
       return `<ul class="lesson-list">${items}</ul>`;
     }
-    return `<p>${escapeHtml(block).replace(/\n/g, '<br>')}</p>`;
+    return `<p>${linkifyEscaped(escapeHtml(block).replace(/\n/g, '<br>'))}</p>`;
   }).join('');
 }
 
@@ -67,7 +83,7 @@ function renderStampPath(selector, lessons, completedIds, currentLesson, small) 
   const container = document.querySelector(selector);
   if (!container) return;
   let html = '';
-  for (let m = 1; m <= 7; m++) {
+  for (let m = 1; m <= TOTAL_MODULES; m++) {
     const moduleLessons = lessons.filter((l) => l.module_number === m);
     const hasLessons = moduleLessons.length > 0;
     const allDone = hasLessons && moduleLessons.every((l) => completedIds.has(l.id));
@@ -77,7 +93,7 @@ function renderStampPath(selector, lessons, completedIds, currentLesson, small) 
     else if (isCurrent) circleClass = ' current';
     const label = small ? '' : `<span class="stamp-label">${escapeHtml(moduleName(m))}</span>`;
     html += `<div class="stamp-item"><div class="stamp-circle${circleClass}">${m}</div>${label}</div>`;
-    if (m < 7) html += `<div class="stamp-connector${allDone ? ' done' : ''}"></div>`;
+    if (m < TOTAL_MODULES) html += `<div class="stamp-connector${allDone ? ' done' : ''}"></div>`;
   }
   container.innerHTML = html;
 }
@@ -86,7 +102,7 @@ function renderModuleNav(selector, lessons, completedIds, expandLesson) {
   const nav = document.querySelector(selector);
   if (!nav) return;
   let html = '';
-  for (let m = 1; m <= 7; m++) {
+  for (let m = 1; m <= TOTAL_MODULES; m++) {
     const moduleLessons = lessons.filter((l) => l.module_number === m);
     if (!moduleLessons.length) {
       html += `<li style="padding:10px 24px; font-size:0.92rem; color:var(--slate);">${m}. ${escapeHtml(moduleName(m))} <span class="small muted">— Coming soon</span></li>`;
@@ -118,14 +134,23 @@ function buildVideoEmbed(url) {
   return `<div style="width:100%;height:100%;background:var(--ink);display:flex;align-items:center;justify-content:center;"><a href="${escapeHtml(url)}" target="_blank" rel="noopener" style="color:#fff;font-family:var(--font-mono);font-size:0.85rem;">▶ Watch Video</a></div>`;
 }
 
+function shuffleArray(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 function buildQuizBoxHtml(q) {
   const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
-  const choices = [
+  const choices = shuffleArray([
     ['a', localize(q, 'choice_a')],
     ['b', localize(q, 'choice_b')],
     ['c', localize(q, 'choice_c')],
     ['d', localize(q, 'choice_d')],
-  ];
+  ]);
   const optionsHtml = choices.map(([key, text]) => `<button class="quiz-option" data-correct="${key === q.correct_choice ? 'true' : 'false'}">${escapeHtml(text)}</button>`).join('');
   const label = lang === 'es' ? 'PREGUNTA DE PRÁCTICA' : 'PRACTICE QUESTION';
   const correctMsg = lang === 'es' ? '¡Correcto!' : 'Correct!';
@@ -314,7 +339,7 @@ function renderLessonPage() {
   if (!lessonCache) return;
   const { lessons, lesson, completedIds, quizQs, userId } = lessonCache;
 
-  document.querySelector('#lesson-stage-eyebrow').textContent = `STAGE ${lesson.module_number} OF 7`;
+  document.querySelector('#lesson-stage-eyebrow').textContent = `STAGE ${lesson.module_number} OF ${TOTAL_MODULES}`;
   document.querySelector('#lesson-stage-title').textContent = moduleName(lesson.module_number);
   document.title = `Stage ${lesson.module_number}: ${moduleName(lesson.module_number)} — Ciudadano Ready`;
 
@@ -331,8 +356,8 @@ function renderLessonPage() {
   const quizWrap = document.querySelector('#lesson-quiz-wrap');
   if (quizQs && quizQs.length) {
     quizSection.style.display = 'block';
-    quizWrap.innerHTML = buildQuizBoxHtml(quizQs[0]);
-    window.bindQuizBox(quizWrap.querySelector('.quiz-box'));
+    quizWrap.innerHTML = quizQs.map((q) => buildQuizBoxHtml(q)).join('<div style="height:16px;"></div>');
+    quizWrap.querySelectorAll('.quiz-box').forEach((box) => window.bindQuizBox(box));
   } else {
     quizSection.style.display = 'none';
     quizWrap.innerHTML = '';
@@ -417,13 +442,28 @@ async function initLessonPage() {
   mainContent.style.display = 'block';
   emptyState.style.display = 'none';
 
-  const { data: quizQs } = await supabaseClient
+  // Quiz questions don't have their own lesson_id column — instead each
+  // lesson "owns" every quiz question in its module whose sort_order falls
+  // between its own sort_order and the next lesson's sort_order (or, if
+  // it's the last lesson in the module, everything from its sort_order
+  // onward). This lets a single lesson carry more than one quiz question
+  // (e.g. a 2-question quiz at the end of one long lesson) while still
+  // keeping each lesson's quiz distinct when a module has one quiz per
+  // lesson.
+  const sortedModuleLessons = lessons
+    .filter((l) => l.module_number === lesson.module_number)
+    .sort((a, b) => a.sort_order - b.sort_order);
+  const lessonIdxInModule = sortedModuleLessons.findIndex((l) => l.id === lesson.id);
+  const nextModuleLesson = sortedModuleLessons[lessonIdxInModule + 1];
+
+  let quizQuery = supabaseClient
     .from('quiz_questions')
     .select('*')
     .eq('module_number', lesson.module_number)
     .eq('published', true)
-    .order('sort_order')
-    .limit(1);
+    .gte('sort_order', lesson.sort_order);
+  if (nextModuleLesson) quizQuery = quizQuery.lt('sort_order', nextModuleLesson.sort_order);
+  const { data: quizQs } = await quizQuery.order('sort_order');
 
   lessonCache = { lessons, lesson, completedIds, quizQs, userId };
   renderLessonPage();

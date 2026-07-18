@@ -34,13 +34,14 @@
       <li><a href="blog.html" data-en="Blog" data-es="Blog">Blog</a></li>
       <li><a href="faq.html" class="active" data-en="FAQ" data-es="Preguntas">FAQ</a></li>
       <li><a href="contact.html" data-en="Contact" data-es="Contacto">Contact</a></li>
+      <li class="nav-login-mobile"><a href="login.html" data-en="Log In" data-es="Ingresar">Log In</a></li>
     </ul>
     <div class="nav-right">
       <div class="lang-toggle">
         <button data-lang-btn="en" class="active">EN</button>
         <button data-lang-btn="es">ES</button>
       </div>
-      <a href="login.html" class="btn btn-ghost btn-sm" data-en="Log In" data-es="Ingresar">Log In</a>
+      <a href="login.html" class="btn btn-ghost btn-sm login-link" data-en="Log In" data-es="Ingresar">Log In</a>
       <button class="nav-toggle" aria-label="Menu">☰</button>
     </div>
   </nav>
@@ -78,46 +79,85 @@
   <div class="container faq-wrap">
     <span class="eyebrow" data-en="SUPPORT" data-es="SOPORTE">SUPPORT</span>
     <h1 data-en="Frequently asked questions" data-es="Preguntas frecuentes">Frequently asked questions</h1>
-    <p>Placeholder answers below — final copy pending review.</p>
 
     <h3 style="margin-top:36px;" data-en="General" data-es="General">General</h3>
     <div class="accordion-item open">
-      <button class="accordion-trigger"><span data-en="Is Ciudadano Ready affiliated with USCIS?" data-es="¿Ciudadano Ready está afiliado con USCIS?">Is Ciudadano Ready affiliated with USCIS?</span><span class="plus">+</span></button>
-      <div class="accordion-panel"><p data-en="No. Placeholder answer — Ciudadano Ready is an independent test-prep resource, not a government agency." data-es="No. Respuesta de marcador: Ciudadano Ready es un recurso independiente de preparación, no una agencia gubernamental.">No. Placeholder answer — Ciudadano Ready is an independent test-prep resource, not a government agency.</p></div>
+      <button class="accordion-trigger"><span data-en="Is CiudadanoReady affiliated with USCIS?" data-es="¿CiudadanoReady está afiliado a USCIS?">Is CiudadanoReady affiliated with USCIS?</span><span class="plus">+</span></button>
+      <div class="accordion-panel"><p data-en="No. CiudadanoReady is a private educational company. We are not affiliated with, endorsed by, authorized by, or sponsored by the U.S. Citizenship and Immigration Services (USCIS) or any other government agency." data-es="No. CiudadanoReady es una empresa privada dedicada a la educación. No estamos afiliados, autorizados, patrocinados ni respaldados por el Servicio de Ciudadanía e Inmigración de los Estados Unidos (USCIS) ni por ninguna otra agencia gubernamental.">No. CiudadanoReady is a private educational company. We are not affiliated with, endorsed by, authorized by, or sponsored by the U.S. Citizenship and Immigration Services (USCIS) or any other government agency.</p></div>
     </div>
     <div class="accordion-item">
-      <button class="accordion-trigger"><span>Is this legal advice?</span><span class="plus">+</span></button>
-      <div class="accordion-panel"><p>Placeholder answer — no. For legal advice about your case, contact a licensed immigration attorney.</p></div>
+      <button class="accordion-trigger"><span data-en="Is this legal advice?" data-es="¿Este curso constituye asesoría legal?">Is this legal advice?</span><span class="plus">+</span></button>
+      <div class="accordion-panel"><p data-en="No. The information provided through CiudadanoReady is for educational purposes only. Our courses are designed to help you prepare for the naturalization interview, civics test, and English, reading, and writing examinations. The information provided does not constitute legal advice and should not be relied upon as legal guidance for your individual immigration case." data-es="No. La información proporcionada por CiudadanoReady tiene únicamente fines educativos. Nuestros cursos están diseñados para ayudarle a prepararse para la entrevista de naturalización, el examen de educación cívica y las pruebas de inglés, lectura y escritura. La información presentada no constituye asesoría legal y no debe interpretarse como asesoramiento para su caso de inmigración en particular.">No. The information provided through CiudadanoReady is for educational purposes only. Our courses are designed to help you prepare for the naturalization interview, civics test, and English, reading, and writing examinations. The information provided does not constitute legal advice and should not be relied upon as legal guidance for your individual immigration case.</p></div>
+    </div>
+    <div class="accordion-item">
+      <button class="accordion-trigger"><span data-en="Who should use CiudadanoReady?" data-es="¿Quién debe utilizar CiudadanoReady?">Who should use CiudadanoReady?</span><span class="plus">+</span></button>
+      <div class="accordion-panel"><p data-en="CiudadanoReady is designed for lawful permanent residents who are preparing for the U.S. naturalization interview and examination. Whether you have just become eligible to apply for citizenship or have already received your interview notice, our course will help you prepare with confidence." data-es="CiudadanoReady está diseñado para residentes permanentes legales que se están preparando para la entrevista y el examen de naturalización de los Estados Unidos. Ya sea que apenas sea elegible para solicitar la ciudadanía o que ya haya recibido la notificación de su entrevista, nuestro curso le ayudará a prepararse con confianza.">CiudadanoReady is designed for lawful permanent residents who are preparing for the U.S. naturalization interview and examination. Whether you have just become eligible to apply for citizenship or have already received your interview notice, our course will help you prepare with confidence.</p></div>
+    </div>
+    <div class="accordion-item">
+      <button class="accordion-trigger"><span data-en="Does completing this course guarantee that I will pass the naturalization interview or become a U.S. citizen?" data-es="¿Completar el curso garantiza que aprobaré la entrevista o que obtendré la ciudadanía estadounidense?">Does completing this course guarantee that I will pass the naturalization interview or become a U.S. citizen?</span><span class="plus">+</span></button>
+      <div class="accordion-panel"><p data-en="No. No educational program can guarantee approval of a naturalization application or success during the USCIS interview. The decision to approve or deny an application is made solely by USCIS based on the applicant's eligibility and performance during the naturalization process." data-es="No. Ningún programa educativo puede garantizar la aprobación de una solicitud de naturalización ni el éxito durante la entrevista con USCIS. La decisión de aprobar o denegar una solicitud corresponde exclusivamente a USCIS y dependerá de que el solicitante cumpla con todos los requisitos legales.">No. No educational program can guarantee approval of a naturalization application or success during the USCIS interview. The decision to approve or deny an application is made solely by USCIS based on the applicant's eligibility and performance during the naturalization process.</p></div>
+    </div>
+    <div class="accordion-item">
+      <button class="accordion-trigger"><span data-en="Does CiudadanoReady prepare my N-400 application?" data-es="¿CiudadanoReady prepara o presenta mi Formulario N-400?">Does CiudadanoReady prepare my N-400 application?</span><span class="plus">+</span></button>
+      <div class="accordion-panel"><p data-en="No. CiudadanoReady is an educational platform designed to prepare students for the naturalization interview and examination. The course does not include preparation or filing of Form N-400 or any other immigration application." data-es="No. CiudadanoReady es una plataforma educativa diseñada para preparar a los estudiantes para la entrevista y el examen de naturalización. El curso no incluye la preparación, revisión ni presentación del Formulario N-400 ni de ninguna otra solicitud de inmigración.">No. CiudadanoReady is an educational platform designed to prepare students for the naturalization interview and examination. The course does not include preparation or filing of Form N-400 or any other immigration application.</p></div>
     </div>
 
     <h3 style="margin-top:36px;" data-en="Pricing & Billing" data-es="Precios y facturación">Pricing & Billing</h3>
     <div class="accordion-item">
-      <button class="accordion-trigger"><span>Can I cancel anytime?</span><span class="plus">+</span></button>
-      <div class="accordion-panel"><p>Placeholder answer — monthly plans can be canceled anytime; 2-year plans are a one-time payment.</p></div>
+      <button class="accordion-trigger"><span data-en="How does pricing and billing work?" data-es="¿Cómo funciona el pago?">How does pricing and billing work?</span><span class="plus">+</span></button>
+      <div class="accordion-panel"><p data-en="CiudadanoReady offers two ways to enroll: a monthly subscription at $19.99/month, or a one-time payment of $199.99 for two years of access. There are no hidden fees, and you choose the plan that works best for you at signup." data-es="CiudadanoReady ofrece dos formas de inscribirse: una suscripción mensual de $19.99 al mes, o un pago único de $199.99 por dos años de acceso. No hay cargos ocultos, y usted elige el plan que mejor se adapte a sus necesidades al registrarse.">CiudadanoReady offers two ways to enroll: a monthly subscription at $19.99/month, or a one-time payment of $199.99 for two years of access. There are no hidden fees, and you choose the plan that works best for you at signup.</p></div>
     </div>
     <div class="accordion-item">
-      <button class="accordion-trigger"><span>Do you offer refunds?</span><span class="plus">+</span></button>
-      <div class="accordion-panel"><p>Placeholder answer — refund policy to be finalized before launch.</p></div>
+      <button class="accordion-trigger"><span data-en="Can I cancel my purchase?" data-es="¿Puedo cancelar mi compra?">Can I cancel my purchase?</span><span class="plus">+</span></button>
+      <div class="accordion-panel"><p data-en="Yes. If you're on the monthly plan, you can cancel anytime from your account's billing settings — you'll keep access through the end of your current billing period, and you won't be charged again. The 2-year plan is a one-time payment, so there's no recurring charge to cancel." data-es="Sí. Si tiene el plan mensual, puede cancelar en cualquier momento desde la configuración de facturación de su cuenta: conservará el acceso hasta el final de su período de facturación actual y no se le cobrará nuevamente. El plan de 2 años es un pago único, por lo que no hay ningún cargo recurrente que cancelar.">Yes. If you're on the monthly plan, you can cancel anytime from your account's billing settings — you'll keep access through the end of your current billing period, and you won't be charged again. The 2-year plan is a one-time payment, so there's no recurring charge to cancel.</p></div>
+    </div>
+    <div class="accordion-item">
+      <button class="accordion-trigger"><span data-en="Do you offer refunds?" data-es="¿Ofrecen reembolsos?">Do you offer refunds?</span><span class="plus">+</span></button>
+      <div class="accordion-panel"><p data-en="Because you get immediate access to the full course and all digital materials as soon as you sign in, we do not offer refunds for either the monthly or 2-year plan. You can cancel your monthly subscription at any time to stop future charges." data-es="Debido a que obtiene acceso inmediato a todo el curso y a los materiales digitales tan pronto inicia sesión, no ofrecemos reembolsos para el plan mensual ni para el plan de 2 años. Puede cancelar su suscripción mensual en cualquier momento para evitar cargos futuros.">Because you get immediate access to the full course and all digital materials as soon as you sign in, we do not offer refunds for either the monthly or 2-year plan. You can cancel your monthly subscription at any time to stop future charges.</p></div>
+    </div>
+    <div class="accordion-item">
+      <button class="accordion-trigger"><span data-en="How long will I have access to the course?" data-es="¿Durante cuánto tiempo tendré acceso al curso?">How long will I have access to the course?</span><span class="plus">+</span></button>
+      <div class="accordion-panel"><p data-en="Monthly plan members have access for as long as their subscription is active. Two-year plan members have access for a full 24 months from the date of purchase. You can see your plan and renewal details anytime from your account dashboard." data-es="Los miembros con el plan mensual tienen acceso mientras su suscripción esté activa. Los miembros con el plan de 2 años tienen acceso durante 24 meses completos a partir de la fecha de compra. Puede consultar los detalles de su plan y renovación en cualquier momento desde el panel de su cuenta.">Monthly plan members have access for as long as their subscription is active. Two-year plan members have access for a full 24 months from the date of purchase. You can see your plan and renewal details anytime from your account dashboard.</p></div>
     </div>
 
     <h3 style="margin-top:36px;" data-en="Course Content" data-es="Contenido del curso">Course Content</h3>
     <div class="accordion-item">
-      <button class="accordion-trigger"><span>How often is content updated?</span><span class="plus">+</span></button>
-      <div class="accordion-panel"><p>Placeholder answer — content will be reviewed against current USCIS materials periodically.</p></div>
+      <button class="accordion-trigger"><span data-en="What does the course include?" data-es="¿Qué incluye el curso?">What does the course include?</span><span class="plus">+</span></button>
+      <div class="accordion-panel"><p data-en="Your enrollment provides access to educational materials designed to prepare you for the naturalization process, which may include: civics lessons and practice questions; English vocabulary and grammar review; reading and writing practice; mock naturalization interviews; practice exams and quizzes; information about the naturalization process; study guides and downloadable resources; and future course updates when applicable. Course content may be updated or expanded from time to time." data-es="Su inscripción le brinda acceso a materiales educativos diseñados para prepararlo para el proceso de naturalización, incluyendo, entre otros: lecciones sobre educación cívica y preguntas de práctica; repaso de vocabulario y gramática en inglés; ejercicios de lectura y escritura; simulaciones de la entrevista de naturalización; exámenes y cuestionarios de práctica; información sobre el proceso de naturalización; guías de estudio y recursos descargables; y actualizaciones futuras del contenido, cuando corresponda. El contenido del curso puede actualizarse o ampliarse periódicamente.">Your enrollment provides access to educational materials designed to prepare you for the naturalization process, which may include: civics lessons and practice questions; English vocabulary and grammar review; reading and writing practice; mock naturalization interviews; practice exams and quizzes; information about the naturalization process; study guides and downloadable resources; and future course updates when applicable. Course content may be updated or expanded from time to time.</p></div>
     </div>
     <div class="accordion-item">
-      <button class="accordion-trigger"><span>Is Spanish content available?</span><span class="plus">+</span></button>
-      <div class="accordion-panel"><p>Placeholder answer — an English/Spanish toggle exists site-wide; Spanish copy is being finalized.</p></div>
+      <button class="accordion-trigger"><span data-en="How often is the course updated?" data-es="¿Con qué frecuencia se actualiza el contenido?">How often is the course updated?</span><span class="plus">+</span></button>
+      <div class="accordion-panel"><p data-en="We regularly review and update our course materials whenever USCIS announces changes to the naturalization process or examination. We also add new lessons, practice materials, and educational resources as needed." data-es="Actualizamos nuestros materiales cada vez que USCIS anuncia cambios en el proceso de naturalización o en el examen. Además, agregamos nuevas lecciones, recursos y materiales de estudio cuando es necesario.">We regularly review and update our course materials whenever USCIS announces changes to the naturalization process or examination. We also add new lessons, practice materials, and educational resources as needed.</p></div>
+    </div>
+    <div class="accordion-item">
+      <button class="accordion-trigger"><span data-en="What if USCIS changes the naturalization exam after I enroll?" data-es="¿Qué sucede si USCIS cambia el examen de naturalización después de que me inscriba?">What if USCIS changes the naturalization exam after I enroll?</span><span class="plus">+</span></button>
+      <div class="accordion-panel"><p data-en="Whenever USCIS officially announces changes to the naturalization examination or interview process, we strive to update our course materials as promptly as possible so our students have access to the most current information." data-es="Cuando USCIS anuncie oficialmente cambios en el examen o en el proceso de naturalización, procuraremos actualizar el contenido del curso lo antes posible para que nuestros estudiantes tengan acceso a la información más reciente.">Whenever USCIS officially announces changes to the naturalization examination or interview process, we strive to update our course materials as promptly as possible so our students have access to the most current information.</p></div>
+    </div>
+    <div class="accordion-item">
+      <button class="accordion-trigger"><span data-en="Is the course available in different languages?" data-es="¿El curso está disponible en otros idiomas?">Is the course available in different languages?</span><span class="plus">+</span></button>
+      <div class="accordion-panel"><p data-en="Yes. Currently, CiudadanoReady is available in English and Spanish. Additional languages may become available in the future." data-es="Sí. Actualmente, CiudadanoReady está disponible en español e inglés. Es posible que otros idiomas estén disponibles en el futuro.">Yes. Currently, CiudadanoReady is available in English and Spanish. Additional languages may become available in the future.</p></div>
+    </div>
+    <div class="accordion-item">
+      <button class="accordion-trigger"><span data-en="Can I study at my own pace?" data-es="¿Puedo estudiar a mi propio ritmo?">Can I study at my own pace?</span><span class="plus">+</span></button>
+      <div class="accordion-panel"><p data-en="Yes. The course is completely self-paced. You may study whenever it is convenient for you and review lessons as often as you like during your access period." data-es="Sí. El curso es completamente autodidacta. Usted puede estudiar cuando le resulte conveniente y revisar las lecciones cuantas veces desee durante el período de acceso.">Yes. The course is completely self-paced. You may study whenever it is convenient for you and review lessons as often as you like during your access period.</p></div>
     </div>
 
     <h3 style="margin-top:36px;" data-en="Technical" data-es="Técnico">Technical</h3>
     <div class="accordion-item">
-      <button class="accordion-trigger"><span>Which devices are supported?</span><span class="plus">+</span></button>
-      <div class="accordion-panel"><p>Placeholder answer — Ciudadano Ready works on desktop and mobile browsers.</p></div>
+      <button class="accordion-trigger"><span data-en="Do I need an internet connection?" data-es="¿Necesito acceso a Internet?">Do I need an internet connection?</span><span class="plus">+</span></button>
+      <div class="accordion-panel"><p data-en="Yes. Since CiudadanoReady is an online learning platform, an internet connection is required to access the course materials." data-es="Sí. CiudadanoReady es una plataforma de aprendizaje en línea, por lo que necesitará una conexión a Internet para acceder al contenido del curso.">Yes. Since CiudadanoReady is an online learning platform, an internet connection is required to access the course materials.</p></div>
     </div>
     <div class="accordion-item">
-      <button class="accordion-trigger"><span>I'm having trouble logging in.</span><span class="plus">+</span></button>
-      <div class="accordion-panel"><p>Placeholder answer — reach out via the <a href="contact.html">Contact page</a> and support will help.</p></div>
+      <button class="accordion-trigger"><span data-en="Can I access the course from my phone or tablet?" data-es="¿Puedo acceder al curso desde mi teléfono o tableta?">Can I access the course from my phone or tablet?</span><span class="plus">+</span></button>
+      <div class="accordion-panel"><p data-en="Yes. CiudadanoReady is designed to be accessible from most modern computers, tablets, and smartphones with an internet connection." data-es="Sí. CiudadanoReady puede utilizarse desde la mayoría de las computadoras, tabletas y teléfonos inteligentes con acceso a Internet.">Yes. CiudadanoReady is designed to be accessible from most modern computers, tablets, and smartphones with an internet connection.</p></div>
+    </div>
+    <div class="accordion-item">
+      <button class="accordion-trigger"><span data-en="Can I share my account with someone else?" data-es="¿Puedo compartir mi cuenta con otra persona?">Can I share my account with someone else?</span><span class="plus">+</span></button>
+      <div class="accordion-panel"><p data-en="No. Your enrollment is intended for your personal use only. Sharing your login credentials or allowing others to use your account may result in suspension or termination of access." data-es="No. Su inscripción es personal e intransferible. Compartir sus credenciales de acceso o permitir que otra persona utilice su cuenta puede resultar en la suspensión o cancelación de su acceso al curso.">No. Your enrollment is intended for your personal use only. Sharing your login credentials or allowing others to use your account may result in suspension or termination of access.</p></div>
+    </div>
+    <div class="accordion-item">
+      <button class="accordion-trigger"><span data-en="Who can I contact if I need technical assistance?" data-es="¿Con quién puedo comunicarme si necesito ayuda técnica?">Who can I contact if I need technical assistance?</span><span class="plus">+</span></button>
+      <div class="accordion-panel"><p data-en="If you experience technical difficulties accessing your course or account, please contact our support team using the contact information provided on our website. We will make every reasonable effort to assist you promptly." data-es="Si tiene problemas para acceder a su cuenta o al contenido del curso, puede comunicarse con nuestro equipo de soporte utilizando la información de contacto disponible en nuestro sitio web. Haremos todo lo posible por ayudarle a resolver cualquier inconveniente a la mayor brevedad posible.">If you experience technical difficulties accessing your course or account, please contact our support team using the contact information provided on our website. We will make every reasonable effort to assist you promptly.</p></div>
     </div>
   </div>
 </section>
