@@ -89,16 +89,90 @@ function buildQuizBoxHtml(q) {
   </div>`;
 }
 
+// ---- Billing / paywall banner (shown when a profile hasn't paid) -------
+function showBillingBanner(status) {
+  const banner = document.querySelector('#dashboard-billing-banner');
+  const eyebrow = document.querySelector('#billing-banner-eyebrow');
+  const title = document.querySelector('#billing-banner-title');
+  const message = document.querySelector('#billing-banner-message');
+  const planButtons = document.querySelector('#billing-banner-plan-buttons');
+  const manageBtn = document.querySelector('#billing-manage-link');
+  if (!banner) return;
+
+  document.querySelector('#dashboard-empty-state').style.display = 'none';
+  document.querySelector('#dashboard-main-content').style.display = 'none';
+  banner.style.display = 'block';
+
+  if (status === 'past_due') {
+    eyebrow.textContent = 'PAYMENT ISSUE';
+    title.textContent = "There's a problem with your payment";
+    message.textContent = "We couldn't process your last payment. Update your billing details to keep your course access.";
+    planButtons.style.display = 'none';
+    manageBtn.style.display = 'inline-flex';
+  } else if (status === 'canceled') {
+    eyebrow.textContent = 'SUBSCRIPTION ENDED';
+    title.textContent = 'Your plan has ended';
+    message.textContent = 'Choose a plan below to pick up right where you left off.';
+    planButtons.style.display = 'flex';
+    manageBtn.style.display = 'none';
+  } else {
+    eyebrow.textContent = 'FINISH SIGNING UP';
+    title.textContent = 'One step left — choose a plan';
+    message.textContent = "Your account is set up, but you haven't completed payment yet. Choose a plan to unlock the full course.";
+    planButtons.style.display = 'flex';
+    manageBtn.style.display = 'none';
+  }
+
+  const monthlyBtn = document.querySelector('#billing-choose-monthly');
+  const yearlyBtn = document.querySelector('#billing-choose-2year');
+  if (monthlyBtn) monthlyBtn.onclick = () => window.startCheckoutRedirect('monthly', monthlyBtn);
+  if (yearlyBtn) yearlyBtn.onclick = () => window.startCheckoutRedirect('2year', yearlyBtn);
+  if (manageBtn) manageBtn.onclick = () => window.openBillingPortal(manageBtn);
+}
+
+function showCheckoutNotice() {
+  const notice = document.querySelector('#dashboard-checkout-notice');
+  if (!notice) return;
+  const params = new URLSearchParams(window.location.search);
+  const checkout = params.get('checkout');
+  if (checkout === 'success') {
+    notice.style.display = 'block';
+    notice.innerHTML = '<span class="eyebrow">PAYMENT RECEIVED</span><h3 style="margin-top:6px;">Welcome in! 🎉</h3><p class="small" style="margin:0;">Your payment went through — it can take a few seconds to unlock. Refresh if the course doesn\'t appear right away.</p>';
+  } else if (checkout === 'cancelled') {
+    notice.style.display = 'block';
+    notice.innerHTML = '<span class="eyebrow">CHECKOUT CANCELLED</span><h3 style="margin-top:6px;">No charge was made</h3><p class="small" style="margin:0;">You can pick a plan below whenever you\'re ready.</p>';
+  }
+  if (checkout) {
+    // Clean the URL so refreshing doesn't keep re-showing the banner.
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+}
+
 // ---- Dashboard --------------------------------------------------------
 async function initDashboard() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) return;
   const userId = session.user.id;
 
-  const [{ data: lessons }, { data: progressRows }, { data: profile }] = await Promise.all([
+  showCheckoutNotice();
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('subscription_status, streak_count')
+    .eq('id', userId)
+    .single();
+
+  const hasAccess = profile && ['active', 'trial', 'comp'].includes(profile.subscription_status);
+  if (!hasAccess) {
+    showBillingBanner(profile ? profile.subscription_status : 'incomplete');
+    renderModuleNav('#dashboard-module-nav', [], new Set(), null);
+    return;
+  }
+  document.querySelector('#dashboard-billing-banner').style.display = 'none';
+
+  const [{ data: lessons }, { data: progressRows }] = await Promise.all([
     supabaseClient.from('lessons').select('*').eq('published', true).order('module_number').order('sort_order'),
     supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId),
-    supabaseClient.from('profiles').select('streak_count').eq('id', userId).single(),
   ]);
 
   const emptyState = document.querySelector('#dashboard-empty-state');
@@ -150,6 +224,17 @@ async function initLessonPage() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) return;
   const userId = session.user.id;
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('subscription_status')
+    .eq('id', userId)
+    .single();
+  const hasAccess = profile && ['active', 'trial', 'comp'].includes(profile.subscription_status);
+  if (!hasAccess) {
+    window.location.href = 'dashboard.html';
+    return;
+  }
 
   const { data: lessons } = await supabaseClient.from('lessons').select('*').eq('published', true).order('module_number').order('sort_order');
 

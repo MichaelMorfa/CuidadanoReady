@@ -137,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>
           <select data-user-field="subscription_status" data-user-id="${u.id}">
             <option value="active" ${u.subscription_status === 'active' ? 'selected' : ''}>Active</option>
+            <option value="incomplete" ${u.subscription_status === 'incomplete' ? 'selected' : ''}>Incomplete (unpaid)</option>
             <option value="trial" ${u.subscription_status === 'trial' ? 'selected' : ''}>Trial</option>
             <option value="past_due" ${u.subscription_status === 'past_due' ? 'selected' : ''}>Past Due</option>
             <option value="canceled" ${u.subscription_status === 'canceled' ? 'selected' : ''}>Canceled</option>

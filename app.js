@@ -18,6 +18,58 @@ function setLang(lang) {
   try { localStorage.setItem('ciudadanoready-lang', lang); } catch (e) {}
 }
 
+// ---- Stripe checkout / billing portal helpers ---------------------------
+// Shared by account.html (right after signup), login.html (resuming a plan
+// choice once email confirmation is done), and dashboard.html (subscribe /
+// manage billing buttons).
+const PENDING_PLAN_KEY = 'ciudadanoready-pending-plan';
+
+window.startCheckoutRedirect = async function startCheckoutRedirect(plan, buttonEl) {
+  if (typeof supabaseClient === 'undefined') return;
+  const original = buttonEl ? buttonEl.textContent : null;
+  if (buttonEl) {
+    buttonEl.disabled = true;
+    buttonEl.textContent = 'Redirecting to checkout…';
+  }
+  try {
+    const { data, error } = await supabaseClient.functions.invoke('create-checkout-session', {
+      body: { plan: plan },
+    });
+    if (error || !data || !data.url) {
+      throw new Error((data && data.error) || (error && error.message) || 'Could not start checkout.');
+    }
+    window.location.href = data.url;
+  } catch (err) {
+    if (buttonEl) {
+      buttonEl.disabled = false;
+      buttonEl.textContent = original;
+    }
+    alert((err && err.message) || 'Something went wrong starting checkout. Please try again.');
+  }
+};
+
+window.openBillingPortal = async function openBillingPortal(buttonEl) {
+  if (typeof supabaseClient === 'undefined') return;
+  const original = buttonEl ? buttonEl.textContent : null;
+  if (buttonEl) {
+    buttonEl.disabled = true;
+    buttonEl.textContent = 'Opening billing portal…';
+  }
+  try {
+    const { data, error } = await supabaseClient.functions.invoke('create-billing-portal-session', {});
+    if (error || !data || !data.url) {
+      throw new Error((data && data.error) || (error && error.message) || 'Could not open billing portal.');
+    }
+    window.location.href = data.url;
+  } catch (err) {
+    if (buttonEl) {
+      buttonEl.disabled = false;
+      buttonEl.textContent = original;
+    }
+    alert((err && err.message) || 'Something went wrong opening the billing portal. Please try again.');
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[data-lang-btn]').forEach((btn) => {
     btn.addEventListener('click', () => setLang(btn.getAttribute('data-lang-btn')));
@@ -133,14 +185,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Admins land in the admin panel; everyone else goes to their dashboard.
       let destination = 'dashboard.html';
+      let isAdmin = false;
       if (data && data.user) {
         const { data: profile } = await supabaseClient
           .from('profiles')
           .select('role')
           .eq('id', data.user.id)
           .single();
-        if (profile && profile.role === 'admin') destination = '/admin';
+        if (profile && profile.role === 'admin') {
+          destination = '/admin';
+          isAdmin = true;
+        }
       }
+
+      // If they picked a plan before confirming their email, send them
+      // straight to Stripe Checkout now instead of the dashboard.
+      let pendingPlan = null;
+      try { pendingPlan = localStorage.getItem(PENDING_PLAN_KEY); } catch (e) {}
+      if (pendingPlan && !isAdmin) {
+        try { localStorage.removeItem(PENDING_PLAN_KEY); } catch (e) {}
+        window.startCheckoutRedirect(pendingPlan);
+        return;
+      }
+
       window.location.href = destination;
     });
   }
@@ -286,10 +353,20 @@ function goToStep(stepNumber) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ---- Signup (real Supabase auth account + simulated payment) -----------
-// Card fields are never sent anywhere — no real payment processor is
-// connected yet. The email/password ARE real and create a real account.
+// ---- Signup (real Supabase auth account, then real Stripe Checkout) ----
 document.addEventListener('DOMContentLoaded', () => {
+  // Pre-select whichever plan the visitor clicked on the homepage/pricing
+  // section (?plan=monthly or ?plan=2year), if they landed here that way.
+  const planOptions = document.querySelectorAll('.plan-option');
+  if (planOptions.length) {
+    const requestedPlan = new URLSearchParams(window.location.search).get('plan');
+    if (requestedPlan === 'monthly' || requestedPlan === '2year') {
+      planOptions.forEach((p) => {
+        p.classList.toggle('selected', p.getAttribute('data-plan') === requestedPlan);
+      });
+    }
+  }
+
   const signupForm = document.querySelector('#signup-form');
   if (!signupForm || typeof supabaseClient === 'undefined') return;
 
@@ -342,12 +419,22 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    try { localStorage.setItem(PENDING_PLAN_KEY, plan); } catch (e) {}
+
+    // If email confirmation is off, Supabase hands back a live session
+    // immediately — skip straight to Stripe Checkout for the chosen plan.
+    if (data.session) {
+      try { localStorage.removeItem(PENDING_PLAN_KEY); } catch (e) {}
+      window.startCheckoutRedirect(plan, btn);
+      return;
+    }
+
     btn.disabled = false;
     btn.textContent = original;
 
     const successMsg = document.querySelector('#signup-success-message');
-    if (successMsg && !data.session) {
-      successMsg.textContent = 'Your account is set up. Check your email to confirm your address, then log in to start Stage 1: Eligibility.';
+    if (successMsg) {
+      successMsg.textContent = 'Your account is set up. Check your email to confirm your address, then log in to complete payment and start Stage 1: Eligibility.';
     }
 
     goToStep(3);
