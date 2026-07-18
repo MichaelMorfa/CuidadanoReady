@@ -379,18 +379,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const name = document.querySelector('#signup-name').value;
     const email = document.querySelector('#signup-email').value;
-    const emailConfirmField = document.querySelector('#signup-email-confirm');
-    const emailConfirm = emailConfirmField ? emailConfirmField.value : email;
-    const mismatchEl = document.querySelector('#signup-email-mismatch');
-
-    if (emailConfirmField && email.trim().toLowerCase() !== emailConfirm.trim().toLowerCase()) {
-      if (mismatchEl) mismatchEl.style.display = 'block';
-      emailConfirmField.classList.add('field-error');
-      emailConfirmField.focus();
-      return;
-    }
-    if (mismatchEl) mismatchEl.style.display = 'none';
-    if (emailConfirmField) emailConfirmField.classList.remove('field-error');
 
     btn.disabled = true;
     btn.textContent = 'Processing…';

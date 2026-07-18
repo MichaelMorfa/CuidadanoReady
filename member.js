@@ -158,7 +158,7 @@ async function initDashboard() {
 
   const { data: profile } = await supabaseClient
     .from('profiles')
-    .select('subscription_status, streak_count')
+    .select('subscription_status, streak_count, email, email_verified_at')
     .eq('id', userId)
     .single();
 
@@ -169,6 +169,32 @@ async function initDashboard() {
     return;
   }
   document.querySelector('#dashboard-billing-banner').style.display = 'none';
+
+  if (profile && !profile.email_verified_at) {
+    const verifyBanner = document.querySelector('#verify-email-banner');
+    const emailEl = document.querySelector('#verify-email-address');
+    const resendBtn = document.querySelector('#verify-email-resend-btn');
+    if (verifyBanner) {
+      verifyBanner.style.display = 'block';
+      if (emailEl) emailEl.textContent = profile.email || session.user.email || 'your email';
+      if (resendBtn) {
+        resendBtn.onclick = async () => {
+          const original = resendBtn.textContent;
+          resendBtn.disabled = true;
+          resendBtn.textContent = 'Sending…';
+          const { data: resendData, error: resendError } = await supabaseClient.rpc('resend_verification_email');
+          resendBtn.disabled = false;
+          if (resendError || !resendData || !resendData.ok) {
+            resendBtn.textContent = original;
+            alert((resendData && resendData.error) || (resendError && resendError.message) || 'Could not resend email.');
+          } else {
+            resendBtn.textContent = 'Sent!';
+            setTimeout(() => { resendBtn.textContent = original; }, 4000);
+          }
+        };
+      }
+    }
+  }
 
   const [{ data: lessons }, { data: progressRows }] = await Promise.all([
     supabaseClient.from('lessons').select('*').eq('published', true).order('module_number').order('sort_order'),

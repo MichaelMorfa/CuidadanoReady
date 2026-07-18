@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verify Your Email — Ciudadano Ready</title>
+<meta name="robots" content="noindex">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav">
+    <a href="index.html" class="logo">Ciudadano<span class="dot">Ready</span></a>
+    <div class="nav-right"></div>
+  </nav>
+</header>
+
+<section class="section text-center">
+  <div class="container" style="max-width:520px;">
+    <div class="stamp-circle" id="verify-icon" style="width:88px; height:88px; font-size:1.6rem; margin:0 auto 24px; border-width:3px;">…</div>
+    <h1 id="verify-title">Verifying your email…</h1>
+    <p class="small" id="verify-message" style="font-size:1.05rem;">One moment while we confirm your link.</p>
+    <div style="margin-top:28px;">
+      <a href="dashboard.html" class="btn btn-primary" id="verify-cta" style="display:none;">Go to My Dashboard →</a>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-disclaimer">
+      <strong>Legal disclaimer:</strong> Ciudadano Ready is an independent test-prep resource and is not a law firm. Nothing on this site constitutes legal advice. For legal advice about your immigration case, please contact a licensed immigration attorney.
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Ciudadano Ready. All rights reserved.</span>
+      <span><a href="terms.html">Terms</a> · <a href="privacy-policy.html">Privacy</a></span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script>
+  (async function () {
+    const iconEl = document.querySelector('#verify-icon');
+    const titleEl = document.querySelector('#verify-title');
+    const messageEl = document.querySelector('#verify-message');
+    const ctaEl = document.querySelector('#verify-cta');
+    const token = new URLSearchParams(window.location.search).get('token');
+
+    if (!token) {
+      iconEl.textContent = '✕';
+      iconEl.style.background = 'var(--danger)';
+      iconEl.style.borderColor = 'var(--danger)';
+      titleEl.textContent = 'Missing verification link';
+      messageEl.textContent = 'This page needs a verification token — please use the link from your email.';
+      ctaEl.style.display = 'inline-flex';
+      return;
+    }
+
+    const { data, error } = await supabaseClient.rpc('verify_email', { p_token: token });
+
+    if (error || !data || !data.ok) {
+      iconEl.textContent = '✕';
+      iconEl.style.background = 'var(--danger)';
+      iconEl.style.borderColor = 'var(--danger)';
+      titleEl.textContent = 'Could not verify email';
+      messageEl.textContent = (data && data.error) || 'This link may be invalid or expired. You can request a new one from your dashboard.';
+      ctaEl.style.display = 'inline-flex';
+      return;
+    }
+
+    iconEl.textContent = '✓';
+    iconEl.style.background = 'var(--forest)';
+    iconEl.style.borderColor = 'var(--forest)';
+    titleEl.textContent = 'Email verified!';
+    messageEl.textContent = 'Your email address is confirmed. Thanks for helping keep your account secure.';
+    ctaEl.style.display = 'inline-flex';
+  })();
+</script>
+</body>
+</html>

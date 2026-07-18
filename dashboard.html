@@ -88,6 +88,16 @@
 
       <div id="dashboard-checkout-notice" class="card card-pad" style="display:none; margin-bottom:20px;"></div>
 
+      <div id="verify-email-banner" class="card card-pad" style="display:none; margin-bottom:20px; border-color: var(--ocean);">
+        <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:12px;">
+          <div>
+            <strong>Verify your email to secure your account.</strong>
+            <p class="small" style="margin:4px 0 0;">We sent a verification link to <span id="verify-email-address">your email</span>. Check your inbox or resend the email.</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="verify-email-resend-btn">Resend Email</button>
+        </div>
+      </div>
+
       <div id="dashboard-billing-banner" style="display:none;">
         <div class="card card-pad text-center" style="max-width:560px; margin:0 auto;">
           <span class="eyebrow" id="billing-banner-eyebrow">FINISH SIGNING UP</span>
