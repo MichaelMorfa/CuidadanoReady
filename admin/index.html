@@ -133,12 +133,20 @@
               <input type="number" id="lesson-sort" value="1" min="1">
             </div>
             <div class="span-2">
-              <label>Lesson Title</label>
+              <label>Lesson Title (English)</label>
               <input type="text" id="lesson-title" placeholder="e.g. What counts as continuous residency" required>
             </div>
             <div class="span-2">
-              <label>Content</label>
-              <textarea id="lesson-content" placeholder="Lesson text/notes…"></textarea>
+              <label>Content (English)</label>
+              <textarea id="lesson-content" placeholder="Lesson text/notes… (separate bullet lines with • and blank lines between paragraphs)"></textarea>
+            </div>
+            <div class="span-2">
+              <label>Título de la lección (Spanish — optional)</label>
+              <input type="text" id="lesson-title-es" placeholder="Se usará el inglés si se deja en blanco">
+            </div>
+            <div class="span-2">
+              <label>Contenido (Spanish — optional)</label>
+              <textarea id="lesson-content-es" placeholder="Se usará el inglés si se deja en blanco"></textarea>
             </div>
             <div>
               <label>Video URL (optional)</label>
@@ -179,24 +187,44 @@
               <input type="number" id="quiz-sort" value="1" min="1">
             </div>
             <div class="span-2">
-              <label>Question</label>
+              <label>Question (English)</label>
               <input type="text" id="quiz-question" placeholder="e.g. What is the supreme law of the land?" required>
             </div>
             <div>
-              <label>Choice A</label>
+              <label>Choice A (English)</label>
               <input type="text" id="quiz-choice-a" required>
             </div>
             <div>
-              <label>Choice B</label>
+              <label>Choice B (English)</label>
               <input type="text" id="quiz-choice-b" required>
             </div>
             <div>
-              <label>Choice C</label>
+              <label>Choice C (English)</label>
               <input type="text" id="quiz-choice-c" required>
             </div>
             <div>
-              <label>Choice D</label>
+              <label>Choice D (English)</label>
               <input type="text" id="quiz-choice-d" required>
+            </div>
+            <div class="span-2">
+              <label>Pregunta (Spanish — optional)</label>
+              <input type="text" id="quiz-question-es" placeholder="Se usará el inglés si se deja en blanco">
+            </div>
+            <div>
+              <label>Opción A (Spanish)</label>
+              <input type="text" id="quiz-choice-a-es">
+            </div>
+            <div>
+              <label>Opción B (Spanish)</label>
+              <input type="text" id="quiz-choice-b-es">
+            </div>
+            <div>
+              <label>Opción C (Spanish)</label>
+              <input type="text" id="quiz-choice-c-es">
+            </div>
+            <div>
+              <label>Opción D (Spanish)</label>
+              <input type="text" id="quiz-choice-d-es">
             </div>
             <div>
               <label>Correct Choice</label>

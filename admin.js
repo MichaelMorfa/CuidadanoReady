@@ -257,6 +257,8 @@ document.addEventListener('DOMContentLoaded', () => {
       sort_order: Number(document.querySelector('#lesson-sort').value) || 1,
       title: document.querySelector('#lesson-title').value,
       content: document.querySelector('#lesson-content').value,
+      title_es: document.querySelector('#lesson-title-es').value || null,
+      content_es: document.querySelector('#lesson-content-es').value || null,
       video_url: document.querySelector('#lesson-video').value || null,
       published: document.querySelector('#lesson-published').checked,
     };
@@ -287,6 +289,8 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelector('#lesson-sort').value = data.sort_order;
       document.querySelector('#lesson-title').value = data.title;
       document.querySelector('#lesson-content').value = data.content || '';
+      document.querySelector('#lesson-title-es').value = data.title_es || '';
+      document.querySelector('#lesson-content-es').value = data.content_es || '';
       document.querySelector('#lesson-video').value = data.video_url || '';
       document.querySelector('#lesson-published').checked = !!data.published;
       document.querySelector('#lesson-submit').textContent = 'Save Changes';
@@ -368,6 +372,11 @@ document.addEventListener('DOMContentLoaded', () => {
       choice_b: document.querySelector('#quiz-choice-b').value,
       choice_c: document.querySelector('#quiz-choice-c').value,
       choice_d: document.querySelector('#quiz-choice-d').value,
+      question_es: document.querySelector('#quiz-question-es').value || null,
+      choice_a_es: document.querySelector('#quiz-choice-a-es').value || null,
+      choice_b_es: document.querySelector('#quiz-choice-b-es').value || null,
+      choice_c_es: document.querySelector('#quiz-choice-c-es').value || null,
+      choice_d_es: document.querySelector('#quiz-choice-d-es').value || null,
       correct_choice: document.querySelector('#quiz-correct').value,
       published: document.querySelector('#quiz-published').checked,
     };
@@ -401,6 +410,11 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelector('#quiz-choice-b').value = data.choice_b;
       document.querySelector('#quiz-choice-c').value = data.choice_c;
       document.querySelector('#quiz-choice-d').value = data.choice_d;
+      document.querySelector('#quiz-question-es').value = data.question_es || '';
+      document.querySelector('#quiz-choice-a-es').value = data.choice_a_es || '';
+      document.querySelector('#quiz-choice-b-es').value = data.choice_b_es || '';
+      document.querySelector('#quiz-choice-c-es').value = data.choice_c_es || '';
+      document.querySelector('#quiz-choice-d-es').value = data.choice_d_es || '';
       document.querySelector('#quiz-correct').value = data.correct_choice;
       document.querySelector('#quiz-published').checked = !!data.published;
       document.querySelector('#quiz-submit').textContent = 'Save Changes';

@@ -16,7 +16,22 @@ function setLang(lang) {
   });
   document.documentElement.setAttribute('lang', lang);
   try { localStorage.setItem('ciudadanoready-lang', lang); } catch (e) {}
+  // Let dynamically-rendered content (lesson/quiz text pulled from the
+  // database, built by member.js) know it should re-render in the new
+  // language without needing a full page reload.
+  window.dispatchEvent(new CustomEvent('ciudadanoready:langchange', { detail: { lang } }));
 }
+
+// Returns the currently active site language ('en' or 'es'), restoring
+// whatever the visitor last picked so it persists across page loads.
+function getCurrentLang() {
+  try {
+    const saved = localStorage.getItem('ciudadanoready-lang');
+    if (saved === 'en' || saved === 'es') return saved;
+  } catch (e) {}
+  return 'en';
+}
+window.getCurrentLang = getCurrentLang;
 
 // ---- Stripe checkout / billing portal helpers ---------------------------
 // Used by dashboard.html's billing banner (resubscribe / upgrade for an
@@ -69,6 +84,10 @@ window.openBillingPortal = async function openBillingPortal(buttonEl) {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Restore whichever language the visitor picked last time, so it
+  // persists across pages instead of resetting to English on every load.
+  setLang(getCurrentLang());
+
   document.querySelectorAll('[data-lang-btn]').forEach((btn) => {
     btn.addEventListener('click', () => setLang(btn.getAttribute('data-lang-btn')));
   });

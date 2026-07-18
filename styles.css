@@ -586,3 +586,19 @@ tr:last-child td { border-bottom: none; }
 .mb-0 { margin-bottom: 0; }
 .muted { color: var(--slate); }
 .small { font-size: 0.85rem; }
+
+/* ---- Lesson body content (dynamic, bilingual) -------------------------- */
+#lesson-content p {
+  color: var(--slate);
+  line-height: 1.7;
+  margin: 0 0 18px;
+}
+#lesson-content .lesson-list {
+  margin: 0 0 20px;
+  padding-left: 22px;
+  color: var(--slate);
+  line-height: 1.6;
+}
+#lesson-content .lesson-list li {
+  margin-bottom: 10px;
+}
