@@ -23,6 +23,15 @@ const MODULE_NAMES = {
   7: { en: 'Oath Ceremony', es: 'Ceremonia de Juramentación' },
 };
 
+// Bilingual words used inside JS-generated dashboard strings (e.g.
+// "Stage 3: N-400 Application · Lesson 1 of 2") that data-en/data-es
+// attributes can't reach since they're built at render time, not
+// present in the static HTML.
+const DASHBOARD_LABELS = {
+  en: { stage: 'Stage', lesson: 'Lesson', of: 'of', complete: 'Course complete! 🎉', keepGoing: 'Keep it going!', startStreak: 'Complete a lesson to start your streak' },
+  es: { stage: 'Etapa', lesson: 'Lección', of: 'de', complete: '¡Curso completado! 🎉', keepGoing: '¡Sigue así!', startStreak: 'Completa una lección para comenzar tu racha' },
+};
+
 function moduleName(m) {
   const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
   const entry = MODULE_NAMES[m];
@@ -101,11 +110,13 @@ function renderStampPath(selector, lessons, completedIds, currentLesson, small) 
 function renderModuleNav(selector, lessons, completedIds, expandLesson) {
   const nav = document.querySelector(selector);
   if (!nav) return;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const comingSoon = lang === 'es' ? 'Próximamente' : 'Coming soon';
   let html = '';
   for (let m = 1; m <= TOTAL_MODULES; m++) {
     const moduleLessons = lessons.filter((l) => l.module_number === m);
     if (!moduleLessons.length) {
-      html += `<li style="padding:10px 24px; font-size:0.92rem; color:var(--slate);">${m}. ${escapeHtml(moduleName(m))} <span class="small muted">— Coming soon</span></li>`;
+      html += `<li style="padding:10px 24px; font-size:0.92rem; color:var(--slate);">${m}. ${escapeHtml(moduleName(m))} <span class="small muted">— ${comingSoon}</span></li>`;
       continue;
     }
     const allDone = moduleLessons.every((l) => completedIds.has(l.id));
@@ -228,22 +239,32 @@ let dashboardCache = null;
 
 function renderDashboard() {
   if (!dashboardCache) return;
-  const { lessons, completedIds } = dashboardCache;
+  const { lessons, completedIds, streak } = dashboardCache;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const dl = (DASHBOARD_LABELS[lang] || DASHBOARD_LABELS.en);
 
   const currentLesson = lessons.find((l) => !completedIds.has(l.id));
   if (currentLesson) {
     const moduleLessons = lessons.filter((l) => l.module_number === currentLesson.module_number);
     const idxInModule = moduleLessons.findIndex((l) => l.id === currentLesson.id) + 1;
-    document.querySelector('#stat-current-stage').textContent = `Stage ${currentLesson.module_number}: ${moduleName(currentLesson.module_number)}`;
-    document.querySelector('#stat-current-lesson-count').textContent = `Lesson ${idxInModule} of ${moduleLessons.length}`;
+    document.querySelector('#stat-current-stage').textContent = `${dl.stage} ${currentLesson.module_number}: ${moduleName(currentLesson.module_number)}`;
+    document.querySelector('#stat-current-lesson-count').textContent = `${dl.lesson} ${idxInModule} ${dl.of} ${moduleLessons.length}`;
     document.querySelector('#continue-lesson-title').textContent = localize(currentLesson, 'title');
-    document.querySelector('#continue-lesson-meta').textContent = `Stage ${currentLesson.module_number}: ${moduleName(currentLesson.module_number)} · Lesson ${idxInModule} of ${moduleLessons.length}`;
+    document.querySelector('#continue-lesson-meta').textContent = `${dl.stage} ${currentLesson.module_number}: ${moduleName(currentLesson.module_number)} · ${dl.lesson} ${idxInModule} ${dl.of} ${moduleLessons.length}`;
     document.querySelector('#continue-lesson-link').setAttribute('href', 'lesson.html?id=' + currentLesson.id);
     document.querySelector('#dashboard-continue-card').style.display = 'block';
   } else {
-    document.querySelector('#stat-current-stage').textContent = 'Course complete! 🎉';
+    document.querySelector('#stat-current-stage').textContent = dl.complete;
     document.querySelector('#stat-current-lesson-count').textContent = '';
     document.querySelector('#dashboard-continue-card').style.display = 'none';
+  }
+
+  if (typeof streak === 'number') {
+    const dayWord = lang === 'es' ? 'días' : (streak === 1 ? 'day' : 'days');
+    const streakEl = document.querySelector('#stat-streak');
+    if (streakEl) streakEl.textContent = streak + ' ' + dayWord;
+    const streakNote = document.querySelector('#stat-streak-note');
+    if (streakNote) streakNote.textContent = streak > 0 ? dl.keepGoing : dl.startStreak;
   }
 
   renderStampPath('#dashboard-stamp-path', lessons, completedIds, currentLesson, false);
@@ -324,10 +345,7 @@ async function initDashboard() {
   document.querySelector('#stat-progress-bar').style.width = pct + '%';
 
   const streak = (profile && profile.streak_count) || 0;
-  document.querySelector('#stat-streak').textContent = streak + (streak === 1 ? ' day' : ' days');
-  document.querySelector('#stat-streak-note').textContent = streak > 0 ? 'Keep it going!' : 'Complete a lesson to start your streak';
-
-  dashboardCache = { lessons, completedIds };
+  dashboardCache = { lessons, completedIds, streak };
   renderDashboard();
 }
 
@@ -339,7 +357,12 @@ function renderLessonPage() {
   if (!lessonCache) return;
   const { lessons, lesson, completedIds, quizQs, userId } = lessonCache;
 
-  document.querySelector('#lesson-stage-eyebrow').textContent = `STAGE ${lesson.module_number} OF ${TOTAL_MODULES}`;
+  const pageLang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const stageWord = pageLang === 'es' ? 'ETAPA' : 'STAGE';
+  const ofWord = pageLang === 'es' ? 'DE' : 'OF';
+  const lessonWord = pageLang === 'es' ? 'LECCIÓN' : 'LESSON';
+
+  document.querySelector('#lesson-stage-eyebrow').textContent = `${stageWord} ${lesson.module_number} ${ofWord} ${TOTAL_MODULES}`;
   document.querySelector('#lesson-stage-title').textContent = moduleName(lesson.module_number);
   document.title = `Stage ${lesson.module_number}: ${moduleName(lesson.module_number)} — Ciudadano Ready`;
 
@@ -347,7 +370,7 @@ function renderLessonPage() {
 
   const moduleLessons = lessons.filter((l) => l.module_number === lesson.module_number);
   const idxInModule = moduleLessons.findIndex((l) => l.id === lesson.id);
-  document.querySelector('#lesson-badge').textContent = `LESSON ${idxInModule + 1} OF ${moduleLessons.length}`;
+  document.querySelector('#lesson-badge').textContent = `${lessonWord} ${idxInModule + 1} ${ofWord} ${moduleLessons.length}`;
   document.querySelector('#lesson-title-h1').textContent = localize(lesson, 'title');
 
   document.querySelector('#lesson-content').innerHTML = renderLessonBody(localize(lesson, 'content'));

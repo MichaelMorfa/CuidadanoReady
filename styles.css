@@ -50,6 +50,14 @@ h1 { font-size: 2.75rem; font-weight: 700; }
 h2 { font-size: 2rem; }
 h3 { font-size: 1.3rem; }
 
+/* h4 isn't covered by the reset above, so it was falling back to the
+   browser's default ~1.33em top+bottom margin wherever it's used
+   (sidebar group headings, footer headings) — inconsistent spacing on
+   top of whatever each usage explicitly set. Zero it here; individual
+   rules (.app-nav-group h4, .footer-grid h4) still control their own
+   bottom margin. */
+h4 { margin: 0; font-family: var(--font-sans); }
+
 p { margin: 0 0 1em; color: var(--slate); }
 
 a { color: var(--ocean); text-decoration: none; }

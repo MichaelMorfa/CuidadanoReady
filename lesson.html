@@ -31,6 +31,12 @@
   .check.done { background: var(--forest); border-color: var(--forest); color:var(--white); }
   .video-embed { aspect-ratio: 16/9; border-radius: var(--radius); overflow:hidden; margin-bottom:28px; }
   .video-embed iframe { width:100%; height:100%; border:0; display:block; }
+
+  /* Sidebar group headings (h4) were inheriting the browser's default
+     top margin (h4 isn't covered by the global h1–h3 reset in
+     styles.css), which pushed "Overview" up into the logo's
+     border-bottom line. Zero it out explicitly. */
+  .app-nav-group h4 { margin: 0 0 8px; }
 </style>
 <meta name="description" content="A Ciudadano Ready lesson.">
 <meta name="robots" content="noindex">
@@ -56,23 +62,23 @@
     <a href="dashboard.html" class="logo">Ciudadano<span class="dot">Ready</span></a>
     <ul class="app-nav">
       <li class="app-nav-group">
-        <h4>Overview</h4>
-        <a href="dashboard.html">Continue Learning</a>
+        <h4 data-en="Overview" data-es="Resumen">Overview</h4>
+        <a href="dashboard.html" data-en="Continue Learning" data-es="Continuar Aprendiendo">Continue Learning</a>
       </li>
       <li class="app-nav-group">
-        <h4>Modules</h4>
+        <h4 data-en="Modules" data-es="Módulos">Modules</h4>
         <ul class="app-nav" id="lesson-module-nav" style="padding:0;">
           <li class="small muted" style="padding:10px 24px;">Loading…</li>
         </ul>
       </li>
       <li class="app-nav-group">
-        <h4>Practice</h4>
-        <a href="flashcards.html">Flashcards</a>
-        <a href="practice-quiz.html">Practice Interview</a>
+        <h4 data-en="Practice" data-es="Práctica">Practice</h4>
+        <a href="flashcards.html" data-en="Flashcards" data-es="Tarjetas de Estudio">Flashcards</a>
+        <a href="practice-quiz.html" data-en="Practice Interview" data-es="Entrevista de Práctica">Practice Interview</a>
       </li>
       <li class="app-nav-group">
-        <h4>More</h4>
-        <a href="contact.html">Support</a>
+        <h4 data-en="More" data-es="Más">More</h4>
+        <a href="contact.html" data-en="Support" data-es="Soporte">Support</a>
       </li>
     </ul>
   </aside>
@@ -91,7 +97,7 @@
           <button data-lang-btn="en" class="active">EN</button>
           <button data-lang-btn="es">ES</button>
         </div>
-        <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link">Log Out</a>
+        <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link" data-en="Log Out" data-es="Cerrar Sesión">Log Out</a>
       </div>
     </div>
 
@@ -114,18 +120,18 @@
         <div class="video-embed" id="lesson-video-wrap" style="display:none;"></div>
 
         <div class="card card-pad" style="margin-bottom:28px;">
-          <h3>Study Guide</h3>
+          <h3 data-en="Study Guide" data-es="Guía de Estudio">Study Guide</h3>
           <div id="lesson-content"></div>
         </div>
 
         <div id="lesson-quiz-section" style="display:none;">
-          <h3>Stage Quiz</h3>
+          <h3 data-en="Stage Quiz" data-es="Cuestionario de la Etapa">Stage Quiz</h3>
           <div id="lesson-quiz-wrap" style="margin-bottom:28px;"></div>
         </div>
 
         <div class="flex justify-between">
-          <a href="#" class="btn btn-ghost" id="lesson-prev-link">← Previous Lesson</a>
-          <a href="#" class="btn btn-primary" id="lesson-next-link">Mark Complete & Continue →</a>
+          <a href="#" class="btn btn-ghost" id="lesson-prev-link" data-en="← Previous Lesson" data-es="← Lección Anterior">← Previous Lesson</a>
+          <a href="#" class="btn btn-primary" id="lesson-next-link">Mark Complete &amp; Continue →</a>
         </div>
       </div>
 

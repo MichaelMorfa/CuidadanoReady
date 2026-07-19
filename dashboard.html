@@ -24,6 +24,19 @@
   .stamp-circle.done { background: var(--forest); border-color: var(--forest); }
   .stamp-connector.done { background: var(--forest); }
   .badge-ocean { border-color: var(--forest); color: var(--forest); }
+
+  /* Sidebar group headings (h4) were inheriting the browser's default
+     top margin (h4 isn't covered by the global h1–h3 reset in
+     styles.css), which pushed "Overview" up into the logo's
+     border-bottom line. Zero it out explicitly. */
+  .app-nav-group h4 { margin: 0 0 8px; }
+
+  /* "Your Path" stretch: circles stay a fixed size, but the connecting
+     lines grow to fill the full card width instead of leaving a gap on
+     the right — matches how it already looks in Spanish, where longer
+     module-name labels happened to push the row wider. */
+  #dashboard-stamp-path { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+  #dashboard-stamp-path .stamp-connector { flex: 1 1 auto; min-width: 16px; }
 </style>
 <meta name="description" content="Your Ciudadano Ready member dashboard.">
 <meta name="robots" content="noindex">
@@ -50,23 +63,23 @@
     <a href="dashboard.html" class="logo">Ciudadano<span class="dot">Ready</span></a>
     <ul class="app-nav">
       <li class="app-nav-group">
-        <h4>Overview</h4>
-        <a href="dashboard.html" class="active">Continue Learning</a>
+        <h4 data-en="Overview" data-es="Resumen">Overview</h4>
+        <a href="dashboard.html" class="active" data-en="Continue Learning" data-es="Continuar Aprendiendo">Continue Learning</a>
       </li>
       <li class="app-nav-group">
-        <h4>Modules</h4>
+        <h4 data-en="Modules" data-es="Módulos">Modules</h4>
         <ul class="app-nav" id="dashboard-module-nav" style="padding:0;">
           <li class="small muted" style="padding:10px 24px;">Loading…</li>
         </ul>
       </li>
       <li class="app-nav-group">
-        <h4>Practice</h4>
-        <a href="flashcards.html">Flashcards</a>
-        <a href="practice-quiz.html">Practice Interview</a>
+        <h4 data-en="Practice" data-es="Práctica">Practice</h4>
+        <a href="flashcards.html" data-en="Flashcards" data-es="Tarjetas de Estudio">Flashcards</a>
+        <a href="practice-quiz.html" data-en="Practice Interview" data-es="Entrevista de Práctica">Practice Interview</a>
       </li>
       <li class="app-nav-group">
-        <h4>More</h4>
-        <a href="contact.html">Support</a>
+        <h4 data-en="More" data-es="Más">More</h4>
+        <a href="contact.html" data-en="Support" data-es="Soporte">Support</a>
       </li>
     </ul>
   </aside>
@@ -76,7 +89,7 @@
       <div class="flex gap-16 items-center">
         <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
         <div>
-          <span class="eyebrow" style="margin-bottom:0;">WELCOME BACK</span>
+          <span class="eyebrow" style="margin-bottom:0;" data-en="WELCOME BACK" data-es="BIENVENIDO DE NUEVO">WELCOME BACK</span>
           <h3 style="margin:0;" id="dashboard-user-name">…</h3>
         </div>
       </div>
@@ -85,7 +98,7 @@
           <button data-lang-btn="en" class="active">EN</button>
           <button data-lang-btn="es">ES</button>
         </div>
-        <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link">Log Out</a>
+        <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link" data-en="Log Out" data-es="Cerrar Sesión">Log Out</a>
       </div>
     </div>
 
@@ -126,23 +139,23 @@
 
       <div id="dashboard-main-content" style="display:none;">
         <div class="grid grid-3" style="margin-bottom:28px;">
-          <div class="card stat-card"><span class="eyebrow">OVERALL PROGRESS</span><div class="stat-value" id="stat-progress-pct">0%</div><div class="progress-bar" style="margin-top:10px;"><div class="progress-bar-fill" id="stat-progress-bar" style="width:0%;"></div></div></div>
-          <div class="card stat-card"><span class="eyebrow">CURRENT STAGE</span><div class="stat-value" style="font-size:1.4rem;" id="stat-current-stage">—</div><span class="stat-delta" id="stat-current-lesson-count"></span></div>
-          <div class="card stat-card"><span class="eyebrow">PRACTICE STREAK</span><div class="stat-value" id="stat-streak">0 days</div><span class="stat-delta" id="stat-streak-note">Complete a lesson to start your streak</span></div>
+          <div class="card stat-card"><span class="eyebrow" data-en="OVERALL PROGRESS" data-es="PROGRESO GENERAL">OVERALL PROGRESS</span><div class="stat-value" id="stat-progress-pct">0%</div><div class="progress-bar" style="margin-top:10px;"><div class="progress-bar-fill" id="stat-progress-bar" style="width:0%;"></div></div></div>
+          <div class="card stat-card"><span class="eyebrow" data-en="CURRENT STAGE" data-es="ETAPA ACTUAL">CURRENT STAGE</span><div class="stat-value" style="font-size:1.4rem;" id="stat-current-stage">—</div><span class="stat-delta" id="stat-current-lesson-count"></span></div>
+          <div class="card stat-card"><span class="eyebrow" data-en="PRACTICE STREAK" data-es="RACHA DE PRÁCTICA">PRACTICE STREAK</span><div class="stat-value" id="stat-streak">0 days</div><span class="stat-delta" id="stat-streak-note" data-en="Complete a lesson to start your streak" data-es="Completa una lección para comenzar tu racha">Complete a lesson to start your streak</span></div>
         </div>
 
         <div class="card card-pad" style="margin-bottom:28px;" id="dashboard-continue-card">
-          <span class="eyebrow">CONTINUE LEARNING</span>
+          <span class="eyebrow" data-en="CONTINUE LEARNING" data-es="CONTINUAR APRENDIENDO">CONTINUE LEARNING</span>
           <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:16px;">
             <div>
               <h3 style="margin-bottom:4px;" id="continue-lesson-title">—</h3>
               <p class="small" style="margin:0;" id="continue-lesson-meta"></p>
             </div>
-            <a href="#" class="btn btn-primary" id="continue-lesson-link">Resume Lesson →</a>
+            <a href="#" class="btn btn-primary" id="continue-lesson-link" data-en="Resume Lesson →" data-es="Reanudar Lección →">Resume Lesson →</a>
           </div>
         </div>
 
-        <h3>Your Path</h3>
+        <h3 data-en="Your Path" data-es="Tu Camino">Your Path</h3>
         <div class="stamp-path" style="margin-bottom:32px; row-gap:16px;" id="dashboard-stamp-path"></div>
       </div>
 
