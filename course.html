@@ -16,6 +16,12 @@
   }
   .lock-badge svg { width: 15px; height: 15px; }
   .stage-card { position: relative; }
+
+  /* Stretch the stage-path connectors to fill the card instead of
+     bunching up on the left with empty space on the right — circles
+     stay a fixed size, the connecting lines grow to fill the gap. */
+  #course-stamp-path { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+  #course-stamp-path .stamp-connector { flex: 1 1 auto; min-width: 12px; }
 </style>
 <meta name="description" content="Seven stages, one clear path to citizenship. See everything the Ciudadano Ready course covers.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -92,7 +98,7 @@
     <p style="max-width:540px;" data-en="Here's everything the course covers. Lessons, videos, and practice quizzes unlock once you create your account." data-es="Esto es todo lo que cubre el curso. Las lecciones, videos y cuestionarios de práctica se desbloquean al crear tu cuenta.">Here's everything the course covers. Lessons, videos, and practice quizzes unlock once you create your account.</p>
 
     <div class="card card-pad" style="margin:28px 0;">
-      <div class="stamp-path" style="row-gap:20px;">
+      <div class="stamp-path" id="course-stamp-path" style="row-gap:20px;">
         <div class="stamp-item"><div class="stamp-circle">1</div><span class="stamp-label" data-en="Welcome" data-es="Bienvenida">Welcome</span></div>
         <div class="stamp-connector"></div>
         <div class="stamp-item"><div class="stamp-circle">2</div><span class="stamp-label" data-en="Eligibility" data-es="Elegibilidad">Eligibility</span></div>

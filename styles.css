@@ -279,6 +279,13 @@ img { max-width: 100%; display: block; }
 .stamp-path.small .stamp-circle { width: 28px; height: 28px; font-size: 0.65rem; }
 .stamp-path.small .stamp-connector { width: 20px; }
 
+/* Stretch the connecting lines to fill the full width of the roadmap
+   card instead of bunching up on the left — circles stay a fixed size,
+   the connectors grow to fill whatever space is left. Used by the
+   homepage hero roadmap. */
+#hero-stamp-path { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+#hero-stamp-path .stamp-connector { flex: 1 1 auto; min-width: 12px; }
+
 /* --------------------------------------------------------------------
    Cards
    -------------------------------------------------------------------- */
