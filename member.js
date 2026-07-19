@@ -469,10 +469,158 @@ async function initLessonPage() {
   renderLessonPage();
 }
 
+// ---- Flashcards page ----------------------------------------------------
+// Study UI for the 3 official USCIS civics-test question banks
+// (100-question 2008 version, 128-question 2025 version, 20-question
+// 65/20 special-consideration subset). Purely client-side study tool —
+// no progress is written to the database, just an in-memory deck with
+// flip / next / prev / shuffle. Cached so a language toggle re-renders
+// the current card in place instead of losing your spot in the deck.
+const FLASHCARD_TEST_LABELS = {
+  test_100: { en: '100-QUESTION TEST', es: 'PRUEBA DE 100 PREGUNTAS' },
+  test_128: { en: '128-QUESTION TEST', es: 'PRUEBA DE 128 PREGUNTAS' },
+  test_20: { en: '20-QUESTION TEST (65/20)', es: 'PRUEBA DE 20 PREGUNTAS (65/20)' },
+};
+
+let flashcardsCache = null; // { testType, cards, order: [idx...], pos, flipped }
+
+function renderFlashcardsStudy() {
+  if (!flashcardsCache) return;
+  const { testType, cards, order, pos, flipped } = flashcardsCache;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const card = cards[order[pos]];
+
+  const badge = document.querySelector('#fc-active-test-badge');
+  if (badge) {
+    const labelEntry = FLASHCARD_TEST_LABELS[testType] || FLASHCARD_TEST_LABELS.test_100;
+    badge.textContent = labelEntry[lang] || labelEntry.en;
+  }
+  const progressText = document.querySelector('#fc-progress-text');
+  if (progressText) progressText.textContent = `${pos + 1} / ${order.length}`;
+
+  document.querySelector('#fc-question-text').textContent = localize(card, 'question');
+
+  const answerList = document.querySelector('#fc-answer-list');
+  if (answerList) {
+    const answerLines = (localize(card, 'answer') || '').split('\n').map((l) => l.trim()).filter(Boolean);
+    answerList.innerHTML = answerLines.map((l) => `<li>${escapeHtml(l)}</li>`).join('');
+  }
+
+  const flipEl = document.querySelector('#fc-flip-card');
+  if (flipEl) flipEl.classList.toggle('flipped', !!flipped);
+
+  const prevBtn = document.querySelector('#fc-prev-btn');
+  if (prevBtn) prevBtn.disabled = pos === 0;
+  const nextBtn = document.querySelector('#fc-next-btn');
+  if (nextBtn) nextBtn.textContent = ''; // rebuilt below with bilingual span, so just clear stale text nodes
+  if (nextBtn) {
+    const label = lang === 'es' ? 'Siguiente' : 'Next';
+    nextBtn.innerHTML = `<span data-en="Next" data-es="Siguiente">${escapeHtml(label)}</span> →`;
+  }
+}
+
+function startFlashcardsDeck(testType, cards) {
+  const order = cards.map((_, i) => i);
+  flashcardsCache = { testType, cards, order, pos: 0, flipped: false };
+  document.querySelector('#fc-picker-view').style.display = 'none';
+  document.querySelector('#fc-study-view').style.display = 'block';
+  renderFlashcardsStudy();
+}
+
+async function initFlashcardsPage() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  const userId = session.user.id;
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('subscription_status')
+    .eq('id', userId)
+    .single();
+  const hasAccess = profile && ['active', 'trial', 'comp'].includes(profile.subscription_status);
+  if (!hasAccess) {
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  // Sidebar module nav, same as dashboard/lesson pages.
+  const { data: lessons } = await supabaseClient.from('lessons').select('*').eq('published', true).order('module_number').order('sort_order');
+  const { data: progressRows } = await supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId);
+  const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
+  renderModuleNav('#fc-page-module-nav', lessons || [], completedIds, null);
+
+  // Picker: clicking a test-type card fetches that bank and starts the deck.
+  document.querySelectorAll('.fc-picker-card').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const testType = btn.getAttribute('data-test-type');
+      btn.setAttribute('aria-busy', 'true');
+      const { data: cards, error } = await supabaseClient
+        .from('flashcards')
+        .select('*')
+        .eq('test_type', testType)
+        .eq('published', true)
+        .order('sort_order');
+      btn.removeAttribute('aria-busy');
+      if (error || !cards || !cards.length) {
+        alert('Could not load flashcards. Please try again.');
+        return;
+      }
+      history.replaceState(null, '', 'flashcards.html?type=' + testType);
+      startFlashcardsDeck(testType, cards);
+    });
+  });
+
+  document.querySelector('#fc-back-to-picker').addEventListener('click', () => {
+    flashcardsCache = null;
+    history.replaceState(null, '', 'flashcards.html');
+    document.querySelector('#fc-study-view').style.display = 'none';
+    document.querySelector('#fc-picker-view').style.display = 'block';
+  });
+
+  document.querySelector('#fc-flip-card').addEventListener('click', () => {
+    if (!flashcardsCache) return;
+    flashcardsCache.flipped = !flashcardsCache.flipped;
+    renderFlashcardsStudy();
+  });
+  document.querySelector('#fc-flip-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!flashcardsCache) return;
+    flashcardsCache.flipped = !flashcardsCache.flipped;
+    renderFlashcardsStudy();
+  });
+  document.querySelector('#fc-prev-btn').addEventListener('click', () => {
+    if (!flashcardsCache || flashcardsCache.pos === 0) return;
+    flashcardsCache.pos -= 1;
+    flashcardsCache.flipped = false;
+    renderFlashcardsStudy();
+  });
+  document.querySelector('#fc-next-btn').addEventListener('click', () => {
+    if (!flashcardsCache) return;
+    flashcardsCache.pos = (flashcardsCache.pos + 1) % flashcardsCache.order.length;
+    flashcardsCache.flipped = false;
+    renderFlashcardsStudy();
+  });
+  document.querySelector('#fc-shuffle-btn').addEventListener('click', () => {
+    if (!flashcardsCache) return;
+    flashcardsCache.order = shuffleArray(flashcardsCache.order);
+    flashcardsCache.pos = 0;
+    flashcardsCache.flipped = false;
+    renderFlashcardsStudy();
+  });
+
+  // Deep-link support: flashcards.html?type=test_128 jumps straight into that deck.
+  const requestedType = new URLSearchParams(window.location.search).get('type');
+  if (requestedType && FLASHCARD_TEST_LABELS[requestedType]) {
+    const matchingBtn = document.querySelector(`.fc-picker-card[data-test-type="${requestedType}"]`);
+    if (matchingBtn) matchingBtn.click();
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof supabaseClient === 'undefined') return;
   if (document.body.hasAttribute('data-dashboard-page')) initDashboard();
   if (document.body.hasAttribute('data-lesson-page')) initLessonPage();
+  if (document.body.hasAttribute('data-flashcards-page')) initFlashcardsPage();
 });
 
 // Re-render dynamic content in place when the visitor toggles EN/ES —
@@ -481,4 +629,5 @@ document.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('ciudadanoready:langchange', () => {
   if (document.body.hasAttribute('data-dashboard-page')) renderDashboard();
   if (document.body.hasAttribute('data-lesson-page')) renderLessonPage();
+  if (document.body.hasAttribute('data-flashcards-page')) renderFlashcardsStudy();
 });

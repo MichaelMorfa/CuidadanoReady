@@ -50,6 +50,7 @@
         <h4>Content</h4>
         <a href="#" data-panel-link="lessons">Course Editor</a>
         <a href="#" data-panel-link="quizzes">Quiz Editor</a>
+        <a href="#" data-panel-link="flashcards">Flashcards Editor</a>
       </li>
       <li class="app-nav-group">
         <h4>Revenue</h4>
@@ -246,6 +247,61 @@
           </form>
         </div>
         <div id="quizzes-list"><p class="empty-state">Loading…</p></div>
+      </section>
+
+      <!-- ================= FLASHCARDS EDITOR ================= -->
+      <section class="admin-panel" data-panel="flashcards">
+        <div class="card card-pad" style="margin-bottom:24px;">
+          <span class="eyebrow">ADD FLASHCARD</span>
+          <form class="admin-add-form" id="flashcard-form">
+            <div>
+              <label>Test</label>
+              <select id="flashcard-test-type" required>
+                <option value="test_128">128-Question Test (2025 version)</option>
+                <option value="test_100">100-Question Test (2008 version)</option>
+                <option value="test_20">20-Question Test (65/20)</option>
+              </select>
+            </div>
+            <div>
+              <label>Sort Order (question #)</label>
+              <input type="number" id="flashcard-sort" value="1" min="1">
+            </div>
+            <div class="span-2">
+              <label>Question (English)</label>
+              <input type="text" id="flashcard-question" placeholder="e.g. What is the supreme law of the land?" required>
+            </div>
+            <div class="span-2">
+              <label>Answer (English)</label>
+              <textarea id="flashcard-answer" placeholder="One answer per line if there are multiple acceptable answers" required></textarea>
+            </div>
+            <div class="span-2">
+              <label>Pregunta (Spanish — optional)</label>
+              <input type="text" id="flashcard-question-es" placeholder="Se usará el inglés si se deja en blanco">
+            </div>
+            <div class="span-2">
+              <label>Respuesta (Spanish — optional)</label>
+              <textarea id="flashcard-answer-es" placeholder="Se usará el inglés si se deja en blanco"></textarea>
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px; padding-bottom:11px;">
+              <input type="checkbox" id="flashcard-published" style="width:auto; margin:0;" checked>
+              <label style="margin:0;" for="flashcard-published">Published</label>
+            </div>
+            <div class="span-2">
+              <button type="submit" class="btn btn-primary" id="flashcard-submit">Add Flashcard</button>
+              <button type="button" class="btn btn-ghost" id="flashcard-cancel-edit" style="display:none;">Cancel Edit</button>
+            </div>
+          </form>
+        </div>
+        <div class="search-row">
+          <select id="flashcard-filter" style="max-width:280px; margin:0;">
+            <option value="test_128">128-Question Test</option>
+            <option value="test_100">100-Question Test</option>
+            <option value="test_20">20-Question Test (65/20)</option>
+            <option value="all">All tests</option>
+          </select>
+          <span class="small muted" id="flashcard-count"></span>
+        </div>
+        <div id="flashcards-list"><p class="empty-state">Loading…</p></div>
       </section>
 
       <!-- ================= REVENUE (placeholder until Stripe/Square) ================= -->

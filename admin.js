@@ -5,13 +5,19 @@
    ========================================================================== */
 
 const MODULE_NAMES = {
-  1: 'Eligibility',
-  2: 'N-400',
-  3: 'Biometrics',
-  4: 'English Test',
-  5: 'Civics Test',
-  6: 'Interview',
-  7: 'Oath',
+  1: 'Welcome',
+  2: 'Eligibility',
+  3: 'N-400 Application',
+  4: 'Biometrics',
+  5: 'Interview & Exam Prep',
+  6: 'The Interview',
+  7: 'Oath Ceremony',
+};
+
+const FLASHCARD_TEST_NAMES = {
+  test_100: '100-Question Test (2008 version)',
+  test_128: '128-Question Test (2025 version)',
+  test_20: '20-Question Test (65/20)',
 };
 
 function escapeHtml(str) {
@@ -36,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     users: 'Users',
     lessons: 'Course Editor',
     quizzes: 'Quiz Editor',
+    flashcards: 'Flashcards Editor',
     revenue: 'Payments',
     support: 'Support',
   };
@@ -53,6 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (name === 'users') loadUsers();
     if (name === 'lessons') loadLessons();
     if (name === 'quizzes') loadQuizzes();
+    if (name === 'flashcards') loadFlashcards();
     if (name === 'support') loadSupport();
   }
 
@@ -428,6 +436,130 @@ document.addEventListener('DOMContentLoaded', () => {
       const { error } = await supabaseClient.from('quiz_questions').delete().eq('id', id);
       if (error) { alert('Could not delete: ' + error.message); return; }
       loadQuizzes();
+    }
+  });
+
+  // ---- Flashcards editor ------------------------------------------------
+  let editingFlashcardId = null;
+  let allFlashcards = [];
+
+  async function loadFlashcards() {
+    const list = document.querySelector('#flashcards-list');
+    const { data, error } = await supabaseClient.from('flashcards').select('*').order('test_type').order('sort_order');
+    if (error) {
+      list.innerHTML = `<p class="empty-state">Could not load flashcards: ${escapeHtml(error.message)}</p>`;
+      return;
+    }
+    allFlashcards = data || [];
+    renderFlashcardsList();
+  }
+
+  function renderFlashcardsList() {
+    const list = document.querySelector('#flashcards-list');
+    const countEl = document.querySelector('#flashcard-count');
+    const filter = document.querySelector('#flashcard-filter')?.value || 'test_128';
+    const rows = filter === 'all' ? allFlashcards : allFlashcards.filter((c) => c.test_type === filter);
+
+    if (countEl) countEl.textContent = `${rows.length} card${rows.length === 1 ? '' : 's'}`;
+    if (!rows.length) {
+      list.innerHTML = '<p class="empty-state">No flashcards in this set yet — add one above.</p>';
+      return;
+    }
+
+    let html = '';
+    let currentType = null;
+    rows.forEach((c) => {
+      if (filter === 'all' && c.test_type !== currentType) {
+        currentType = c.test_type;
+        html += `<div class="module-heading">${escapeHtml(FLASHCARD_TEST_NAMES[currentType] || currentType)}</div>`;
+      }
+      html += `
+        <div class="card card-pad" style="margin-bottom:12px;" data-flashcard-card="${c.id}">
+          <div class="flex justify-between items-center">
+            <div>
+              <span class="small muted" style="font-family:var(--font-mono);">#${c.sort_order}</span>
+              <strong style="margin-left:6px;">${escapeHtml(c.question)}</strong>
+              ${c.published ? '<span class="badge badge-forest" style="margin-left:8px;">Published</span>' : '<span class="badge" style="margin-left:8px;">Draft</span>'}
+            </div>
+            <div class="flex gap-8">
+              <button class="btn btn-ghost btn-sm" data-flashcard-edit="${c.id}">Edit</button>
+              <button class="btn btn-ghost btn-sm" data-flashcard-delete="${c.id}">Delete</button>
+            </div>
+          </div>
+          <p class="small" style="margin-top:10px; margin-bottom:0;">${escapeHtml((c.answer || '').split('\n').join(' · '))}</p>
+        </div>
+      `;
+    });
+    list.innerHTML = html;
+  }
+
+  document.querySelector('#flashcard-filter')?.addEventListener('change', renderFlashcardsList);
+
+  const flashcardForm = document.querySelector('#flashcard-form');
+  const flashcardCancelBtn = document.querySelector('#flashcard-cancel-edit');
+
+  function resetFlashcardForm() {
+    editingFlashcardId = null;
+    flashcardForm.reset();
+    document.querySelector('#flashcard-published').checked = true;
+    document.querySelector('#flashcard-submit').textContent = 'Add Flashcard';
+    flashcardCancelBtn.style.display = 'none';
+  }
+
+  flashcardCancelBtn?.addEventListener('click', resetFlashcardForm);
+
+  flashcardForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      test_type: document.querySelector('#flashcard-test-type').value,
+      sort_order: Number(document.querySelector('#flashcard-sort').value) || 1,
+      question: document.querySelector('#flashcard-question').value,
+      answer: document.querySelector('#flashcard-answer').value,
+      question_es: document.querySelector('#flashcard-question-es').value || null,
+      answer_es: document.querySelector('#flashcard-answer-es').value || null,
+      published: document.querySelector('#flashcard-published').checked,
+    };
+    const submitBtn = document.querySelector('#flashcard-submit');
+    submitBtn.disabled = true;
+    let error;
+    if (editingFlashcardId) {
+      ({ error } = await supabaseClient.from('flashcards').update(payload).eq('id', editingFlashcardId));
+    } else {
+      ({ error } = await supabaseClient.from('flashcards').insert(payload));
+    }
+    submitBtn.disabled = false;
+    if (error) { alert('Could not save flashcard: ' + error.message); return; }
+    resetFlashcardForm();
+    loadFlashcards();
+  });
+
+  document.querySelector('#flashcards-list')?.addEventListener('click', async (e) => {
+    const editBtn = e.target.closest('[data-flashcard-edit]');
+    const delBtn = e.target.closest('[data-flashcard-delete]');
+
+    if (editBtn) {
+      const id = editBtn.getAttribute('data-flashcard-edit');
+      const { data } = await supabaseClient.from('flashcards').select('*').eq('id', id).single();
+      if (!data) return;
+      editingFlashcardId = id;
+      document.querySelector('#flashcard-test-type').value = data.test_type;
+      document.querySelector('#flashcard-sort').value = data.sort_order;
+      document.querySelector('#flashcard-question').value = data.question;
+      document.querySelector('#flashcard-answer').value = data.answer || '';
+      document.querySelector('#flashcard-question-es').value = data.question_es || '';
+      document.querySelector('#flashcard-answer-es').value = data.answer_es || '';
+      document.querySelector('#flashcard-published').checked = !!data.published;
+      document.querySelector('#flashcard-submit').textContent = 'Save Changes';
+      flashcardCancelBtn.style.display = 'inline-flex';
+      flashcardForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    if (delBtn) {
+      const id = delBtn.getAttribute('data-flashcard-delete');
+      if (!confirm('Delete this flashcard? This cannot be undone.')) return;
+      const { error } = await supabaseClient.from('flashcards').delete().eq('id', id);
+      if (error) { alert('Could not delete: ' + error.message); return; }
+      loadFlashcards();
     }
   });
 
