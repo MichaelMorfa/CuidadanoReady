@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Practice Interview — Ciudadano Ready</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ===== Member Area theme (matches dashboard.html / lesson.html / flashcards.html) ===== */
+  body { background: var(--paper-dim); }
+  .app-sidebar { background: var(--paper-dim); border-right: 1px solid var(--line); }
+  .app-nav a.active { color: var(--forest); background: var(--white); border-left-color: var(--forest); }
+  .app-nav a:hover { color: var(--forest); }
+  .app-topbar { background: var(--paper-dim); border-bottom: 1px solid var(--line); }
+  .app-content .card { box-shadow: none; }
+  .app-content .card:hover { box-shadow: none; }
+  .btn-primary { background: var(--forest); }
+  .btn-primary:hover { background: #244F3B; }
+  .badge-ocean { border-color: var(--forest); color: var(--forest); }
+  .progress-bar-fill { background: var(--forest); }
+
+  .pq-picker-card { padding: 28px; cursor: pointer; text-align: left; }
+  .pq-picker-card:hover { border-color: var(--forest); }
+  .pq-picker-count { font-family: var(--font-serif); font-size: 2rem; font-weight: 700; color: var(--forest); margin: 4px 0 6px; }
+
+  .pq-stage { max-width: 680px; margin: 0 auto; }
+  .pq-progress-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .pq-progress-text { font-family: var(--font-mono); font-size: 0.8rem; color: var(--slate); }
+
+  .pq-question-card { padding: 32px; text-align: center; margin-bottom: 20px; }
+  .pq-question-card h3 { font-size: 1.3rem; margin: 0 0 4px; }
+  .pq-answer-reveal { display: none; margin-top: 20px; padding-top: 20px; border-top: 1px dashed var(--line); text-align: left; }
+  .pq-answer-reveal.show { display: block; }
+  .pq-answer-list { list-style: none; margin: 0; padding: 0; }
+  .pq-answer-list li { padding: 6px 0 6px 22px; position: relative; font-weight: 600; color: var(--ink); }
+  .pq-answer-list li::before { content: "•"; position: absolute; left: 4px; color: var(--forest); }
+
+  .pq-grade-row { display: flex; gap: 12px; justify-content: center; margin-top: 20px; }
+  .pq-grade-row .btn { flex: 1; max-width: 220px; }
+  .btn-grade-correct { background: rgba(47,107,79,0.08); border-color: var(--forest); color: var(--forest); }
+  .btn-grade-correct:hover { background: var(--forest); color: var(--white); }
+  .btn-grade-incorrect { background: rgba(179,73,47,0.08); border-color: var(--danger); color: var(--danger); }
+  .btn-grade-incorrect:hover { background: var(--danger); color: var(--white); }
+
+  /* ---- Results ---- */
+  .pq-results-header { text-align: center; padding: 40px 24px; margin-bottom: 24px; }
+  .pq-score-circle {
+    width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 16px;
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    border: 6px solid var(--line); font-family: var(--font-serif); font-weight: 700;
+  }
+  .pq-score-circle.pass { border-color: var(--forest); color: var(--forest); }
+  .pq-score-circle.fail { border-color: var(--danger); color: var(--danger); }
+  .pq-score-circle .pq-score-frac { font-size: 1.7rem; line-height: 1; }
+  .pq-pass-badge { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 6px 16px; border-radius: 20px; display: inline-block; }
+  .pq-pass-badge.pass { background: rgba(47,107,79,0.1); color: var(--forest); }
+  .pq-pass-badge.fail { background: rgba(179,73,47,0.1); color: var(--danger); }
+
+  .pq-review-item { display: flex; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .pq-review-item:last-child { border-bottom: none; }
+  .pq-review-icon { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--white); }
+  .pq-review-icon.correct { background: var(--forest); }
+  .pq-review-icon.incorrect { background: var(--danger); }
+  .pq-review-question { font-weight: 600; margin: 0 0 4px; }
+  .pq-review-answer { margin: 0; color: var(--slate); font-size: 0.9rem; }
+
+  /* ---- Past attempts history ---- */
+  .pq-history-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .pq-history-row:last-child { border-bottom: none; }
+  .pq-history-row:hover .pq-history-test { color: var(--forest); }
+  .pq-history-test { font-weight: 600; }
+  .pq-history-meta { font-size: 0.8rem; color: var(--slate); }
+</style>
+<meta name="description" content="Practice the USCIS civics interview with a randomized, timed-style quiz.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Ciudadano Ready">
+<meta property="og:title" content="Practice Interview — Ciudadano Ready">
+<meta property="og:description" content="Practice the USCIS civics interview with a randomized quiz.">
+<meta property="og:image" content="https://ciudadanoready.com/og-image.png">
+<meta property="og:url" content="https://ciudadanoready.com/practice-quiz.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Practice Interview — Ciudadano Ready">
+<meta name="twitter:description" content="Practice the USCIS civics interview with a randomized quiz.">
+<meta name="twitter:image" content="https://ciudadanoready.com/og-image.png">
+</head>
+<body data-auth-required="true" data-practice-quiz-page="true">
+
+<div class="app-shell">
+  <div class="sidebar-backdrop"></div>
+  <aside class="app-sidebar">
+    <a href="dashboard.html" class="logo">Ciudadano<span class="dot">Ready</span></a>
+    <ul class="app-nav">
+      <li class="app-nav-group">
+        <h4 data-en="Overview" data-es="Resumen">Overview</h4>
+        <a href="dashboard.html" data-en="Continue Learning" data-es="Continuar Aprendiendo">Continue Learning</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="Modules" data-es="Módulos">Modules</h4>
+        <ul class="app-nav" id="pq-page-module-nav" style="padding:0;">
+          <li class="small muted" style="padding:10px 24px;">Loading…</li>
+        </ul>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="Practice" data-es="Práctica">Practice</h4>
+        <a href="flashcards.html" data-en="Flashcards" data-es="Tarjetas de Estudio">Flashcards</a>
+        <a href="practice-quiz.html" class="active" data-en="Practice Interview" data-es="Entrevista de Práctica">Practice Interview</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="More" data-es="Más">More</h4>
+        <a href="contact.html" data-en="Support" data-es="Soporte">Support</a>
+      </li>
+    </ul>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-topbar">
+      <div class="flex gap-16 items-center">
+        <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
+        <div>
+          <span class="eyebrow" style="margin-bottom:0;" data-en="PRACTICE" data-es="PRÁCTICA">PRACTICE</span>
+          <h3 style="margin:0;" data-en="Practice Interview" data-es="Entrevista de Práctica">Practice Interview</h3>
+        </div>
+      </div>
+      <div class="flex gap-16 items-center">
+        <div class="lang-toggle">
+          <button data-lang-btn="en" class="active">EN</button>
+          <button data-lang-btn="es">ES</button>
+        </div>
+        <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link" data-en="Log Out" data-es="Cerrar Sesión">Log Out</a>
+      </div>
+    </div>
+
+    <div class="app-content">
+
+      <!-- Picker: choose which official USCIS test to be quizzed on -->
+      <div id="pq-picker-view">
+        <span class="eyebrow" data-en="SIMULATE THE REAL INTERVIEW" data-es="SIMULA LA ENTREVISTA REAL">SIMULATE THE REAL INTERVIEW</span>
+        <h2 style="margin-top:4px;" data-en="Take a practice civics test" data-es="Toma una prueba de práctica de educación cívica">Take a practice civics test</h2>
+        <p class="small" style="max-width:640px; margin-bottom:28px;" data-en="Just like the real interview, you'll be asked a random set of questions from the bank you've been studying and graded against the real USCIS passing threshold. Answer out loud, then reveal the answer and grade yourself honestly." data-es="Al igual que en la entrevista real, se te harán una serie de preguntas aleatorias del banco que has estado estudiando y serás evaluado con el umbral real de aprobación de USCIS. Responde en voz alta, luego revela la respuesta y califícate con honestidad.">Just like the real interview, you'll be asked a random set of questions from the bank you've been studying and graded against the real USCIS passing threshold. Answer out loud, then reveal the answer and grade yourself honestly.</p>
+
+        <div class="grid grid-3" id="pq-picker-cards" style="margin-bottom:40px;">
+          <button class="card pq-picker-card" data-test-type="test_128">
+            <span class="badge badge-forest" data-en="CURRENT · 2025 VERSION" data-es="ACTUAL · VERSIÓN 2025">CURRENT · 2025 VERSION</span>
+            <div class="pq-picker-count">20 <span style="font-size:1rem; color:var(--slate); font-weight:500;" data-en="questions asked" data-es="preguntas">questions asked</span></div>
+            <p class="small" style="margin:0;" data-en="From the 128-question bank. Need 12 of 20 correct to pass — the real 2025 threshold." data-es="Del banco de 128 preguntas. Necesitas 12 de 20 correctas para aprobar — el umbral real de 2025.">From the 128-question bank. Need 12 of 20 correct to pass — the real 2025 threshold.</p>
+          </button>
+          <button class="card pq-picker-card" data-test-type="test_100">
+            <span class="badge" data-en="LEGACY · 2008 VERSION" data-es="ANTERIOR · VERSIÓN 2008">LEGACY · 2008 VERSION</span>
+            <div class="pq-picker-count">10 <span style="font-size:1rem; color:var(--slate); font-weight:500;" data-en="questions asked" data-es="preguntas">questions asked</span></div>
+            <p class="small" style="margin:0;" data-en="From the 100-question bank. Need 6 of 10 correct to pass — the real 2008 threshold." data-es="Del banco de 100 preguntas. Necesitas 6 de 10 correctas para aprobar — el umbral real de 2008.">From the 100-question bank. Need 6 of 10 correct to pass — the real 2008 threshold.</p>
+          </button>
+          <button class="card pq-picker-card" data-test-type="test_20">
+            <span class="badge badge-ocean" data-en="65/20 SPECIAL CONSIDERATION" data-es="CONSIDERACIÓN ESPECIAL 65/20">65/20 SPECIAL CONSIDERATION</span>
+            <div class="pq-picker-count">10 <span style="font-size:1rem; color:var(--slate); font-weight:500;" data-en="questions asked" data-es="preguntas">questions asked</span></div>
+            <p class="small" style="margin:0;" data-en="From the 20-question 65/20 bank. Need 6 of 10 correct to pass." data-es="Del banco de 20 preguntas 65/20. Necesitas 6 de 10 correctas para aprobar.">From the 20-question 65/20 bank. Need 6 of 10 correct to pass.</p>
+          </button>
+        </div>
+
+        <h3 data-en="Your Past Attempts" data-es="Tus Intentos Anteriores">Your Past Attempts</h3>
+        <div class="card card-pad" id="pq-history-card">
+          <p class="small muted" style="margin:0;" id="pq-history-empty" data-en="No practice tests taken yet — try one above." data-es="Aún no has tomado ninguna prueba de práctica — intenta una arriba.">No practice tests taken yet — try one above.</p>
+          <div id="pq-history-list"></div>
+        </div>
+      </div>
+
+      <!-- In-progress quiz -->
+      <div id="pq-quiz-view" style="display:none;">
+        <div class="pq-stage">
+          <div class="pq-progress-row">
+            <span class="badge" id="pq-active-test-badge">—</span>
+            <span class="pq-progress-text" id="pq-progress-text">1 / 10</span>
+          </div>
+          <div class="progress-bar" style="margin-bottom:24px;"><div class="progress-bar-fill" id="pq-progress-bar" style="width:0%;"></div></div>
+
+          <div class="card pq-question-card">
+            <span class="eyebrow" data-en="THE OFFICER ASKS" data-es="EL OFICIAL PREGUNTA">THE OFFICER ASKS</span>
+            <h3 id="pq-question-text">—</h3>
+
+            <div class="pq-answer-reveal" id="pq-answer-reveal">
+              <span class="eyebrow" data-en="ACCEPTABLE ANSWERS" data-es="RESPUESTAS ACEPTABLES">ACCEPTABLE ANSWERS</span>
+              <ul class="pq-answer-list" id="pq-answer-list"></ul>
+            </div>
+          </div>
+
+          <div id="pq-reveal-row" style="text-align:center;">
+            <button class="btn btn-primary" id="pq-reveal-btn" data-en="Reveal Answer" data-es="Revelar Respuesta">Reveal Answer</button>
+          </div>
+
+          <div class="pq-grade-row" id="pq-grade-row" style="display:none;">
+            <button class="btn btn-grade-incorrect" id="pq-grade-wrong">✗ <span data-en="I Missed It" data-es="No la Sabía">I Missed It</span></button>
+            <button class="btn btn-grade-correct" id="pq-grade-right">✓ <span data-en="I Knew It" data-es="La Sabía">I Knew It</span></button>
+          </div>
+
+          <div style="text-align:center; margin-top:20px;">
+            <button class="btn btn-ghost btn-sm" id="pq-quit-btn" data-en="Quit practice test" data-es="Salir de la prueba">Quit practice test</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="pq-results-view" style="display:none;">
+        <div class="pq-stage">
+          <div class="card pq-results-header" id="pq-results-header">
+            <div class="pq-score-circle" id="pq-score-circle">
+              <span class="pq-score-frac" id="pq-score-frac">0/0</span>
+            </div>
+            <span class="pq-pass-badge" id="pq-pass-badge">—</span>
+            <p class="small" style="margin:16px auto 0; max-width:420px;" id="pq-results-message"></p>
+          </div>
+
+          <div class="flex gap-16 justify-center" style="margin-bottom:32px; flex-wrap:wrap;">
+            <button class="btn btn-primary" id="pq-retake-btn" data-en="Take Another" data-es="Tomar Otra">Take Another</button>
+            <button class="btn btn-ghost" id="pq-results-back-btn" data-en="← Back to Practice Tests" data-es="← Volver a Pruebas de Práctica">← Back to Practice Tests</button>
+          </div>
+
+          <h3 data-en="Review Your Answers" data-es="Revisa Tus Respuestas">Review Your Answers</h3>
+          <div class="card card-pad" id="pq-review-list"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="app.js"></script>
+<script src="member.js"></script>
+</body>
+</html>

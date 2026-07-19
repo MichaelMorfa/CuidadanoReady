@@ -616,11 +616,269 @@ async function initFlashcardsPage() {
   }
 }
 
+// ---- Practice Interview (randomized, graded practice test) --------------
+// Simulates the real USCIS interview: a random draw of questions from
+// whichever bank the member is studying, using the real official counts
+// and passing thresholds (100-set: 10 asked / 6 to pass; 128-set: 20
+// asked / 12 to pass; 20-set: 10 asked / 6 to pass). Since flashcards
+// are oral Q&A (no multiple-choice options), grading is self-reported —
+// same as the real interview, where the officer listens to a spoken
+// answer and marks it right or wrong. Every attempt is saved to
+// practice_quiz_attempts (score, pass/fail, and each question with the
+// member's self-grade) so they can revisit and review it later, not just
+// immediately after finishing.
+const PRACTICE_QUIZ_CONFIG = {
+  test_100: { ask: 10, pass: 6 },
+  test_128: { ask: 20, pass: 12 },
+  test_20: { ask: 10, pass: 6 },
+};
+
+let practiceQuizCache = null; // { testType, questions, idx, answers, revealed }
+let practiceResultsCache = null; // last-rendered attempt, kept for re-render on langchange
+
+function renderPracticeQuizQuestion() {
+  if (!practiceQuizCache) return;
+  const { testType, questions, idx, revealed } = practiceQuizCache;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const q = questions[idx];
+
+  const badge = document.querySelector('#pq-active-test-badge');
+  if (badge) {
+    const labelEntry = FLASHCARD_TEST_LABELS[testType] || FLASHCARD_TEST_LABELS.test_100;
+    badge.textContent = labelEntry[lang] || labelEntry.en;
+  }
+  document.querySelector('#pq-progress-text').textContent = `${idx + 1} / ${questions.length}`;
+  document.querySelector('#pq-progress-bar').style.width = Math.round((idx / questions.length) * 100) + '%';
+
+  document.querySelector('#pq-question-text').textContent = localize(q, 'question');
+  const answerList = document.querySelector('#pq-answer-list');
+  const answerLines = (localize(q, 'answer') || '').split('\n').map((l) => l.trim()).filter(Boolean);
+  answerList.innerHTML = answerLines.map((l) => `<li>${escapeHtml(l)}</li>`).join('');
+
+  document.querySelector('#pq-answer-reveal').classList.toggle('show', !!revealed);
+  document.querySelector('#pq-reveal-row').style.display = revealed ? 'none' : 'block';
+  document.querySelector('#pq-grade-row').style.display = revealed ? 'flex' : 'none';
+}
+
+function startPracticeQuiz(testType, questions) {
+  practiceQuizCache = { testType, questions, idx: 0, answers: [], revealed: false };
+  document.querySelector('#pq-picker-view').style.display = 'none';
+  document.querySelector('#pq-results-view').style.display = 'none';
+  document.querySelector('#pq-quiz-view').style.display = 'block';
+  renderPracticeQuizQuestion();
+}
+
+function renderPracticeQuizResults(attempt) {
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  practiceResultsCache = attempt;
+
+  document.querySelector('#pq-quiz-view').style.display = 'none';
+  document.querySelector('#pq-picker-view').style.display = 'none';
+  document.querySelector('#pq-results-view').style.display = 'block';
+
+  const circle = document.querySelector('#pq-score-circle');
+  const frac = document.querySelector('#pq-score-frac');
+  const passBadge = document.querySelector('#pq-pass-badge');
+  const msg = document.querySelector('#pq-results-message');
+
+  frac.textContent = `${attempt.score}/${attempt.total}`;
+  circle.classList.remove('pass', 'fail');
+  circle.classList.add(attempt.passed ? 'pass' : 'fail');
+  passBadge.classList.remove('pass', 'fail');
+  passBadge.classList.add(attempt.passed ? 'pass' : 'fail');
+
+  const labels = {
+    en: {
+      pass: 'PASSED', fail: 'NOT YET PASSING',
+      passMsg: 'You answered enough correctly to pass this test at the real interview. Keep practicing to stay sharp!',
+      failMsg: "You're not quite at the passing threshold yet — review what you missed below and try again.",
+    },
+    es: {
+      pass: 'APROBADO', fail: 'AÚN NO APRUEBA',
+      passMsg: 'Respondiste correctamente lo suficiente para aprobar esta prueba en la entrevista real. ¡Sigue practicando para mantenerte al día!',
+      failMsg: 'Todavía no alcanzas el umbral de aprobación — revisa lo que fallaste abajo e inténtalo de nuevo.',
+    },
+  };
+  const l = labels[lang] || labels.en;
+  passBadge.textContent = attempt.passed ? l.pass : l.fail;
+  msg.textContent = attempt.passed ? l.passMsg : l.failMsg;
+
+  const reviewList = document.querySelector('#pq-review-list');
+  reviewList.innerHTML = (attempt.answers || []).map((a) => {
+    const qText = (lang === 'es' && a.question_es) ? a.question_es : a.question;
+    const aText = (lang === 'es' && a.answer_es) ? a.answer_es : a.answer;
+    const firstLine = (aText || '').split('\n')[0];
+    return `<div class="pq-review-item">
+      <div class="pq-review-icon ${a.correct ? 'correct' : 'incorrect'}">${a.correct ? '✓' : '✗'}</div>
+      <div>
+        <p class="pq-review-question">${escapeHtml(qText)}</p>
+        <p class="pq-review-answer">${escapeHtml(firstLine)}</p>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function finishPracticeQuiz(userId) {
+  const { testType, answers } = practiceQuizCache;
+  const score = answers.filter((a) => a.correct).length;
+  const total = answers.length;
+  const passed = score >= (PRACTICE_QUIZ_CONFIG[testType] || {}).pass;
+  const payload = { user_id: userId, test_type: testType, score, total, passed, answers };
+
+  const { data, error } = await supabaseClient.from('practice_quiz_attempts').insert(payload).select().single();
+  practiceQuizCache = null;
+  const attempt = (!error && data) ? data : payload;
+  renderPracticeQuizResults(attempt);
+  loadPracticeQuizHistory();
+}
+
+function renderPracticeQuizHistory(attempts) {
+  const emptyEl = document.querySelector('#pq-history-empty');
+  const listEl = document.querySelector('#pq-history-list');
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  if (!attempts || !attempts.length) {
+    if (emptyEl) emptyEl.style.display = 'block';
+    if (listEl) listEl.innerHTML = '';
+    return;
+  }
+  if (emptyEl) emptyEl.style.display = 'none';
+  const dateFmt = (iso) => new Date(iso).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  listEl.innerHTML = attempts.map((a) => {
+    const labelEntry = FLASHCARD_TEST_LABELS[a.test_type] || FLASHCARD_TEST_LABELS.test_100;
+    const passText = a.passed ? (lang === 'es' ? 'Aprobado' : 'Passed') : (lang === 'es' ? 'No aprobado' : 'Not passing');
+    return `<div class="pq-history-row" data-attempt-id="${a.id}">
+      <div>
+        <div class="pq-history-test">${escapeHtml(labelEntry[lang] || labelEntry.en)}</div>
+        <div class="pq-history-meta">${dateFmt(a.created_at)}</div>
+      </div>
+      <span class="badge ${a.passed ? 'badge-forest' : ''}" style="${a.passed ? '' : 'border-color:var(--danger); color:var(--danger);'}">${a.score}/${a.total} · ${passText}</span>
+    </div>`;
+  }).join('');
+
+  listEl.querySelectorAll('[data-attempt-id]').forEach((row) => {
+    row.addEventListener('click', () => {
+      const attempt = attempts.find((a) => a.id === row.getAttribute('data-attempt-id'));
+      if (attempt) renderPracticeQuizResults(attempt);
+    });
+  });
+}
+
+let practiceQuizHistoryCache = [];
+
+async function loadPracticeQuizHistory() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  const { data } = await supabaseClient
+    .from('practice_quiz_attempts')
+    .select('*')
+    .eq('user_id', session.user.id)
+    .order('created_at', { ascending: false })
+    .limit(25);
+  practiceQuizHistoryCache = data || [];
+  renderPracticeQuizHistory(practiceQuizHistoryCache);
+}
+
+async function initPracticeQuizPage() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  const userId = session.user.id;
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('subscription_status')
+    .eq('id', userId)
+    .single();
+  const hasAccess = profile && ['active', 'trial', 'comp'].includes(profile.subscription_status);
+  if (!hasAccess) {
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  const { data: lessons } = await supabaseClient.from('lessons').select('*').eq('published', true).order('module_number').order('sort_order');
+  const { data: progressRows } = await supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId);
+  const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
+  renderModuleNav('#pq-page-module-nav', lessons || [], completedIds, null);
+
+  loadPracticeQuizHistory();
+
+  async function beginQuiz(testType) {
+    const config = PRACTICE_QUIZ_CONFIG[testType] || PRACTICE_QUIZ_CONFIG.test_100;
+    const { data: cards, error } = await supabaseClient
+      .from('flashcards')
+      .select('*')
+      .eq('test_type', testType)
+      .eq('published', true);
+    if (error || !cards || !cards.length) {
+      alert('Could not load practice questions. Please try again.');
+      return;
+    }
+    const chosen = shuffleArray(cards).slice(0, Math.min(config.ask, cards.length));
+    startPracticeQuiz(testType, chosen);
+  }
+
+  document.querySelectorAll('.pq-picker-card').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      btn.setAttribute('aria-busy', 'true');
+      beginQuiz(btn.getAttribute('data-test-type')).finally(() => btn.removeAttribute('aria-busy'));
+    });
+  });
+
+  document.querySelector('#pq-reveal-btn').addEventListener('click', () => {
+    if (!practiceQuizCache) return;
+    practiceQuizCache.revealed = true;
+    renderPracticeQuizQuestion();
+  });
+
+  function gradeCurrent(isCorrect) {
+    if (!practiceQuizCache) return;
+    const { questions, idx } = practiceQuizCache;
+    const q = questions[idx];
+    practiceQuizCache.answers.push({
+      flashcard_id: q.id,
+      question: q.question,
+      answer: q.answer,
+      question_es: q.question_es || null,
+      answer_es: q.answer_es || null,
+      correct: isCorrect,
+    });
+    if (idx + 1 >= questions.length) {
+      finishPracticeQuiz(userId);
+    } else {
+      practiceQuizCache.idx += 1;
+      practiceQuizCache.revealed = false;
+      renderPracticeQuizQuestion();
+    }
+  }
+  document.querySelector('#pq-grade-right').addEventListener('click', () => gradeCurrent(true));
+  document.querySelector('#pq-grade-wrong').addEventListener('click', () => gradeCurrent(false));
+
+  document.querySelector('#pq-quit-btn').addEventListener('click', () => {
+    const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+    const confirmMsg = lang === 'es' ? '¿Salir de esta prueba de práctica? Tu progreso no se guardará.' : 'Quit this practice test? Your progress won\'t be saved.';
+    if (!confirm(confirmMsg)) return;
+    practiceQuizCache = null;
+    document.querySelector('#pq-quiz-view').style.display = 'none';
+    document.querySelector('#pq-picker-view').style.display = 'block';
+  });
+
+  document.querySelector('#pq-retake-btn').addEventListener('click', () => {
+    const lastType = (practiceResultsCache && practiceResultsCache.test_type) || 'test_128';
+    beginQuiz(lastType);
+  });
+  document.querySelector('#pq-results-back-btn').addEventListener('click', () => {
+    practiceResultsCache = null;
+    document.querySelector('#pq-results-view').style.display = 'none';
+    document.querySelector('#pq-picker-view').style.display = 'block';
+    loadPracticeQuizHistory();
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof supabaseClient === 'undefined') return;
   if (document.body.hasAttribute('data-dashboard-page')) initDashboard();
   if (document.body.hasAttribute('data-lesson-page')) initLessonPage();
   if (document.body.hasAttribute('data-flashcards-page')) initFlashcardsPage();
+  if (document.body.hasAttribute('data-practice-quiz-page')) initPracticeQuizPage();
 });
 
 // Re-render dynamic content in place when the visitor toggles EN/ES —
@@ -630,4 +888,9 @@ window.addEventListener('ciudadanoready:langchange', () => {
   if (document.body.hasAttribute('data-dashboard-page')) renderDashboard();
   if (document.body.hasAttribute('data-lesson-page')) renderLessonPage();
   if (document.body.hasAttribute('data-flashcards-page')) renderFlashcardsStudy();
+  if (document.body.hasAttribute('data-practice-quiz-page')) {
+    if (practiceQuizCache) renderPracticeQuizQuestion();
+    if (practiceResultsCache) renderPracticeQuizResults(practiceResultsCache);
+    renderPracticeQuizHistory(practiceQuizHistoryCache);
+  }
 });
