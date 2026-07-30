@@ -62,6 +62,17 @@ function linkifyEscaped(escapedText) {
   return escapedText.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
 }
 
+// Converts **bold** and *italic* markers (Markdown-style, as used in the
+// "Know Your Country" history content) into <strong>/<em>. Runs on
+// already-escaped text, so it's safe — the * characters survive escapeHtml
+// untouched. Bold is matched before italic so "**word**" isn't mistaken
+// for two separate italic spans.
+function boldItalicEscaped(escapedText) {
+  return escapedText
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>');
+}
+
 // Renders lesson body text into paragraphs, turning consecutive lines that
 // start with "•" into a proper bulleted list instead of running them all
 // together on one line. A block that's a single line starting with "## "
@@ -76,15 +87,15 @@ function renderLessonBody(text) {
     const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
 
     if (lines.length === 1 && lines[0].startsWith('## ')) {
-      return `<h4 class="lesson-subhead">${escapeHtml(lines[0].slice(3))}</h4>`;
+      return `<h4 class="lesson-subhead">${boldItalicEscaped(escapeHtml(lines[0].slice(3)))}</h4>`;
     }
 
     const isBulletBlock = lines.length > 0 && lines.every((l) => l.startsWith('•'));
     if (isBulletBlock) {
-      const items = lines.map((l) => `<li>${linkifyEscaped(escapeHtml(l.replace(/^•\s*/, '')))}</li>`).join('');
+      const items = lines.map((l) => `<li>${boldItalicEscaped(linkifyEscaped(escapeHtml(l.replace(/^•\s*/, ''))))}</li>`).join('');
       return `<ul class="lesson-list">${items}</ul>`;
     }
-    return `<p>${linkifyEscaped(escapeHtml(block).replace(/\n/g, '<br>'))}</p>`;
+    return `<p>${boldItalicEscaped(linkifyEscaped(escapeHtml(block).replace(/\n/g, '<br>')))}</p>`;
   }).join('');
 }
 
@@ -896,12 +907,182 @@ async function initPracticeQuizPage() {
   });
 }
 
+// ==========================================================================
+// "Know Your Country" — 40-lesson narrative U.S. history section.
+// Separate from the 7-stage naturalization process modules: this is
+// supplementary background reading (the "why" behind the civics
+// questions), not a required sequential step, so it lives on its own page
+// with its own simple read/unread tracking (country_lesson_progress),
+// browsable in any order.
+// ==========================================================================
+
+const KYC_LABELS = {
+  en: { unit: 'Unit', lesson: 'Lesson', progress: (done, total) => `${done} / ${total}` },
+  es: { unit: 'Unidad', lesson: 'Lección', progress: (done, total) => `${done} / ${total}` },
+};
+
+let kycCache = null; // { lessons: [...], completedNums: Set, currentLessonNumber }
+
+function renderKycPicker() {
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const kl = KYC_LABELS[lang];
+  if (!kycCache) return;
+  const { lessons, completedNums } = kycCache;
+
+  const total = lessons.length;
+  const done = lessons.filter((l) => completedNums.has(l.lesson_number)).length;
+  document.querySelector('#kyc-progress-count').textContent = kl.progress(done, total);
+  document.querySelector('#kyc-progress-fill').style.width = total ? `${Math.round((done / total) * 100)}%` : '0%';
+
+  const units = [];
+  lessons.forEach((l) => {
+    let u = units.find((x) => x.unit_number === l.unit_number);
+    if (!u) { u = { unit_number: l.unit_number, unit_title: l.unit_title, unit_title_es: l.unit_title_es, lessons: [] }; units.push(u); }
+    u.lessons.push(l);
+  });
+  units.sort((a, b) => a.unit_number - b.unit_number);
+
+  const listEl = document.querySelector('#kyc-units-list');
+  listEl.innerHTML = units.map((u) => {
+    const unitTitle = (lang === 'es' && u.unit_title_es) ? u.unit_title_es : u.unit_title;
+    const rows = u.lessons.map((l) => {
+      const isDone = completedNums.has(l.lesson_number);
+      const title = localize(l, 'title');
+      return `<div class="kyc-lesson-row${isDone ? ' done' : ''}" data-lesson-number="${l.lesson_number}">
+        <span class="kyc-lesson-check">${isDone ? '✓' : ''}</span>
+        <span class="kyc-lesson-num">${l.lesson_number}</span>
+        <span class="kyc-lesson-title">${escapeHtml(title)}</span>
+      </div>`;
+    }).join('');
+    return `<div class="kyc-unit-block">
+      <div class="kyc-unit-heading">
+        <span class="kyc-unit-num">${kl.unit} ${u.unit_number}</span>
+        <h3>${escapeHtml(unitTitle)}</h3>
+      </div>
+      ${rows}
+    </div>`;
+  }).join('');
+
+  listEl.querySelectorAll('[data-lesson-number]').forEach((row) => {
+    row.addEventListener('click', () => {
+      openKycLesson(parseInt(row.getAttribute('data-lesson-number'), 10));
+    });
+  });
+}
+
+function renderKycReading() {
+  if (!kycCache || kycCache.currentLessonNumber == null) return;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const kl = KYC_LABELS[lang];
+  const { lessons, currentLessonNumber } = kycCache;
+  const lesson = lessons.find((l) => l.lesson_number === currentLessonNumber);
+  if (!lesson) return;
+
+  document.querySelector('#kyc-lesson-badge').textContent = `${kl.unit.toUpperCase()} ${lesson.unit_number} · ${kl.lesson.toUpperCase()} ${lesson.lesson_number}`;
+  document.querySelector('#kyc-lesson-title').textContent = localize(lesson, 'title');
+  document.querySelector('#kyc-lesson-content').innerHTML = renderLessonBody(localize(lesson, 'content'));
+
+  const idx = lessons.findIndex((l) => l.lesson_number === currentLessonNumber);
+  const prevBtn = document.querySelector('#kyc-prev-lesson-btn');
+  const nextBtn = document.querySelector('#kyc-next-lesson-btn');
+  prevBtn.disabled = idx <= 0;
+  nextBtn.textContent = idx >= lessons.length - 1 ? (lang === 'es' ? 'Terminado ✓' : 'Done ✓') : `${lang === 'es' ? 'Siguiente' : 'Next'} →`;
+
+  markKycLessonRead(currentLessonNumber);
+}
+
+async function markKycLessonRead(lessonNumber) {
+  if (!kycCache || kycCache.completedNums.has(lessonNumber)) return;
+  kycCache.completedNums.add(lessonNumber);
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  await supabaseClient.from('country_lesson_progress').upsert(
+    { user_id: session.user.id, lesson_number: lessonNumber },
+    { onConflict: 'user_id,lesson_number' }
+  );
+}
+
+function openKycLesson(lessonNumber) {
+  if (!kycCache) return;
+  kycCache.currentLessonNumber = lessonNumber;
+  document.querySelector('#kyc-picker-view').style.display = 'none';
+  document.querySelector('#kyc-reading-view').style.display = 'block';
+  window.scrollTo(0, 0);
+  renderKycReading();
+}
+
+async function initKycPage() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  const userId = session.user.id;
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('subscription_status')
+    .eq('id', userId)
+    .single();
+  const hasAccess = profile && ['active', 'trial', 'comp'].includes(profile.subscription_status);
+  if (!hasAccess) {
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  const { data: courseLessons } = await supabaseClient.from('lessons').select('*').eq('published', true).order('module_number').order('sort_order');
+  const { data: courseProgress } = await supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId);
+  renderModuleNav('#kyc-page-module-nav', courseLessons || [], new Set((courseProgress || []).map((p) => p.lesson_id)), null);
+
+  const [{ data: kycLessons }, { data: kycProgress }] = await Promise.all([
+    supabaseClient.from('country_lessons').select('*').eq('published', true).order('lesson_number'),
+    supabaseClient.from('country_lesson_progress').select('lesson_number').eq('user_id', userId),
+  ]);
+
+  kycCache = {
+    lessons: kycLessons || [],
+    completedNums: new Set((kycProgress || []).map((p) => p.lesson_number)),
+    currentLessonNumber: null,
+  };
+  renderKycPicker();
+
+  document.querySelector('#kyc-back-to-list').addEventListener('click', () => {
+    kycCache.currentLessonNumber = null;
+    document.querySelector('#kyc-reading-view').style.display = 'none';
+    document.querySelector('#kyc-picker-view').style.display = 'block';
+    renderKycPicker();
+  });
+
+  document.querySelector('#kyc-prev-lesson-btn').addEventListener('click', () => {
+    const { lessons, currentLessonNumber } = kycCache;
+    const idx = lessons.findIndex((l) => l.lesson_number === currentLessonNumber);
+    if (idx > 0) { kycCache.currentLessonNumber = lessons[idx - 1].lesson_number; window.scrollTo(0, 0); renderKycReading(); }
+  });
+  document.querySelector('#kyc-next-lesson-btn').addEventListener('click', () => {
+    const { lessons, currentLessonNumber } = kycCache;
+    const idx = lessons.findIndex((l) => l.lesson_number === currentLessonNumber);
+    if (idx < lessons.length - 1) {
+      kycCache.currentLessonNumber = lessons[idx + 1].lesson_number; window.scrollTo(0, 0); renderKycReading();
+    } else {
+      kycCache.currentLessonNumber = null;
+      document.querySelector('#kyc-reading-view').style.display = 'none';
+      document.querySelector('#kyc-picker-view').style.display = 'block';
+      renderKycPicker();
+    }
+  });
+
+  // Deep link support: know-your-country.html?lesson=12
+  const params = new URLSearchParams(window.location.search);
+  const deepLinkLesson = parseInt(params.get('lesson'), 10);
+  if (deepLinkLesson && kycCache.lessons.some((l) => l.lesson_number === deepLinkLesson)) {
+    openKycLesson(deepLinkLesson);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof supabaseClient === 'undefined') return;
   if (document.body.hasAttribute('data-dashboard-page')) initDashboard();
   if (document.body.hasAttribute('data-lesson-page')) initLessonPage();
   if (document.body.hasAttribute('data-flashcards-page')) initFlashcardsPage();
   if (document.body.hasAttribute('data-practice-quiz-page')) initPracticeQuizPage();
+  if (document.body.hasAttribute('data-kyc-page')) initKycPage();
 });
 
 // Re-render dynamic content in place when the visitor toggles EN/ES —
@@ -915,5 +1096,8 @@ window.addEventListener('ciudadanoready:langchange', () => {
     if (practiceQuizCache) renderPracticeQuizQuestion();
     if (practiceResultsCache) renderPracticeQuizResults(practiceResultsCache);
     renderPracticeQuizHistory(practiceQuizHistoryCache);
+  }
+  if (document.body.hasAttribute('data-kyc-page') && kycCache) {
+    if (kycCache.currentLessonNumber != null) renderKycReading(); else renderKycPicker();
   }
 });

@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     lessons: 'Course Editor',
     quizzes: 'Quiz Editor',
     flashcards: 'Flashcards Editor',
+    'country-lessons': 'Know Your Country Editor',
     revenue: 'Payments',
     support: 'Support',
   };
@@ -61,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (name === 'lessons') loadLessons();
     if (name === 'quizzes') loadQuizzes();
     if (name === 'flashcards') loadFlashcards();
+    if (name === 'country-lessons') loadCountryLessons();
     if (name === 'support') loadSupport();
   }
 
@@ -560,6 +562,129 @@ document.addEventListener('DOMContentLoaded', () => {
       const { error } = await supabaseClient.from('flashcards').delete().eq('id', id);
       if (error) { alert('Could not delete: ' + error.message); return; }
       loadFlashcards();
+    }
+  });
+
+  // ---- "Know Your Country" (history background) editor ------------------
+  let editingCountryLessonId = null;
+  let allCountryLessons = [];
+
+  async function loadCountryLessons() {
+    const list = document.querySelector('#country-lessons-list');
+    const { data, error } = await supabaseClient.from('country_lessons').select('*').order('lesson_number');
+    if (error) {
+      list.innerHTML = `<p class="empty-state">Could not load lessons: ${escapeHtml(error.message)}</p>`;
+      return;
+    }
+    allCountryLessons = data || [];
+    renderCountryLessonsList();
+  }
+
+  function renderCountryLessonsList() {
+    const list = document.querySelector('#country-lessons-list');
+    const countEl = document.querySelector('#cl-count');
+    if (countEl) countEl.textContent = `${allCountryLessons.length} lesson${allCountryLessons.length === 1 ? '' : 's'}`;
+    if (!allCountryLessons.length) {
+      list.innerHTML = '<p class="empty-state">No lessons yet — add one above.</p>';
+      return;
+    }
+
+    let html = '';
+    let currentUnit = null;
+    allCountryLessons.forEach((l) => {
+      if (l.unit_number !== currentUnit) {
+        currentUnit = l.unit_number;
+        html += `<div class="module-heading">Unit ${l.unit_number} — ${escapeHtml(l.unit_title)}</div>`;
+      }
+      html += `
+        <div class="card card-pad" style="margin-bottom:12px;" data-country-lesson-card="${l.id}">
+          <div class="flex justify-between items-center">
+            <div>
+              <span class="small muted" style="font-family:var(--font-mono);">#${l.lesson_number}</span>
+              <strong style="margin-left:6px;">${escapeHtml(l.title)}</strong>
+              ${l.published ? '<span class="badge badge-forest" style="margin-left:8px;">Published</span>' : '<span class="badge" style="margin-left:8px;">Draft</span>'}
+              ${l.content_es ? '<span class="badge badge-ocean" style="margin-left:8px;">ES ready</span>' : ''}
+            </div>
+            <div class="flex gap-8">
+              <button class="btn btn-ghost btn-sm" data-country-lesson-edit="${l.id}">Edit</button>
+              <button class="btn btn-ghost btn-sm" data-country-lesson-delete="${l.id}">Delete</button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    list.innerHTML = html;
+  }
+
+  const countryLessonForm = document.querySelector('#country-lesson-form');
+  const countryLessonCancelBtn = document.querySelector('#cl-cancel-edit');
+
+  function resetCountryLessonForm() {
+    editingCountryLessonId = null;
+    countryLessonForm.reset();
+    document.querySelector('#cl-published').checked = true;
+    document.querySelector('#cl-submit').textContent = 'Add Lesson';
+    countryLessonCancelBtn.style.display = 'none';
+  }
+
+  countryLessonCancelBtn?.addEventListener('click', resetCountryLessonForm);
+
+  countryLessonForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      unit_number: Number(document.querySelector('#cl-unit-number').value) || 1,
+      unit_title: document.querySelector('#cl-unit-title').value,
+      lesson_number: Number(document.querySelector('#cl-lesson-number').value) || 1,
+      title: document.querySelector('#cl-title').value,
+      content: document.querySelector('#cl-content').value,
+      unit_title_es: document.querySelector('#cl-unit-title-es').value || null,
+      title_es: document.querySelector('#cl-title-es').value || null,
+      content_es: document.querySelector('#cl-content-es').value || null,
+      published: document.querySelector('#cl-published').checked,
+    };
+    const submitBtn = document.querySelector('#cl-submit');
+    submitBtn.disabled = true;
+    let error;
+    if (editingCountryLessonId) {
+      ({ error } = await supabaseClient.from('country_lessons').update(payload).eq('id', editingCountryLessonId));
+    } else {
+      ({ error } = await supabaseClient.from('country_lessons').insert(payload));
+    }
+    submitBtn.disabled = false;
+    if (error) { alert('Could not save lesson: ' + error.message); return; }
+    resetCountryLessonForm();
+    loadCountryLessons();
+  });
+
+  document.querySelector('#country-lessons-list')?.addEventListener('click', async (e) => {
+    const editBtn = e.target.closest('[data-country-lesson-edit]');
+    const delBtn = e.target.closest('[data-country-lesson-delete]');
+
+    if (editBtn) {
+      const id = editBtn.getAttribute('data-country-lesson-edit');
+      const { data } = await supabaseClient.from('country_lessons').select('*').eq('id', id).single();
+      if (!data) return;
+      editingCountryLessonId = id;
+      document.querySelector('#cl-unit-number').value = data.unit_number;
+      document.querySelector('#cl-lesson-number').value = data.lesson_number;
+      document.querySelector('#cl-unit-title').value = data.unit_title;
+      document.querySelector('#cl-title').value = data.title;
+      document.querySelector('#cl-content').value = data.content || '';
+      document.querySelector('#cl-unit-title-es').value = data.unit_title_es || '';
+      document.querySelector('#cl-title-es').value = data.title_es || '';
+      document.querySelector('#cl-content-es').value = data.content_es || '';
+      document.querySelector('#cl-published').checked = !!data.published;
+      document.querySelector('#cl-submit').textContent = 'Save Changes';
+      countryLessonCancelBtn.style.display = 'inline-flex';
+      countryLessonForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    if (delBtn) {
+      const id = delBtn.getAttribute('data-country-lesson-delete');
+      if (!confirm('Delete this lesson? This cannot be undone.')) return;
+      const { error } = await supabaseClient.from('country_lessons').delete().eq('id', id);
+      if (error) { alert('Could not delete: ' + error.message); return; }
+      loadCountryLessons();
     }
   });
 

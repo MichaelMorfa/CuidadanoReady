@@ -51,6 +51,7 @@
         <a href="#" data-panel-link="lessons">Course Editor</a>
         <a href="#" data-panel-link="quizzes">Quiz Editor</a>
         <a href="#" data-panel-link="flashcards">Flashcards Editor</a>
+        <a href="#" data-panel-link="country-lessons">Know Your Country Editor</a>
       </li>
       <li class="app-nav-group">
         <h4>Revenue</h4>
@@ -302,6 +303,59 @@
           <span class="small muted" id="flashcard-count"></span>
         </div>
         <div id="flashcards-list"><p class="empty-state">Loading…</p></div>
+      </section>
+
+      <!-- ================= KNOW YOUR COUNTRY (40-lesson history background) ================= -->
+      <section class="admin-panel" data-panel="country-lessons">
+        <div class="card card-pad" style="margin-bottom:24px;">
+          <span class="eyebrow">EDIT LESSON</span>
+          <form class="admin-add-form" id="country-lesson-form">
+            <div>
+              <label>Unit Number</label>
+              <input type="number" id="cl-unit-number" value="1" min="1" max="10" required>
+            </div>
+            <div>
+              <label>Lesson Number (1–40, unique)</label>
+              <input type="number" id="cl-lesson-number" value="1" min="1" max="40" required>
+            </div>
+            <div class="span-2">
+              <label>Unit Title (English)</label>
+              <input type="text" id="cl-unit-title" placeholder="e.g. The World Before the United States" required>
+            </div>
+            <div class="span-2">
+              <label>Lesson Title (English)</label>
+              <input type="text" id="cl-title" placeholder="e.g. The First Peoples of North America" required>
+            </div>
+            <div class="span-2">
+              <label>Lesson Content (English)</label>
+              <textarea id="cl-content" style="min-height:220px;" placeholder="Blank line between paragraphs. Lines starting with • become a bulleted list. **bold** and *italic* are supported." required></textarea>
+            </div>
+            <div class="span-2">
+              <label>Título de la Unidad (Spanish — optional)</label>
+              <input type="text" id="cl-unit-title-es" placeholder="Se usará el inglés si se deja en blanco">
+            </div>
+            <div class="span-2">
+              <label>Título de la Lección (Spanish — optional)</label>
+              <input type="text" id="cl-title-es" placeholder="Se usará el inglés si se deja en blanco">
+            </div>
+            <div class="span-2">
+              <label>Contenido (Spanish — optional)</label>
+              <textarea id="cl-content-es" style="min-height:220px;" placeholder="Se usará el inglés si se deja en blanco"></textarea>
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px; padding-bottom:11px;">
+              <input type="checkbox" id="cl-published" style="width:auto; margin:0;" checked>
+              <label style="margin:0;" for="cl-published">Published</label>
+            </div>
+            <div class="span-2">
+              <button type="submit" class="btn btn-primary" id="cl-submit">Add Lesson</button>
+              <button type="button" class="btn btn-ghost" id="cl-cancel-edit" style="display:none;">Cancel Edit</button>
+            </div>
+          </form>
+        </div>
+        <div class="search-row">
+          <span class="small muted" id="cl-count"></span>
+        </div>
+        <div id="country-lessons-list"><p class="empty-state">Loading…</p></div>
       </section>
 
       <!-- ================= REVENUE (placeholder until Stripe/Square) ================= -->
