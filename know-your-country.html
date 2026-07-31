@@ -55,10 +55,11 @@
 
   /* ---- Audio narration bar ---- */
   .kyc-audio-bar {
-    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    display: flex; flex-direction: column; gap: 10px;
     padding: 14px 18px; margin-bottom: 24px;
     border: 1px solid var(--line); border-radius: var(--radius); background: var(--white);
   }
+  .kyc-audio-controls-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
   .kyc-audio-play-btn { display: inline-flex; align-items: center; gap: 8px; }
   .kyc-audio-lang-toggle { display: inline-flex; align-items: center; gap: 6px; border-left: 1px solid var(--line); padding-left: 16px; }
   .kyc-audio-lang-toggle .small.muted { margin-right: 2px; }
@@ -70,8 +71,23 @@
   .kyc-audio-lang-btn.active { background: var(--forest); border-color: var(--forest); color: var(--white); }
   .kyc-audio-status { font-size: 0.82rem; color: var(--slate); margin-left: auto; }
   .kyc-audio-status.speaking { color: var(--forest); font-weight: 600; }
+  .kyc-audio-seek-row { display: flex; align-items: center; gap: 10px; }
+  .kyc-audio-time { font-family: var(--font-mono); font-size: 0.72rem; color: var(--slate); min-width: 34px; text-align: center; flex-shrink: 0; }
+  .kyc-audio-seek {
+    flex: 1; margin: 0; height: 5px; border-radius: 3px; background: var(--line);
+    outline: none; cursor: pointer; -webkit-appearance: none; appearance: none;
+  }
+  .kyc-audio-seek::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%;
+    background: var(--forest); cursor: pointer; border: 2px solid var(--white); box-shadow: 0 0 0 1px var(--line);
+  }
+  .kyc-audio-seek::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%; background: var(--forest); cursor: pointer;
+    border: 2px solid var(--white); box-shadow: 0 0 0 1px var(--line);
+  }
+  .kyc-audio-seek:disabled { opacity: 0.4; cursor: not-allowed; }
   @media (max-width: 560px) {
-    .kyc-audio-bar { flex-direction: column; align-items: flex-start; }
+    .kyc-audio-controls-row { flex-direction: column; align-items: flex-start; }
     .kyc-audio-lang-toggle { border-left: none; padding-left: 0; border-top: 1px solid var(--line); padding-top: 12px; width: 100%; }
     .kyc-audio-status { margin-left: 0; }
   }
@@ -176,19 +192,26 @@
           <h1 id="kyc-lesson-title" style="margin-bottom:20px;">—</h1>
 
           <div class="kyc-audio-bar" id="kyc-audio-bar">
-            <button class="btn btn-primary btn-sm kyc-audio-play-btn" id="kyc-audio-play-btn">
-              <span id="kyc-audio-play-icon">▶</span>
-              <span id="kyc-audio-play-label" data-en="Listen" data-es="Escuchar">Listen</span>
-            </button>
-            <button class="btn btn-ghost btn-sm" id="kyc-audio-stop-btn" style="display:none;">
-              ⏹ <span data-en="Stop" data-es="Detener">Stop</span>
-            </button>
-            <div class="kyc-audio-lang-toggle">
-              <span class="small muted" data-en="Listen in:" data-es="Escuchar en:">Listen in:</span>
-              <button class="kyc-audio-lang-btn" data-audio-lang="en">EN</button>
-              <button class="kyc-audio-lang-btn" data-audio-lang="es">ES</button>
+            <div class="kyc-audio-controls-row">
+              <button class="btn btn-primary btn-sm kyc-audio-play-btn" id="kyc-audio-play-btn">
+                <span id="kyc-audio-play-icon">▶</span>
+                <span id="kyc-audio-play-label" data-en="Listen" data-es="Escuchar">Listen</span>
+              </button>
+              <button class="btn btn-ghost btn-sm" id="kyc-audio-stop-btn" style="display:none;">
+                ⏹ <span data-en="Stop" data-es="Detener">Stop</span>
+              </button>
+              <div class="kyc-audio-lang-toggle">
+                <span class="small muted" data-en="Listen in:" data-es="Escuchar en:">Listen in:</span>
+                <button class="kyc-audio-lang-btn" data-audio-lang="en">EN</button>
+                <button class="kyc-audio-lang-btn" data-audio-lang="es">ES</button>
+              </div>
+              <span class="kyc-audio-status small" id="kyc-audio-status"></span>
             </div>
-            <span class="kyc-audio-status small" id="kyc-audio-status"></span>
+            <div class="kyc-audio-seek-row">
+              <span class="kyc-audio-time" id="kyc-audio-current-time">0:00</span>
+              <input type="range" class="kyc-audio-seek" id="kyc-audio-seek" min="0" max="0" step="0.1" value="0" disabled>
+              <span class="kyc-audio-time" id="kyc-audio-duration">0:00</span>
+            </div>
           </div>
 
           <div class="card card-pad kyc-reading-body" id="kyc-lesson-content"></div>

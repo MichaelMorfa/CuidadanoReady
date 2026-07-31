@@ -930,6 +930,31 @@ let kycCache = null; // { lessons: [...], completedNums: Set, currentLessonNumbe
 // single shared <audio> element we point at the right file per lesson/lang.
 const kycAudioState = { lang: 'en', playing: false, paused: false };
 let kycAudioEl = null;
+let kycSeeking = false; // true while the user is actively dragging the seek bar
+
+function formatKycTime(sec) {
+  if (!isFinite(sec) || sec < 0) sec = 0;
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+// Keeps the seek slider + time labels in sync with actual playback. Skipped
+// while the user has the slider grabbed so their drag isn't fought/overwritten.
+function updateKycSeekUI() {
+  const seek = document.querySelector('#kyc-audio-seek');
+  const curEl = document.querySelector('#kyc-audio-current-time');
+  const durEl = document.querySelector('#kyc-audio-duration');
+  if (!seek) return;
+  const el = kycAudioEl;
+  const duration = (el && isFinite(el.duration) && el.duration > 0) ? el.duration : 0;
+  const current = el ? el.currentTime : 0;
+  seek.disabled = !duration;
+  seek.max = duration || 0;
+  if (!kycSeeking) seek.value = current || 0;
+  if (curEl) curEl.textContent = formatKycTime(current);
+  if (durEl) durEl.textContent = formatKycTime(duration);
+}
 
 function getKycAudioEl() {
   if (!kycAudioEl) {
@@ -940,6 +965,8 @@ function getKycAudioEl() {
     document.body.appendChild(kycAudioEl);
     kycAudioEl.addEventListener('ended', () => { kycAudioState.playing = false; kycAudioState.paused = false; updateKycAudioUI(); });
     kycAudioEl.addEventListener('error', () => { kycAudioState.playing = false; kycAudioState.paused = false; updateKycAudioUI(); });
+    kycAudioEl.addEventListener('loadedmetadata', updateKycSeekUI);
+    kycAudioEl.addEventListener('timeupdate', updateKycSeekUI);
   }
   return kycAudioEl;
 }
@@ -966,6 +993,7 @@ function updateKycAudioUI() {
   const hasAudio = !!currentKycAudioUrl();
 
   if (playBtn) playBtn.disabled = !hasAudio;
+  updateKycSeekUI();
 
   if (!hasAudio) {
     icon.textContent = '▶';
@@ -1001,6 +1029,15 @@ function stopKycAudio() {
   kycAudioState.playing = false;
   kycAudioState.paused = false;
   updateKycAudioUI();
+}
+
+// Jumps playback to a specific point (0-duration seconds), used by the
+// draggable seek bar to scrub forward/back or restart from the beginning.
+function seekKycAudio(seconds) {
+  const el = getKycAudioEl();
+  if (!isFinite(el.duration) || el.duration <= 0) return;
+  el.currentTime = Math.max(0, Math.min(seconds, el.duration));
+  updateKycSeekUI();
 }
 
 function speakKycLesson() {
@@ -1039,6 +1076,7 @@ function setKycAudioLang(lang) {
   if (kycAudioState.lang === lang) return;
   const wasPlaying = kycAudioState.playing && !kycAudioState.paused;
   stopKycAudio();
+  if (!wasPlaying && kycAudioEl) kycAudioEl.removeAttribute('src'); // reset seek bar/duration to 0:00 until they press play again
   kycAudioState.lang = lang;
   updateKycAudioUI();
   if (wasPlaying) speakKycLesson(); // switch narration language mid-listen by restarting the lesson in the new language
@@ -1118,6 +1156,7 @@ function renderKycReading() {
 // different lesson is opened so audio never carries over between lessons.
 function resetKycAudioForNewLesson() {
   stopKycAudio();
+  if (kycAudioEl) kycAudioEl.removeAttribute('src'); // clear old lesson's file so seek bar/duration reset to 0:00
   kycAudioState.lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
   updateKycAudioUI();
 }
@@ -1212,6 +1251,28 @@ async function initKycPage() {
 
   document.querySelector('#kyc-audio-play-btn').addEventListener('click', toggleKycAudioPlayPause);
   document.querySelector('#kyc-audio-stop-btn').addEventListener('click', stopKycAudio);
+
+  const kycSeekInput = document.querySelector('#kyc-audio-seek');
+  if (kycSeekInput) {
+    // Dragging updates playback position live; we suppress the normal
+    // timeupdate-driven UI sync while the user has the handle grabbed so
+    // their drag isn't overwritten mid-gesture.
+    const beginKycSeekDrag = () => { kycSeeking = true; };
+    const endKycSeekDrag = () => { kycSeeking = false; seekKycAudio(parseFloat(kycSeekInput.value) || 0); };
+    kycSeekInput.addEventListener('pointerdown', beginKycSeekDrag);
+    kycSeekInput.addEventListener('pointerup', endKycSeekDrag);
+    kycSeekInput.addEventListener('touchstart', beginKycSeekDrag, { passive: true });
+    kycSeekInput.addEventListener('touchend', endKycSeekDrag);
+    kycSeekInput.addEventListener('input', () => {
+      // Live-scrub as the user drags, and update the time label immediately.
+      kycSeeking = true;
+      seekKycAudio(parseFloat(kycSeekInput.value) || 0);
+      const curEl = document.querySelector('#kyc-audio-current-time');
+      if (curEl) curEl.textContent = formatKycTime(parseFloat(kycSeekInput.value) || 0);
+    });
+    kycSeekInput.addEventListener('change', endKycSeekDrag);
+  }
+
   document.querySelectorAll('#kyc-audio-bar [data-audio-lang]').forEach((btn) => {
     btn.addEventListener('click', () => setKycAudioLang(btn.getAttribute('data-audio-lang')));
   });
