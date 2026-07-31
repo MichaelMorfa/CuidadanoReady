@@ -923,6 +923,142 @@ const KYC_LABELS = {
 
 let kycCache = null; // { lessons: [...], completedNums: Set, currentLessonNumber }
 
+// ---- "Know Your Country" audio narration (browser Web Speech API) --------
+// Reads the current lesson aloud in English or Spanish. No audio files are
+// generated or stored — this uses the visitor's own browser/OS voices via
+// window.speechSynthesis, so voice quality varies by device but it works
+// everywhere with no cost or backend infrastructure.
+const kycAudioState = { lang: 'en', playing: false, paused: false };
+let kycVoicesCache = null;
+
+function getKycVoices() {
+  if (!window.speechSynthesis) return [];
+  if (!kycVoicesCache || !kycVoicesCache.length) kycVoicesCache = window.speechSynthesis.getVoices();
+  return kycVoicesCache || [];
+}
+// Voice lists load asynchronously in some browsers (notably Chrome) — this
+// event fires once they're ready, so we refresh our cache when it does.
+if (window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = () => { kycVoicesCache = window.speechSynthesis.getVoices(); };
+}
+
+function pickKycVoice(lang) {
+  const voices = getKycVoices();
+  if (!voices.length) return null;
+  const prefix = lang === 'es' ? 'es' : 'en';
+  return voices.find((v) => v.lang && v.lang.toLowerCase().startsWith(prefix + '-'))
+    || voices.find((v) => v.lang && v.lang.toLowerCase().startsWith(prefix))
+    || null;
+}
+
+// Converts the site's plain-text lesson-body convention (blank-line
+// paragraphs, "• " bullet lines, **bold**/*italic* markers) into clean
+// prose suitable for text-to-speech — strips markup characters that would
+// otherwise be read aloud literally ("asterisk asterisk...") and turns
+// bullet lines into plain spoken sentences.
+function kycTextForSpeech(title, rawContent) {
+  const blocks = (rawContent || '').split(/\n\n+/).map((b) => b.trim()).filter(Boolean);
+  const spoken = blocks.map((block) => {
+    const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
+    const isBulletBlock = lines.length > 0 && lines.every((l) => l.startsWith('•'));
+    const text = isBulletBlock
+      ? lines.map((l) => l.replace(/^•\s*/, '')).join('. ')
+      : block.replace(/\n/g, ' ');
+    return text.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1');
+  });
+  return `${title}. ${spoken.join(' ')}`;
+}
+
+function updateKycAudioUI() {
+  const bar = document.querySelector('#kyc-audio-bar');
+  if (!bar) return;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  bar.querySelectorAll('[data-audio-lang]').forEach((btn) => {
+    btn.classList.toggle('active', btn.getAttribute('data-audio-lang') === kycAudioState.lang);
+  });
+  const icon = document.querySelector('#kyc-audio-play-icon');
+  const label = document.querySelector('#kyc-audio-play-label');
+  const stopBtn = document.querySelector('#kyc-audio-stop-btn');
+  const status = document.querySelector('#kyc-audio-status');
+  if (kycAudioState.playing && !kycAudioState.paused) {
+    icon.textContent = '⏸';
+    label.textContent = lang === 'es' ? 'Pausar' : 'Pause';
+    stopBtn.style.display = 'inline-flex';
+    status.textContent = lang === 'es' ? 'Reproduciendo…' : 'Playing…';
+    status.classList.add('speaking');
+  } else if (kycAudioState.playing && kycAudioState.paused) {
+    icon.textContent = '▶';
+    label.textContent = lang === 'es' ? 'Reanudar' : 'Resume';
+    stopBtn.style.display = 'inline-flex';
+    status.textContent = lang === 'es' ? 'Pausado' : 'Paused';
+    status.classList.remove('speaking');
+  } else {
+    icon.textContent = '▶';
+    label.textContent = lang === 'es' ? 'Escuchar' : 'Listen';
+    stopBtn.style.display = 'none';
+    status.textContent = '';
+    status.classList.remove('speaking');
+  }
+}
+
+function stopKycAudio() {
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  kycAudioState.playing = false;
+  kycAudioState.paused = false;
+  updateKycAudioUI();
+}
+
+function speakKycLesson() {
+  if (!window.speechSynthesis || !kycCache || kycCache.currentLessonNumber == null) return;
+  const lesson = kycCache.lessons.find((l) => l.lesson_number === kycCache.currentLessonNumber);
+  if (!lesson) return;
+
+  window.speechSynthesis.cancel(); // clear any queued/previous utterance first
+
+  const audioLang = kycAudioState.lang;
+  const title = audioLang === 'es' ? (lesson.title_es || lesson.title) : lesson.title;
+  const content = audioLang === 'es' ? (lesson.content_es || lesson.content) : lesson.content;
+  const text = kycTextForSpeech(title, content);
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = audioLang === 'es' ? 'es-US' : 'en-US';
+  const voice = pickKycVoice(audioLang);
+  if (voice) utterance.voice = voice;
+  utterance.rate = 0.95;
+
+  utterance.onend = () => { kycAudioState.playing = false; kycAudioState.paused = false; updateKycAudioUI(); };
+  utterance.onerror = () => { kycAudioState.playing = false; kycAudioState.paused = false; updateKycAudioUI(); };
+
+  kycAudioState.playing = true;
+  kycAudioState.paused = false;
+  window.speechSynthesis.speak(utterance);
+  updateKycAudioUI();
+}
+
+function toggleKycAudioPlayPause() {
+  if (!window.speechSynthesis) return;
+  if (!kycAudioState.playing) {
+    speakKycLesson();
+  } else if (kycAudioState.paused) {
+    window.speechSynthesis.resume();
+    kycAudioState.paused = false;
+    updateKycAudioUI();
+  } else {
+    window.speechSynthesis.pause();
+    kycAudioState.paused = true;
+    updateKycAudioUI();
+  }
+}
+
+function setKycAudioLang(lang) {
+  if (kycAudioState.lang === lang) return;
+  const wasPlaying = kycAudioState.playing && !kycAudioState.paused;
+  stopKycAudio();
+  kycAudioState.lang = lang;
+  updateKycAudioUI();
+  if (wasPlaying) speakKycLesson(); // switch narration language mid-listen by restarting the lesson in the new language
+}
+
 function renderKycPicker() {
   const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
   const kl = KYC_LABELS[lang];
@@ -989,6 +1125,16 @@ function renderKycReading() {
   nextBtn.textContent = idx >= lessons.length - 1 ? (lang === 'es' ? 'Terminado ✓' : 'Done ✓') : `${lang === 'es' ? 'Siguiente' : 'Next'} →`;
 
   markKycLessonRead(currentLessonNumber);
+  updateKycAudioUI();
+}
+
+// Stops any in-progress narration and defaults the audio player's language
+// to whatever the site is currently displayed in — called every time a
+// different lesson is opened so audio never carries over between lessons.
+function resetKycAudioForNewLesson() {
+  stopKycAudio();
+  kycAudioState.lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  updateKycAudioUI();
 }
 
 async function markKycLessonRead(lessonNumber) {
@@ -1008,6 +1154,7 @@ function openKycLesson(lessonNumber) {
   document.querySelector('#kyc-picker-view').style.display = 'none';
   document.querySelector('#kyc-reading-view').style.display = 'block';
   window.scrollTo(0, 0);
+  resetKycAudioForNewLesson();
   renderKycReading();
 }
 
@@ -1044,6 +1191,7 @@ async function initKycPage() {
   renderKycPicker();
 
   document.querySelector('#kyc-back-to-list').addEventListener('click', () => {
+    stopKycAudio();
     kycCache.currentLessonNumber = null;
     document.querySelector('#kyc-reading-view').style.display = 'none';
     document.querySelector('#kyc-picker-view').style.display = 'block';
@@ -1053,20 +1201,40 @@ async function initKycPage() {
   document.querySelector('#kyc-prev-lesson-btn').addEventListener('click', () => {
     const { lessons, currentLessonNumber } = kycCache;
     const idx = lessons.findIndex((l) => l.lesson_number === currentLessonNumber);
-    if (idx > 0) { kycCache.currentLessonNumber = lessons[idx - 1].lesson_number; window.scrollTo(0, 0); renderKycReading(); }
+    if (idx > 0) {
+      kycCache.currentLessonNumber = lessons[idx - 1].lesson_number;
+      window.scrollTo(0, 0);
+      resetKycAudioForNewLesson();
+      renderKycReading();
+    }
   });
   document.querySelector('#kyc-next-lesson-btn').addEventListener('click', () => {
     const { lessons, currentLessonNumber } = kycCache;
     const idx = lessons.findIndex((l) => l.lesson_number === currentLessonNumber);
     if (idx < lessons.length - 1) {
-      kycCache.currentLessonNumber = lessons[idx + 1].lesson_number; window.scrollTo(0, 0); renderKycReading();
+      kycCache.currentLessonNumber = lessons[idx + 1].lesson_number;
+      window.scrollTo(0, 0);
+      resetKycAudioForNewLesson();
+      renderKycReading();
     } else {
+      stopKycAudio();
       kycCache.currentLessonNumber = null;
       document.querySelector('#kyc-reading-view').style.display = 'none';
       document.querySelector('#kyc-picker-view').style.display = 'block';
       renderKycPicker();
     }
   });
+
+  document.querySelector('#kyc-audio-play-btn').addEventListener('click', toggleKycAudioPlayPause);
+  document.querySelector('#kyc-audio-stop-btn').addEventListener('click', stopKycAudio);
+  document.querySelectorAll('#kyc-audio-bar [data-audio-lang]').forEach((btn) => {
+    btn.addEventListener('click', () => setKycAudioLang(btn.getAttribute('data-audio-lang')));
+  });
+
+  // Stop narration if the visitor navigates away or closes the tab —
+  // speechSynthesis otherwise keeps talking after the page unloads on some browsers.
+  window.addEventListener('beforeunload', stopKycAudio);
+  window.addEventListener('pagehide', stopKycAudio);
 
   // Deep link support: know-your-country.html?lesson=12
   const params = new URLSearchParams(window.location.search);

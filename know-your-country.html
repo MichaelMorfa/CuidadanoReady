@@ -52,6 +52,29 @@
   .kyc-reading-body p { margin: 0 0 16px; line-height: 1.7; }
   .kyc-reading-body ul.lesson-list { margin: 0 0 16px; padding-left: 20px; line-height: 1.7; }
   .kyc-reading-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 32px; gap: 12px; flex-wrap: wrap; }
+
+  /* ---- Audio narration bar ---- */
+  .kyc-audio-bar {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 14px 18px; margin-bottom: 24px;
+    border: 1px solid var(--line); border-radius: var(--radius); background: var(--white);
+  }
+  .kyc-audio-play-btn { display: inline-flex; align-items: center; gap: 8px; }
+  .kyc-audio-lang-toggle { display: inline-flex; align-items: center; gap: 6px; border-left: 1px solid var(--line); padding-left: 16px; }
+  .kyc-audio-lang-toggle .small.muted { margin-right: 2px; }
+  .kyc-audio-lang-btn {
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.03em;
+    padding: 5px 10px; border-radius: 6px; border: 1px solid var(--line);
+    background: var(--white); color: var(--slate); cursor: pointer;
+  }
+  .kyc-audio-lang-btn.active { background: var(--forest); border-color: var(--forest); color: var(--white); }
+  .kyc-audio-status { font-size: 0.82rem; color: var(--slate); margin-left: auto; }
+  .kyc-audio-status.speaking { color: var(--forest); font-weight: 600; }
+  @media (max-width: 560px) {
+    .kyc-audio-bar { flex-direction: column; align-items: flex-start; }
+    .kyc-audio-lang-toggle { border-left: none; padding-left: 0; border-top: 1px solid var(--line); padding-top: 12px; width: 100%; }
+    .kyc-audio-status { margin-left: 0; }
+  }
 </style>
 <meta name="description" content="The story behind the U.S. citizenship test — real American history in plain language.">
 <meta name="robots" content="noindex">
@@ -150,7 +173,23 @@
 
         <div class="kyc-reading-stage">
           <span class="badge" style="border-color:var(--forest); color:var(--forest); margin-bottom:12px; display:inline-block;" id="kyc-lesson-badge">—</span>
-          <h1 id="kyc-lesson-title" style="margin-bottom:24px;">—</h1>
+          <h1 id="kyc-lesson-title" style="margin-bottom:20px;">—</h1>
+
+          <div class="kyc-audio-bar" id="kyc-audio-bar">
+            <button class="btn btn-primary btn-sm kyc-audio-play-btn" id="kyc-audio-play-btn">
+              <span id="kyc-audio-play-icon">▶</span>
+              <span id="kyc-audio-play-label" data-en="Listen" data-es="Escuchar">Listen</span>
+            </button>
+            <button class="btn btn-ghost btn-sm" id="kyc-audio-stop-btn" style="display:none;">
+              ⏹ <span data-en="Stop" data-es="Detener">Stop</span>
+            </button>
+            <div class="kyc-audio-lang-toggle">
+              <span class="small muted" data-en="Listen in:" data-es="Escuchar en:">Listen in:</span>
+              <button class="kyc-audio-lang-btn" data-audio-lang="en">EN</button>
+              <button class="kyc-audio-lang-btn" data-audio-lang="es">ES</button>
+            </div>
+            <span class="kyc-audio-status small" id="kyc-audio-status"></span>
+          </div>
 
           <div class="card card-pad kyc-reading-body" id="kyc-lesson-content"></div>
 
