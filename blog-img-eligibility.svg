@@ -1,0 +1,42 @@
+<svg viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="450" fill="#DEEAE3"/>
+  <rect width="800" height="450" fill="url(#dots6)" opacity="0.5"/>
+  <defs>
+    <pattern id="dots6" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.6" fill="#2F6B4F" opacity="0.2"/>
+    </pattern>
+  </defs>
+
+  <!-- clipboard -->
+  <g transform="translate(250,80)">
+    <rect x="0" y="10" width="240" height="300" rx="14" fill="#FFFFFF" stroke="#C9CED6" stroke-width="2"/>
+    <rect x="80" y="0" width="80" height="26" rx="8" fill="#545C68"/>
+
+    <g>
+      <circle cx="42" cy="70" r="13" fill="#2F6B4F"/>
+      <path d="M36 70 l4 5 l9 -10" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="66" y="63" width="150" height="10" rx="5" fill="#E9EBEE"/>
+
+      <circle cx="42" cy="118" r="13" fill="#2F6B4F"/>
+      <path d="M36 118 l4 5 l9 -10" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="66" y="111" width="150" height="10" rx="5" fill="#E9EBEE"/>
+
+      <circle cx="42" cy="166" r="13" fill="#2F6B4F"/>
+      <path d="M36 166 l4 5 l9 -10" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="66" y="159" width="120" height="10" rx="5" fill="#E9EBEE"/>
+
+      <circle cx="42" cy="214" r="13" fill="none" stroke="#C9CED6" stroke-width="3"/>
+      <rect x="66" y="207" width="140" height="10" rx="5" fill="#E9EBEE"/>
+
+      <circle cx="42" cy="262" r="13" fill="none" stroke="#C9CED6" stroke-width="3"/>
+      <rect x="66" y="255" width="100" height="10" rx="5" fill="#E9EBEE"/>
+    </g>
+  </g>
+
+  <!-- magnifying glass overlapping -->
+  <g transform="translate(500,250)">
+    <circle cx="0" cy="0" r="55" fill="none" stroke="#1C7FB8" stroke-width="14"/>
+    <line x1="40" y1="40" x2="90" y2="90" stroke="#1C7FB8" stroke-width="16" stroke-linecap="round"/>
+    <circle cx="0" cy="0" r="55" fill="#FFFFFF" opacity="0.15"/>
+  </g>
+</svg>

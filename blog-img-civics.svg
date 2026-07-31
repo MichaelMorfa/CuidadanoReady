@@ -1,0 +1,42 @@
+<svg viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="450" fill="#DEEAE3"/>
+  <rect width="800" height="450" fill="url(#dots2)" opacity="0.5"/>
+  <defs>
+    <pattern id="dots2" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.6" fill="#2F6B4F" opacity="0.2"/>
+    </pattern>
+  </defs>
+
+  <!-- test paper -->
+  <g transform="translate(215,90)">
+    <rect x="0" y="0" width="270" height="320" rx="10" fill="#FFFFFF" stroke="#C9CED6" stroke-width="2"/>
+    <rect x="30" y="34" width="130" height="14" rx="4" fill="#1C222B"/>
+    <rect x="30" y="60" width="90" height="8" rx="4" fill="#C9CED6"/>
+
+    <!-- question rows with bubbles -->
+    <g>
+      <rect x="30" y="100" width="200" height="8" rx="4" fill="#E9EBEE"/>
+      <circle cx="40" cy="132" r="9" fill="none" stroke="#545C68" stroke-width="2.5"/>
+      <circle cx="70" cy="132" r="9" fill="#2F6B4F"/>
+      <circle cx="100" cy="132" r="9" fill="none" stroke="#545C68" stroke-width="2.5"/>
+
+      <rect x="30" y="164" width="200" height="8" rx="4" fill="#E9EBEE"/>
+      <circle cx="40" cy="196" r="9" fill="#2F6B4F"/>
+      <circle cx="70" cy="196" r="9" fill="none" stroke="#545C68" stroke-width="2.5"/>
+      <circle cx="100" cy="196" r="9" fill="none" stroke="#545C68" stroke-width="2.5"/>
+
+      <rect x="30" y="228" width="200" height="8" rx="4" fill="#E9EBEE"/>
+      <circle cx="40" cy="260" r="9" fill="none" stroke="#545C68" stroke-width="2.5"/>
+      <circle cx="70" cy="260" r="9" fill="none" stroke="#545C68" stroke-width="2.5"/>
+      <circle cx="100" cy="260" r="9" fill="#2F6B4F"/>
+    </g>
+  </g>
+
+  <!-- seal / badge overlapping top right -->
+  <g transform="translate(470,60)">
+    <circle cx="90" cy="90" r="90" fill="#2F6B4F"/>
+    <circle cx="90" cy="90" r="90" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-dasharray="6 8"/>
+    <path d="M90 40 l12 24 l26 4 l-19 18 l5 26 l-24 -13 l-24 13 l5 -26 l-19 -18 l26 -4 Z" fill="#FFFFFF"/>
+    <text x="90" y="152" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="20" fill="#FFFFFF" font-weight="600">2025</text>
+  </g>
+</svg>

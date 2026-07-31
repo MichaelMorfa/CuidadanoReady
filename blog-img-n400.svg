@@ -1,0 +1,46 @@
+<svg viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="450" fill="#DCEAF3"/>
+  <rect width="800" height="450" fill="url(#dots)" opacity="0.5"/>
+  <defs>
+    <pattern id="dots" width="26" height="26" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.6" fill="#1C7FB8" opacity="0.18"/>
+    </pattern>
+  </defs>
+
+  <!-- ID card, tilted, behind the main document -->
+  <g transform="translate(505,150) rotate(9)">
+    <rect x="0" y="0" width="190" height="120" rx="12" fill="#145F8C"/>
+    <circle cx="42" cy="60" r="24" fill="#DCEAF3"/>
+    <rect x="82" y="38" width="90" height="10" rx="5" fill="#DCEAF3"/>
+    <rect x="82" y="58" width="70" height="8" rx="4" fill="#7FB6D6"/>
+    <rect x="82" y="76" width="55" height="8" rx="4" fill="#7FB6D6"/>
+  </g>
+
+  <!-- main document with folded corner -->
+  <g transform="translate(230,95)">
+    <path d="M0 0 H240 L290 50 V330 H0 Z" fill="#FFFFFF" stroke="#C9CED6" stroke-width="2"/>
+    <path d="M240 0 L290 50 H240 Z" fill="#E9EBEE" stroke="#C9CED6" stroke-width="2"/>
+
+    <rect x="34" y="50" width="150" height="14" rx="4" fill="#1C222B"/>
+    <rect x="34" y="78" width="220" height="8" rx="4" fill="#C9CED6"/>
+    <rect x="34" y="96" width="220" height="8" rx="4" fill="#C9CED6"/>
+    <rect x="34" y="114" width="160" height="8" rx="4" fill="#C9CED6"/>
+
+    <!-- checklist rows -->
+    <g font-family="sans-serif">
+      <circle cx="46" cy="168" r="14" fill="#2F6B4F"/>
+      <path d="M40 168 l4 5 l9 -10" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="72" y="160" width="180" height="10" rx="5" fill="#E9EBEE"/>
+
+      <circle cx="46" cy="208" r="14" fill="#2F6B4F"/>
+      <path d="M40 208 l4 5 l9 -10" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="72" y="200" width="150" height="10" rx="5" fill="#E9EBEE"/>
+
+      <circle cx="46" cy="248" r="14" fill="#C9CED6"/>
+      <rect x="72" y="240" width="165" height="10" rx="5" fill="#E9EBEE"/>
+
+      <circle cx="46" cy="288" r="14" fill="#C9CED6"/>
+      <rect x="72" y="280" width="130" height="10" rx="5" fill="#E9EBEE"/>
+    </g>
+  </g>
+</svg>
