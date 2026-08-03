@@ -25,11 +25,6 @@
   .stamp-connector.done { background: var(--forest); }
   .badge-ocean { border-color: var(--forest); color: var(--forest); }
 
-  .lesson-sub-list { list-style:none; margin:0; padding:2px 0 6px 34px; }
-  .lesson-sub-list li a { display:flex; align-items:center; gap:8px; padding:7px 0; font-size:0.86rem; color: var(--slate); }
-  .lesson-sub-list li a.current { color: var(--forest); font-weight:600; }
-  .check { width:16px; height:16px; border-radius:50%; border:2px solid var(--line); flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; font-size:0.6rem; }
-  .check.done { background: var(--forest); border-color: var(--forest); color:var(--white); }
   .video-embed { aspect-ratio: 16/9; border-radius: var(--radius); overflow:hidden; margin-bottom:28px; }
   .video-embed iframe { width:100%; height:100%; border:0; display:block; }
   .video-placeholder { display:flex; align-items:center; gap:12px; padding:16px 20px; border:1px dashed var(--line); border-radius: var(--radius); margin-bottom:28px; color: var(--slate); background: var(--white); }
@@ -104,9 +99,10 @@
       <li class="app-nav-group">
         <h4 data-en="Overview" data-es="Resumen">Overview</h4>
         <a href="dashboard.html" data-en="Continue Learning" data-es="Continuar Aprendiendo">Continue Learning</a>
+        <a href="progress.html" data-en="⭐ My Progress" data-es="⭐ Mi Progreso">⭐ My Progress</a>
       </li>
       <li class="app-nav-group">
-        <h4 data-en="Modules" data-es="Módulos">Modules</h4>
+        <h4 data-en="Course" data-es="Curso">Course</h4>
         <ul class="app-nav" id="lesson-module-nav" style="padding:0;">
           <li class="small muted" style="padding:10px 24px;">Loading…</li>
         </ul>
@@ -169,7 +165,6 @@
           </div>
 
           <div class="card card-pad" style="margin-bottom:28px;">
-            <h3 data-en="Study Guide" data-es="Guía de Estudio">Study Guide</h3>
             <div id="lesson-content"></div>
           </div>
         </div>

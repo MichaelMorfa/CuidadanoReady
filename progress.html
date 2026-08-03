@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem("ciudadanoready-theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Progress — Ciudadano Ready</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ===== Member Area theme (matches dashboard.html) ===== */
+  body { background: var(--paper-dim); }
+  .app-sidebar { background: var(--paper-dim); border-right: 1px solid var(--line); }
+  .app-nav a.active { color: var(--forest); background: var(--surface); border-left-color: var(--forest); }
+  .app-nav a:hover { color: var(--forest); }
+  .app-topbar { background: var(--paper-dim); border-bottom: 1px solid var(--line); }
+  .app-content .card { box-shadow: none; }
+  .app-content .card:hover { box-shadow: none; }
+  .progress-bar-fill { background: var(--forest); }
+  .btn-primary { background: var(--forest); }
+  .btn-primary:hover { background: #244F3B; }
+  .app-nav-group h4 { margin: 0 0 8px; }
+
+  /* Readiness hero */
+  .readiness-hero { display:flex; align-items:center; gap:32px; padding:32px; flex-wrap:wrap; margin-bottom:28px; }
+  .readiness-circle {
+    width:140px; height:140px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; flex-direction:column;
+    border:8px solid var(--line); font-family: var(--font-serif); font-weight:700;
+  }
+  .readiness-circle .readiness-num { font-size:2.2rem; line-height:1; }
+  .readiness-circle .readiness-max { font-size:0.8rem; color: var(--slate); font-weight:500; }
+  .readiness-circle.tier-1 { border-color: var(--danger); color: var(--danger); }
+  .readiness-circle.tier-2 { border-color: #C48A2E; color: #C48A2E; }
+  .readiness-circle.tier-3 { border-color: var(--ocean); color: var(--ocean); }
+  .readiness-circle.tier-4 { border-color: var(--forest); color: var(--forest); }
+  .readiness-label { font-family: var(--font-mono); font-size:0.78rem; letter-spacing:0.05em; text-transform:uppercase; padding:4px 12px; border-radius:20px; display:inline-block; margin-bottom:8px; }
+  .readiness-label.tier-1 { background: rgba(179,73,47,0.1); color: var(--danger); }
+  .readiness-label.tier-2 { background: rgba(196,138,46,0.12); color: #C48A2E; }
+  .readiness-label.tier-3 { background: rgba(28,127,184,0.1); color: var(--ocean); }
+  .readiness-label.tier-4 { background: rgba(47,107,79,0.1); color: var(--forest); }
+
+  /* Stat grid */
+  .progress-stat-card { padding:22px; }
+  .progress-stat-card .stat-value { font-family: var(--font-serif); font-size:2rem; font-weight:700; margin:6px 0; }
+  .progress-stat-card .stat-sub { font-size:0.82rem; color: var(--slate); }
+  .flashcard-bank-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-top:1px solid var(--line); font-size:0.88rem; }
+  .flashcard-bank-row:first-of-type { border-top:none; padding-top:0; }
+  .flashcard-bank-row .bank-name { color: var(--slate); }
+  .flashcard-bank-row .bank-score { font-weight:600; }
+
+  .ph-history-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-top:1px solid var(--line); font-size:0.9rem; }
+  .ph-history-row:first-of-type { border-top:none; padding-top:0; }
+  .ph-history-meta { font-size:0.8rem; color: var(--slate); }
+</style>
+<meta name="description" content="Track your Ciudadano Ready course progress, quiz scores, and interview readiness.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+</head>
+<body data-auth-required="true" data-progress-page="true">
+
+<div class="app-shell">
+  <div class="sidebar-backdrop"></div>
+  <aside class="app-sidebar">
+    <a href="dashboard.html" class="logo">Ciudadano<span class="dot">Ready</span></a>
+    <ul class="app-nav">
+      <li class="app-nav-group">
+        <h4 data-en="Overview" data-es="Resumen">Overview</h4>
+        <a href="dashboard.html" data-en="Continue Learning" data-es="Continuar Aprendiendo">Continue Learning</a>
+        <a href="progress.html" class="active" data-en="⭐ My Progress" data-es="⭐ Mi Progreso">⭐ My Progress</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="Course" data-es="Curso">Course</h4>
+        <ul class="app-nav" id="progress-module-nav" style="padding:0;">
+          <li class="small muted" style="padding:10px 24px;">Loading…</li>
+        </ul>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="Practice" data-es="Práctica">Practice</h4>
+        <a href="flashcards.html" data-en="Flashcards" data-es="Tarjetas de Estudio">Flashcards</a>
+        <a href="practice-quiz.html" data-en="Practice Interview" data-es="Entrevista de Práctica">Practice Interview</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="Background" data-es="Contexto">Background</h4>
+        <a href="know-your-country.html" data-en="Know Your Country" data-es="Conoce Tu País">Know Your Country</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="More" data-es="Más">More</h4>
+        <a href="contact.html" data-en="Support" data-es="Soporte">Support</a>
+        <a href="settings.html" data-en="Settings" data-es="Configuración">Settings</a>
+      </li>
+    </ul>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-topbar">
+      <div class="flex gap-16 items-center">
+        <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
+        <div>
+          <span class="eyebrow" style="margin-bottom:0;" data-en="YOUR PREP" data-es="TU PREPARACIÓN">YOUR PREP</span>
+          <h3 style="margin:0;" data-en="My Progress" data-es="Mi Progreso">My Progress</h3>
+        </div>
+      </div>
+      <div class="flex gap-16 items-center">
+        <div class="lang-toggle">
+          <button data-lang-btn="en" class="active">EN</button>
+          <button data-lang-btn="es">ES</button>
+        </div>
+        <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link" data-en="Log Out" data-es="Cerrar Sesión">Log Out</a>
+      </div>
+    </div>
+
+    <div class="app-content">
+
+      <div class="card readiness-hero">
+        <div id="readiness-circle" class="readiness-circle tier-1">
+          <span class="readiness-num" id="readiness-num">—</span>
+          <span class="readiness-max">/ 100</span>
+        </div>
+        <div>
+          <span class="readiness-label tier-1" id="readiness-label" data-en="Getting Started" data-es="Comenzando">Getting Started</span>
+          <h3 style="margin:6px 0 6px;" data-en="Interview Readiness Score" data-es="Puntaje de Preparación para la Entrevista">Interview Readiness Score</h3>
+          <p class="small muted" style="margin:0; max-width:480px;" id="readiness-desc" data-en="A rough estimate that blends your course progress, quiz scores, flashcard mastery, and practice interview results — not an official prediction of your real interview outcome." data-es="Una estimación aproximada que combina tu progreso del curso, tus calificaciones de exámenes, tu dominio de las tarjetas de estudio y tus resultados de la entrevista de práctica. No es una predicción oficial del resultado real de tu entrevista.">A rough estimate that blends your course progress, quiz scores, flashcard mastery, and practice interview results — not an official prediction of your real interview outcome.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-3" style="margin-bottom:28px; gap:20px;">
+        <div class="card progress-stat-card">
+          <span class="eyebrow" data-en="COURSE COMPLETION" data-es="CURSO COMPLETADO">COURSE COMPLETION</span>
+          <div class="stat-value" id="stat-course-pct">0%</div>
+          <div class="progress-bar" style="margin-bottom:8px;"><div class="progress-bar-fill" id="stat-course-bar" style="width:0%;"></div></div>
+          <p class="stat-sub" id="stat-course-sub"></p>
+        </div>
+        <div class="card progress-stat-card">
+          <span class="eyebrow" data-en="MODULE QUIZ AVERAGE" data-es="PROMEDIO DE CUESTIONARIOS">MODULE QUIZ AVERAGE</span>
+          <div class="stat-value" id="stat-quiz-avg">—</div>
+          <p class="stat-sub" id="stat-quiz-sub"></p>
+        </div>
+        <div class="card progress-stat-card">
+          <span class="eyebrow" data-en="STUDY STREAK" data-es="RACHA DE ESTUDIO">STUDY STREAK</span>
+          <div class="stat-value" id="stat-streak">0 <span style="font-size:1rem; font-weight:500;" data-en="days" data-es="días">days</span></div>
+          <p class="stat-sub" id="stat-streak-sub" data-en="Complete a lesson to start your streak" data-es="Completa una lección para comenzar tu racha">Complete a lesson to start your streak</p>
+        </div>
+      </div>
+
+      <div class="grid grid-2" style="gap:20px;">
+        <div class="card card-pad">
+          <h3 data-en="Flashcard Mastery" data-es="Dominio de Tarjetas de Estudio">Flashcard Mastery</h3>
+          <p class="small muted" style="margin-bottom:14px;" data-en="Questions you've answered correctly in Practice Interview sessions, out of each official question bank." data-es="Preguntas que has respondido correctamente en las sesiones de Entrevista de Práctica, del total de cada banco oficial de preguntas.">Questions you've answered correctly in Practice Interview sessions, out of each official question bank.</p>
+          <div id="flashcard-mastery-rows">
+            <p class="small muted">Loading…</p>
+          </div>
+        </div>
+
+        <div class="card card-pad">
+          <h3 data-en="Practice Interview History" data-es="Historial de Entrevista de Práctica">Practice Interview History</h3>
+          <p class="small muted" style="margin-bottom:14px;" id="ph-summary">Loading…</p>
+          <div id="ph-history-rows"></div>
+          <a href="practice-quiz.html" class="btn btn-ghost btn-sm" style="margin-top:16px;" data-en="Take a Practice Interview →" data-es="Tomar una Entrevista de Práctica →">Take a Practice Interview →</a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="app.js"></script>
+<script src="member.js"></script>
+</body>
+</html>

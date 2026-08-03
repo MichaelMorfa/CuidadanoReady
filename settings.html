@@ -66,9 +66,10 @@
       <li class="app-nav-group">
         <h4 data-en="Overview" data-es="Resumen">Overview</h4>
         <a href="dashboard.html" data-en="Continue Learning" data-es="Continuar Aprendiendo">Continue Learning</a>
+        <a href="progress.html" data-en="⭐ My Progress" data-es="⭐ Mi Progreso">⭐ My Progress</a>
       </li>
       <li class="app-nav-group">
-        <h4 data-en="Modules" data-es="Módulos">Modules</h4>
+        <h4 data-en="Course" data-es="Curso">Course</h4>
         <ul class="app-nav" id="settings-module-nav" style="padding:0;">
           <li class="small muted" style="padding:10px 24px;">Loading…</li>
         </ul>
@@ -113,10 +114,30 @@
 
       <!-- Profile -->
       <div class="card card-pad settings-section">
-        <h3 data-en="Profile" data-es="Perfil">Profile</h3>
-        <p class="small muted section-desc" data-en="Your name and email on file." data-es="Tu nombre y correo electrónico registrados.">Your name and email on file.</p>
+        <div class="flex justify-between items-start" style="gap:12px;">
+          <div>
+            <h3 data-en="Profile" data-es="Perfil">Profile</h3>
+            <p class="small muted section-desc" data-en="Your name and email on file." data-es="Tu nombre y correo electrónico registrados.">Your name and email on file.</p>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm" id="profile-edit-btn" data-en="Edit" data-es="Editar">Edit</button>
+        </div>
 
-        <form id="profile-form">
+        <div id="profile-view-mode">
+          <div class="settings-row" style="border-top:none;">
+            <div>
+              <div class="small muted" data-en="Full Name" data-es="Nombre Completo">Full Name</div>
+              <div style="font-weight:600;" id="profile-view-name">—</div>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="small muted" data-en="Email Address" data-es="Correo Electrónico">Email Address</div>
+              <div style="font-weight:600;" id="profile-view-email">—</div>
+            </div>
+          </div>
+        </div>
+
+        <form id="profile-form" style="display:none;">
           <div class="settings-field">
             <label data-en="Full Name" data-es="Nombre Completo">Full Name</label>
             <input type="text" id="settings-full-name" placeholder="Jane Doe">
@@ -126,7 +147,10 @@
             <input type="email" id="settings-email" placeholder="jane@example.com">
             <p class="small muted" data-en="Changing your email sends a confirmation link to the new address before it takes effect." data-es="Cambiar tu correo envía un enlace de confirmación a la nueva dirección antes de que surta efecto.">Changing your email sends a confirmation link to the new address before it takes effect.</p>
           </div>
-          <button type="submit" class="btn btn-primary btn-sm" id="profile-save-btn" data-en="Save Changes" data-es="Guardar Cambios">Save Changes</button>
+          <div class="flex gap-8">
+            <button type="submit" class="btn btn-primary btn-sm" id="profile-save-btn" data-en="Save Changes" data-es="Guardar Cambios">Save Changes</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="profile-cancel-btn" data-en="Cancel" data-es="Cancelar">Cancel</button>
+          </div>
           <div class="settings-msg" id="profile-msg"></div>
         </form>
       </div>
@@ -137,6 +161,10 @@
         <p class="small muted section-desc" data-en="Choose a new password for your account." data-es="Elige una nueva contraseña para tu cuenta.">Choose a new password for your account.</p>
 
         <form id="password-form">
+          <div class="settings-field">
+            <label data-en="Current Password" data-es="Contraseña Actual">Current Password</label>
+            <input type="password" id="settings-current-password" placeholder="Your current password" required>
+          </div>
           <div class="settings-field">
             <label data-en="New Password" data-es="Nueva Contraseña">New Password</label>
             <input type="password" id="settings-new-password" placeholder="At least 6 characters" minlength="6" required>

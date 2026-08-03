@@ -144,13 +144,14 @@ function renderModuleNav(selector, lessons, completedIds, expandLesson) {
     const allDone = moduleLessons.every((l) => completedIds.has(l.id));
     const isExpanded = expandLesson && expandLesson.module_number === m;
     const firstLesson = moduleLessons[0];
-    html += `<li><a href="lesson.html?id=${firstLesson.id}" class="${isExpanded ? 'active' : ''}"><span class="check${allDone ? ' done' : ''}">${allDone ? '✓' : ''}</span>&nbsp;${m}. ${escapeHtml(moduleName(m))}</a>`;
+    const lessonWord = lang === 'es' ? 'Lección' : 'Lesson';
+    html += `<li><a href="lesson.html?id=${firstLesson.id}" class="module-nav-link ${isExpanded ? 'active' : ''}"><span class="module-nav-badge${allDone ? ' done' : ''}">${allDone ? '✓' : m}</span>${escapeHtml(moduleName(m))}</a>`;
     if (isExpanded) {
       html += '<ul class="lesson-sub-list">';
-      moduleLessons.forEach((l) => {
+      moduleLessons.forEach((l, i) => {
         const done = completedIds.has(l.id);
         const isCurrent = expandLesson.id === l.id;
-        html += `<li><a href="lesson.html?id=${l.id}" class="${isCurrent ? 'current' : ''}"><span class="check${done ? ' done' : ''}">${done ? '✓' : ''}</span> ${escapeHtml(localize(l, 'title'))}</a></li>`;
+        html += `<li><a href="lesson.html?id=${l.id}" class="${isCurrent ? 'current' : ''}"><span class="check${done ? ' done' : ''}">${done ? '✓' : ''}</span><span class="lesson-sub-text"><span class="lesson-sub-label">${lessonWord} ${i + 1}</span><span class="lesson-sub-title">${escapeHtml(localize(l, 'title'))}</span></span></a></li>`;
       });
       html += '</ul>';
     }
@@ -1163,8 +1164,39 @@ async function initSettingsPage() {
 
   const nameInput = document.querySelector('#settings-full-name');
   const emailInput = document.querySelector('#settings-email');
-  if (nameInput) nameInput.value = (profile && profile.full_name) || '';
-  if (emailInput) emailInput.value = (profile && profile.email) || session.user.email || '';
+  const currentName = (profile && profile.full_name) || '';
+  const currentEmail = (profile && profile.email) || session.user.email || '';
+  if (nameInput) nameInput.value = currentName;
+  if (emailInput) emailInput.value = currentEmail;
+  const viewNameEl = document.querySelector('#profile-view-name');
+  const viewEmailEl = document.querySelector('#profile-view-email');
+  if (viewNameEl) viewNameEl.textContent = currentName || '—';
+  if (viewEmailEl) viewEmailEl.textContent = currentEmail || '—';
+
+  // Profile starts read-only; "Edit" reveals the form (pre-filled with
+  // current values), "Cancel" discards any unsaved typing and reverts.
+  const profileViewMode = document.querySelector('#profile-view-mode');
+  const profileFormEl = document.querySelector('#profile-form');
+  const profileEditBtn = document.querySelector('#profile-edit-btn');
+  const profileCancelBtn = document.querySelector('#profile-cancel-btn');
+  function enterProfileEditMode() {
+    if (profileViewMode) profileViewMode.style.display = 'none';
+    if (profileFormEl) profileFormEl.style.display = 'block';
+    if (profileEditBtn) profileEditBtn.style.display = 'none';
+  }
+  function exitProfileEditMode() {
+    if (profileViewMode) profileViewMode.style.display = 'block';
+    if (profileFormEl) profileFormEl.style.display = 'none';
+    if (profileEditBtn) profileEditBtn.style.display = 'inline-flex';
+    const msg = document.querySelector('#profile-msg');
+    if (msg) { msg.style.display = 'none'; msg.textContent = ''; }
+  }
+  if (profileEditBtn) profileEditBtn.addEventListener('click', enterProfileEditMode);
+  if (profileCancelBtn) profileCancelBtn.addEventListener('click', () => {
+    if (nameInput) nameInput.value = currentName;
+    if (emailInput) emailInput.value = currentEmail;
+    exitProfileEditMode();
+  });
 
   const planNameEl = document.querySelector('#settings-plan-name');
   const planStatusEl = document.querySelector('#settings-plan-status');
@@ -1212,10 +1244,19 @@ async function initSettingsPage() {
       btn.disabled = false;
       if (profileError || authError) {
         showSettingsMsg(msg, (profileError && profileError.message) || (authError && authError.message) || 'Something went wrong.', true);
-      } else if (emailChanged) {
+        return;
+      }
+
+      if (viewNameEl) viewNameEl.textContent = newName || '—';
+      // Don't flip the displayed email until the confirmation link is
+      // clicked — Supabase doesn't apply it until then, so showing the new
+      // address now would be misleading.
+      if (!emailChanged && viewEmailEl) viewEmailEl.textContent = newEmail || '—';
+
+      if (emailChanged) {
         showSettingsMsg(msg, lang === 'es' ? 'Guardado. Revisa tu nuevo correo para confirmar el cambio de dirección.' : 'Saved. Check your new inbox to confirm the email change.', false);
       } else {
-        showSettingsMsg(msg, lang === 'es' ? 'Guardado.' : 'Saved.', false);
+        exitProfileEditMode();
       }
     });
   }
@@ -1227,11 +1268,12 @@ async function initSettingsPage() {
       const btn = document.querySelector('#password-save-btn');
       const msg = document.querySelector('#password-msg');
       const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+      const currentPw = document.querySelector('#settings-current-password').value;
       const newPw = document.querySelector('#settings-new-password').value;
       const confirmPw = document.querySelector('#settings-confirm-password').value;
 
       if (newPw !== confirmPw) {
-        showSettingsMsg(msg, lang === 'es' ? 'Las contraseñas no coinciden.' : 'Passwords do not match.', true);
+        showSettingsMsg(msg, lang === 'es' ? 'Las contraseñas nuevas no coinciden.' : 'New passwords do not match.', true);
         return;
       }
       if (newPw.length < 6) {
@@ -1240,8 +1282,27 @@ async function initSettingsPage() {
       }
 
       btn.disabled = true;
+      btn.textContent = lang === 'es' ? 'Verificando…' : 'Verifying…';
+
+      // Confirm they actually know the current password before allowing a
+      // change — signInWithPassword re-authenticates against it without
+      // disturbing the existing session if it succeeds.
+      const { error: verifyError } = await supabaseClient.auth.signInWithPassword({
+        email: session.user.email,
+        password: currentPw,
+      });
+
+      if (verifyError) {
+        btn.disabled = false;
+        btn.textContent = lang === 'es' ? 'Actualizar Contraseña' : 'Update Password';
+        showSettingsMsg(msg, lang === 'es' ? 'Tu contraseña actual es incorrecta.' : 'Your current password is incorrect.', true);
+        return;
+      }
+
+      btn.textContent = lang === 'es' ? 'Actualizando…' : 'Updating…';
       const { error } = await supabaseClient.auth.updateUser({ password: newPw });
       btn.disabled = false;
+      btn.textContent = lang === 'es' ? 'Actualizar Contraseña' : 'Update Password';
 
       if (error) {
         showSettingsMsg(msg, error.message || 'Could not update password.', true);
@@ -1251,6 +1312,192 @@ async function initSettingsPage() {
       }
     });
   }
+}
+
+// ---- My Progress page ------------------------------------------------
+// Pulls together stats that otherwise only lived on the dashboard (course
+// completion) or were never surfaced at all (flashcard mastery, module quiz
+// average, a composite "readiness score") into one dedicated page. Cached
+// so a language toggle re-renders the bank labels / date formatting without
+// a refetch.
+let progressCache = null;
+
+const READINESS_TIERS = [
+  { max: 39, tier: 1, en: 'Getting Started', es: 'Comenzando' },
+  { max: 64, tier: 2, en: 'Building Confidence', es: 'Ganando Confianza' },
+  { max: 84, tier: 3, en: 'Making Good Progress', es: 'Buen Progreso' },
+  { max: 101, tier: 4, en: 'Interview Ready', es: 'Listo para la Entrevista' },
+];
+
+function readinessTierFor(score) {
+  return READINESS_TIERS.find((t) => score <= t.max) || READINESS_TIERS[READINESS_TIERS.length - 1];
+}
+
+function renderProgressPage() {
+  if (!progressCache) return;
+  const { courseCompletionPct, moduleQuizAvg, moduleQuizCount, streak, flashcardBanks, practiceAttempts, readinessScore } = progressCache;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+
+  document.querySelector('#stat-course-pct').textContent = courseCompletionPct + '%';
+  document.querySelector('#stat-course-bar').style.width = courseCompletionPct + '%';
+  document.querySelector('#stat-course-sub').textContent = lang === 'es' ? 'Ponderado por el contenido de cada módulo' : 'Weighted by how much is in each module';
+
+  const quizAvgEl = document.querySelector('#stat-quiz-avg');
+  const quizSubEl = document.querySelector('#stat-quiz-sub');
+  if (moduleQuizCount > 0) {
+    quizAvgEl.textContent = moduleQuizAvg + '%';
+    quizSubEl.textContent = moduleQuizCount === 1
+      ? (lang === 'es' ? '1 cuestionario de módulo tomado' : '1 module quiz taken')
+      : (lang === 'es' ? `${moduleQuizCount} cuestionarios de módulo tomados` : `${moduleQuizCount} module quizzes taken`);
+  } else {
+    quizAvgEl.textContent = '—';
+    quizSubEl.textContent = lang === 'es' ? 'Aún no has tomado un cuestionario de módulo' : "You haven't taken a module quiz yet";
+  }
+
+  const streakEl = document.querySelector('#stat-streak');
+  if (streakEl) streakEl.innerHTML = `${streak} <span style="font-size:1rem; font-weight:500;">${lang === 'es' ? (streak === 1 ? 'día' : 'días') : (streak === 1 ? 'day' : 'days')}</span>`;
+  const streakSubEl = document.querySelector('#stat-streak-sub');
+  if (streakSubEl) streakSubEl.textContent = streak > 0
+    ? (lang === 'es' ? '¡Sigue así!' : 'Keep it going!')
+    : (lang === 'es' ? 'Completa una lección para comenzar tu racha' : 'Complete a lesson to start your streak');
+
+  const bankRowsEl = document.querySelector('#flashcard-mastery-rows');
+  if (bankRowsEl) {
+    if (!flashcardBanks.length) {
+      bankRowsEl.innerHTML = `<p class="small muted">${lang === 'es' ? 'Toma una Entrevista de Práctica para empezar a registrar tu dominio.' : 'Take a Practice Interview to start tracking your mastery.'}</p>`;
+    } else {
+      bankRowsEl.innerHTML = flashcardBanks.map((b) => {
+        const labelEntry = FLASHCARD_TEST_LABELS[b.testType] || FLASHCARD_TEST_LABELS.test_100;
+        return `<div class="flashcard-bank-row"><span class="bank-name">${escapeHtml(labelEntry[lang] || labelEntry.en)}</span><span class="bank-score">${b.correct}/${b.total}</span></div>`;
+      }).join('');
+    }
+  }
+
+  const phSummaryEl = document.querySelector('#ph-summary');
+  const phRowsEl = document.querySelector('#ph-history-rows');
+  if (phSummaryEl) {
+    if (!practiceAttempts.length) {
+      phSummaryEl.textContent = lang === 'es' ? 'Aún no has tomado ninguna entrevista de práctica.' : "You haven't taken a practice interview yet.";
+      if (phRowsEl) phRowsEl.innerHTML = '';
+    } else {
+      const passCount = practiceAttempts.filter((a) => a.passed).length;
+      phSummaryEl.textContent = lang === 'es'
+        ? `${practiceAttempts.length} intentos · ${passCount} aprobado(s)`
+        : `${practiceAttempts.length} attempt${practiceAttempts.length === 1 ? '' : 's'} · ${passCount} passed`;
+      const dateFmt = (iso) => new Date(iso).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+      if (phRowsEl) {
+        phRowsEl.innerHTML = practiceAttempts.slice(0, 5).map((a) => {
+          const labelEntry = FLASHCARD_TEST_LABELS[a.test_type] || FLASHCARD_TEST_LABELS.test_100;
+          const passText = a.passed ? (lang === 'es' ? 'Aprobado' : 'Passed') : (lang === 'es' ? 'No aprobado' : 'Not passing');
+          return `<div class="ph-history-row">
+            <div><div>${escapeHtml(labelEntry[lang] || labelEntry.en)}</div><div class="ph-history-meta">${dateFmt(a.created_at)}</div></div>
+            <span class="badge ${a.passed ? 'badge-forest' : ''}" style="${a.passed ? '' : 'border-color:var(--danger); color:var(--danger);'}">${a.score}/${a.total} · ${passText}</span>
+          </div>`;
+        }).join('');
+      }
+    }
+  }
+
+  const circleEl = document.querySelector('#readiness-circle');
+  const numEl = document.querySelector('#readiness-num');
+  const labelEl = document.querySelector('#readiness-label');
+  const tier = readinessTierFor(readinessScore);
+  if (numEl) numEl.textContent = readinessScore;
+  if (circleEl) circleEl.className = 'readiness-circle tier-' + tier.tier;
+  if (labelEl) {
+    labelEl.className = 'readiness-label tier-' + tier.tier;
+    labelEl.textContent = lang === 'es' ? tier.es : tier.en;
+  }
+
+  renderModuleNav('#progress-module-nav', progressCache.lessons, progressCache.completedIds, null);
+}
+
+async function initProgressPage() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  const userId = session.user.id;
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('subscription_status, streak_count')
+    .eq('id', userId)
+    .single();
+  const hasAccess = profile && ['active', 'trial', 'comp'].includes(profile.subscription_status);
+  if (!hasAccess) {
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  const [{ data: lessons }, { data: progressRows }, { data: moduleQuizRows }, { data: practiceAttemptsRaw }, { data: flashcardRows }] = await Promise.all([
+    supabaseClient.from('lessons').select('*').eq('published', true).order('module_number').order('sort_order'),
+    supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId),
+    supabaseClient.from('module_quiz_results').select('score, total').eq('user_id', userId),
+    supabaseClient.from('practice_quiz_attempts').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
+    supabaseClient.from('flashcards').select('test_type').eq('published', true),
+  ]);
+
+  const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
+  const courseCompletionPct = await computeWeightedProgress(userId, lessons || [], completedIds);
+
+  const quizRows = moduleQuizRows || [];
+  const moduleQuizCount = quizRows.length;
+  const moduleQuizAvg = moduleQuizCount
+    ? Math.round(quizRows.reduce((sum, r) => sum + (r.total ? (r.score / r.total) * 100 : 0), 0) / moduleQuizCount)
+    : 0;
+
+  // Flashcard "mastery": for each question bank, the most recent time each
+  // card appeared in a Practice Interview attempt, was it graded correct?
+  // Attempts are fetched oldest-first so a later attempt's grade overwrites
+  // an earlier one for the same card.
+  const bankTotals = {};
+  (flashcardRows || []).forEach((f) => { bankTotals[f.test_type] = (bankTotals[f.test_type] || 0) + 1; });
+  const latestGradeByCard = {}; // `${test_type}:${flashcard_id}` -> boolean
+  const practiceAttempts = practiceAttemptsRaw || [];
+  practiceAttempts.forEach((attempt) => {
+    (attempt.answers || []).forEach((ans) => {
+      latestGradeByCard[`${attempt.test_type}:${ans.flashcard_id}`] = !!ans.correct;
+    });
+  });
+  const masteredCountByBank = {};
+  Object.keys(latestGradeByCard).forEach((key) => {
+    if (!latestGradeByCard[key]) return;
+    const testType = key.split(':')[0];
+    masteredCountByBank[testType] = (masteredCountByBank[testType] || 0) + 1;
+  });
+  const flashcardBanks = Object.keys(bankTotals)
+    .sort((a, b) => bankTotals[b] - bankTotals[a])
+    .map((testType) => ({ testType, correct: masteredCountByBank[testType] || 0, total: bankTotals[testType] }));
+
+  // Most-recent-first for the history list and for "did they just pass".
+  const practiceAttemptsDesc = practiceAttempts.slice().reverse();
+  const practiceAvgPct = practiceAttempts.length
+    ? Math.round(practiceAttempts.reduce((sum, a) => sum + (a.total ? (a.score / a.total) * 100 : 0), 0) / practiceAttempts.length)
+    : 0;
+  const primaryBank = flashcardBanks.find((b) => b.testType === 'test_128') || flashcardBanks[0];
+  const flashcardPct = primaryBank && primaryBank.total ? Math.round((primaryBank.correct / primaryBank.total) * 100) : 0;
+
+  // Composite readiness score: each component defaults to 0 if the member
+  // hasn't done that kind of practice yet, so the score honestly reflects
+  // what's still outstanding rather than politely ignoring gaps.
+  const readinessScore = Math.round(
+    courseCompletionPct * 0.35 +
+    moduleQuizAvg * 0.25 +
+    flashcardPct * 0.20 +
+    practiceAvgPct * 0.20
+  );
+
+  progressCache = {
+    lessons: lessons || [],
+    completedIds,
+    courseCompletionPct,
+    moduleQuizAvg,
+    moduleQuizCount,
+    streak: (profile && profile.streak_count) || 0,
+    flashcardBanks,
+    practiceAttempts: practiceAttemptsDesc,
+    readinessScore,
+  };
+  renderProgressPage();
 }
 
 // ==========================================================================
@@ -1644,6 +1891,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.body.hasAttribute('data-practice-quiz-page')) initPracticeQuizPage();
   if (document.body.hasAttribute('data-kyc-page')) initKycPage();
   if (document.body.hasAttribute('data-settings-page')) initSettingsPage();
+  if (document.body.hasAttribute('data-progress-page')) initProgressPage();
 });
 
 // Re-render dynamic content in place when the visitor toggles EN/ES —
@@ -1661,4 +1909,5 @@ window.addEventListener('ciudadanoready:langchange', () => {
   if (document.body.hasAttribute('data-kyc-page') && kycCache) {
     if (kycCache.currentLessonNumber != null) renderKycReading(); else renderKycPicker();
   }
+  if (document.body.hasAttribute('data-progress-page')) renderProgressPage();
 });
