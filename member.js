@@ -129,11 +129,51 @@ function renderStampPath(selector, lessons, completedIds, currentLesson, small) 
   container.innerHTML = html;
 }
 
+// ---- Sequential module/lesson locking ----------------------------------
+// A module is "complete" once every one of its lessons has a lesson_progress
+// row. Because the module quiz already gates the final lesson of a module
+// from being marked complete until it's passed (see initLessonPage), this
+// single check also implies "that module's quiz was passed" — no separate
+// module_quiz_results lookup is needed just to decide lock state.
+function isModuleComplete(moduleLessons, completedIds) {
+  return moduleLessons.length > 0 && moduleLessons.every((l) => completedIds.has(l.id));
+}
+
+// Module 1 is always unlocked. Module m (m>1) unlocks once module m-1 is
+// fully complete. A module with no lessons yet (not authored) doesn't block
+// the next one.
+function isModuleUnlocked(m, lessons, completedIds) {
+  if (m <= 1) return true;
+  const prevLessons = lessons.filter((l) => l.module_number === m - 1);
+  if (!prevLessons.length) return true;
+  return isModuleComplete(prevLessons, completedIds);
+}
+
+// Within an unlocked module, the first lesson is always unlocked; each
+// subsequent lesson requires the immediately-preceding lesson (by
+// sort_order) in that same module to be complete.
+function isLessonUnlocked(lesson, lessons, completedIds) {
+  if (!isModuleUnlocked(lesson.module_number, lessons, completedIds)) return false;
+  const moduleLessons = lessons.filter((l) => l.module_number === lesson.module_number).sort((a, b) => a.sort_order - b.sort_order);
+  const idx = moduleLessons.findIndex((l) => l.id === lesson.id);
+  if (idx <= 0) return true;
+  return completedIds.has(moduleLessons[idx - 1].id);
+}
+
+// Finds the first lesson (in overall module/sort_order) the learner hasn't
+// finished yet, among lessons that are actually unlocked — used to redirect
+// away from a locked lesson someone reached via a stale/typed-in URL.
+function firstAvailableLesson(lessons, completedIds) {
+  const sorted = lessons.slice().sort((a, b) => (a.module_number - b.module_number) || (a.sort_order - b.sort_order));
+  return sorted.find((l) => !completedIds.has(l.id) && isLessonUnlocked(l, lessons, completedIds)) || null;
+}
+
 function renderModuleNav(selector, lessons, completedIds, expandLesson) {
   const nav = document.querySelector(selector);
   if (!nav) return;
   const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
   const comingSoon = lang === 'es' ? 'Próximamente' : 'Coming soon';
+  const lockedWord = lang === 'es' ? 'Bloqueado' : 'Locked';
   let html = '';
   for (let m = 1; m <= TOTAL_MODULES; m++) {
     const moduleLessons = lessons.filter((l) => l.module_number === m);
@@ -142,15 +182,27 @@ function renderModuleNav(selector, lessons, completedIds, expandLesson) {
       continue;
     }
     const allDone = moduleLessons.every((l) => completedIds.has(l.id));
+    const unlocked = isModuleUnlocked(m, lessons, completedIds);
     const isExpanded = expandLesson && expandLesson.module_number === m;
     const firstLesson = moduleLessons[0];
     const lessonWord = lang === 'es' ? 'Lección' : 'Lesson';
+
+    if (!unlocked) {
+      html += `<li><span class="module-nav-link module-nav-locked" title="${lockedWord}"><span class="module-nav-badge locked">🔒</span>${escapeHtml(moduleName(m))}</span></li>`;
+      continue;
+    }
+
     html += `<li><a href="lesson.html?id=${firstLesson.id}" class="module-nav-link ${isExpanded ? 'active' : ''}"><span class="module-nav-badge${allDone ? ' done' : ''}">${allDone ? '✓' : m}</span>${escapeHtml(moduleName(m))}</a>`;
     if (isExpanded) {
       html += '<ul class="lesson-sub-list">';
       moduleLessons.forEach((l, i) => {
         const done = completedIds.has(l.id);
         const isCurrent = expandLesson.id === l.id;
+        const lUnlocked = isLessonUnlocked(l, lessons, completedIds);
+        if (!lUnlocked) {
+          html += `<li><span class="lesson-sub-locked" title="${lockedWord}"><span class="check">🔒</span><span class="lesson-sub-text"><span class="lesson-sub-label">${lessonWord} ${i + 1}</span><span class="lesson-sub-title">${escapeHtml(localize(l, 'title'))}</span></span></span></li>`;
+          return;
+        }
         html += `<li><a href="lesson.html?id=${l.id}" class="${isCurrent ? 'current' : ''}"><span class="check${done ? ' done' : ''}">${done ? '✓' : ''}</span><span class="lesson-sub-text"><span class="lesson-sub-label">${lessonWord} ${i + 1}</span><span class="lesson-sub-title">${escapeHtml(localize(l, 'title'))}</span></span></a></li>`;
       });
       html += '</ul>';
@@ -694,16 +746,27 @@ async function initLessonPage() {
     return;
   }
 
+  const { data: progressRows } = await supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId);
+  const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
+
   const params = new URLSearchParams(window.location.search);
   const requestedId = params.get('id');
   let lesson = lessons.find((l) => l.id === requestedId);
   if (!lesson) {
-    lesson = lessons[0];
+    lesson = firstAvailableLesson(lessons, completedIds) || lessons[0];
     history.replaceState(null, '', 'lesson.html?id=' + lesson.id);
+  } else if (!isLessonUnlocked(lesson, lessons, completedIds)) {
+    // Reached a locked lesson directly via URL (stale link, typed-in id,
+    // browser back/forward) — bounce to the first lesson they're actually
+    // allowed to work on instead of loading gated content.
+    const fallback = firstAvailableLesson(lessons, completedIds);
+    if (fallback) {
+      window.location.href = 'lesson.html?id=' + fallback.id;
+    } else {
+      window.location.href = 'dashboard.html';
+    }
+    return;
   }
-
-  const { data: progressRows } = await supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId);
-  const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
 
   mainContent.style.display = 'block';
   emptyState.style.display = 'none';
@@ -1322,11 +1385,14 @@ async function initSettingsPage() {
 // a refetch.
 let progressCache = null;
 
+// Tier labels intentionally avoid any language implying this predicts a
+// real USCIS interview outcome (e.g. no "Interview Ready") — see the
+// disclaimer in progress.html's info popover for why.
 const READINESS_TIERS = [
   { max: 39, tier: 1, en: 'Getting Started', es: 'Comenzando' },
   { max: 64, tier: 2, en: 'Building Confidence', es: 'Ganando Confianza' },
   { max: 84, tier: 3, en: 'Making Good Progress', es: 'Buen Progreso' },
-  { max: 101, tier: 4, en: 'Interview Ready', es: 'Listo para la Entrevista' },
+  { max: 101, tier: 4, en: 'Excelling', es: 'Sobresaliente' },
 ];
 
 function readinessTierFor(score) {
@@ -1407,6 +1473,27 @@ function renderProgressPage() {
   if (labelEl) {
     labelEl.className = 'readiness-label tier-' + tier.tier;
     labelEl.textContent = lang === 'es' ? tier.es : tier.en;
+  }
+
+  // Info-icon popover: the disclaimer text lives here instead of as
+  // permanent body copy on the hero. Bound once (dataset.bound guard) since
+  // renderProgressPage re-runs on every language toggle.
+  const infoBtn = document.querySelector('#readiness-info-btn');
+  const infoPopover = document.querySelector('#readiness-info-popover');
+  if (infoBtn && infoPopover && !infoBtn.dataset.bound) {
+    infoBtn.dataset.bound = 'true';
+    const closePopover = () => { infoPopover.setAttribute('hidden', ''); infoBtn.setAttribute('aria-expanded', 'false'); };
+    const openPopover = () => { infoPopover.removeAttribute('hidden'); infoBtn.setAttribute('aria-expanded', 'true'); };
+    infoBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (infoPopover.hasAttribute('hidden')) openPopover(); else closePopover();
+    });
+    document.addEventListener('click', (e) => {
+      if (!infoPopover.hasAttribute('hidden') && !infoPopover.contains(e.target) && e.target !== infoBtn) closePopover();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !infoPopover.hasAttribute('hidden')) closePopover();
+    });
   }
 
   renderModuleNav('#progress-module-nav', progressCache.lessons, progressCache.completedIds, null);

@@ -40,6 +40,25 @@
   .readiness-label.tier-3 { background: rgba(28,127,184,0.1); color: var(--ocean); }
   .readiness-label.tier-4 { background: rgba(47,107,79,0.1); color: var(--forest); }
 
+  /* Info icon + popover — the full explanation of what the score does/
+     doesn't mean lives here instead of sitting on the page as permanent
+     body text, so the hero reads as a quick glance ("Citizenship Study
+     Score 84") rather than a wall of caveats. */
+  .info-icon-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--line);
+    background: var(--surface); color: var(--slate); font-size: 0.78rem; line-height: 1;
+    cursor: pointer; flex-shrink: 0; padding: 0;
+  }
+  .info-icon-btn:hover, .info-icon-btn[aria-expanded="true"] { border-color: var(--forest); color: var(--forest); }
+  .readiness-heading-row { position: relative; display: flex; align-items: center; gap: 8px; margin: 6px 0 4px; }
+  .info-popover {
+    position: absolute; top: calc(100% + 8px); left: 0; z-index: 20;
+    width: min(360px, 80vw); background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius-sm); box-shadow: 0 8px 24px rgba(0,0,0,0.12); padding: 14px 16px;
+  }
+  .info-popover[hidden] { display: none; }
+
   /* Stat grid */
   .progress-stat-card { padding:22px; }
   .progress-stat-card .stat-value { font-family: var(--font-serif); font-size:2rem; font-weight:700; margin:6px 0; }
@@ -53,7 +72,7 @@
   .ph-history-row:first-of-type { border-top:none; padding-top:0; }
   .ph-history-meta { font-size:0.8rem; color: var(--slate); }
 </style>
-<meta name="description" content="Track your Ciudadano Ready course progress, quiz scores, and interview readiness.">
+<meta name="description" content="Track your Ciudadano Ready course progress, quiz scores, and study performance.">
 <meta name="robots" content="noindex">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="alternate icon" href="/favicon.ico">
@@ -70,7 +89,7 @@
       <li class="app-nav-group">
         <h4 data-en="Overview" data-es="Resumen">Overview</h4>
         <a href="dashboard.html" data-en="Continue Learning" data-es="Continuar Aprendiendo">Continue Learning</a>
-        <a href="progress.html" class="active" data-en="⭐ My Progress" data-es="⭐ Mi Progreso">⭐ My Progress</a>
+        <a href="progress.html" class="active" data-en="My Progress" data-es="Mi Progreso">My Progress</a>
       </li>
       <li class="app-nav-group">
         <h4 data-en="Course" data-es="Curso">Course</h4>
@@ -122,8 +141,13 @@
         </div>
         <div>
           <span class="readiness-label tier-1" id="readiness-label" data-en="Getting Started" data-es="Comenzando">Getting Started</span>
-          <h3 style="margin:6px 0 6px;" data-en="Interview Readiness Score" data-es="Puntaje de Preparación para la Entrevista">Interview Readiness Score</h3>
-          <p class="small muted" style="margin:0; max-width:480px;" id="readiness-desc" data-en="A rough estimate that blends your course progress, quiz scores, flashcard mastery, and practice interview results — not an official prediction of your real interview outcome." data-es="Una estimación aproximada que combina tu progreso del curso, tus calificaciones de exámenes, tu dominio de las tarjetas de estudio y tus resultados de la entrevista de práctica. No es una predicción oficial del resultado real de tu entrevista.">A rough estimate that blends your course progress, quiz scores, flashcard mastery, and practice interview results — not an official prediction of your real interview outcome.</p>
+          <div class="readiness-heading-row">
+            <h3 style="margin:0;" data-en="Citizenship Study Score" data-es="Puntaje de Estudio de Ciudadanía">Citizenship Study Score</h3>
+            <button type="button" class="info-icon-btn" id="readiness-info-btn" aria-expanded="false" aria-controls="readiness-info-popover" aria-label="What does this score mean?">ⓘ</button>
+            <div class="info-popover" id="readiness-info-popover" role="tooltip" hidden>
+              <p class="small" style="margin:0;" data-en="This score reflects your progress and performance within CiudadanoReady, including course completion, quizzes, flashcards, and practice exercises. It is provided for educational purposes only and is not an official USCIS assessment or a prediction or guarantee of your interview outcome." data-es="Este puntaje refleja tu progreso y desempeño dentro de CiudadanoReady, incluyendo la finalización del curso, los cuestionarios, las tarjetas de estudio y los ejercicios de práctica. Se proporciona únicamente con fines educativos y no es una evaluación oficial de USCIS ni una predicción o garantía del resultado de tu entrevista.">This score reflects your progress and performance within CiudadanoReady, including course completion, quizzes, flashcards, and practice exercises. It is provided for educational purposes only and is not an official USCIS assessment or a prediction or guarantee of your interview outcome.</p>
+            </div>
+          </div>
         </div>
       </div>
 
