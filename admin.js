@@ -160,6 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="flex gap-8 items-center">
             <button class="btn btn-ghost btn-sm" data-user-save="${u.id}">Save</button>
             <button class="btn btn-ghost btn-sm" data-user-reset="${u.id}" data-user-email="${escapeHtml(u.email || '')}">Reset PW</button>
+            <button class="btn btn-ghost btn-sm" data-user-reset-progress="${u.id}" data-user-email="${escapeHtml(u.email || '')}" style="color:var(--danger); border-color:var(--danger);">Reset Progress</button>
             <span class="row-save-msg" data-user-msg="${u.id}">Saved ✓</span>
           </div>
         </td>
@@ -178,6 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelector('#users-tbody')?.addEventListener('click', async (e) => {
     const saveBtn = e.target.closest('[data-user-save]');
     const resetBtn = e.target.closest('[data-user-reset]');
+    const resetProgressBtn = e.target.closest('[data-user-reset-progress]');
 
     if (saveBtn) {
       const id = saveBtn.getAttribute('data-user-save');
@@ -203,6 +205,33 @@ document.addEventListener('DOMContentLoaded', () => {
       resetBtn.disabled = false;
       resetBtn.textContent = error ? 'Failed' : 'Sent ✓';
       setTimeout(() => { resetBtn.textContent = 'Reset PW'; }, 2500);
+    }
+
+    if (resetProgressBtn) {
+      const id = resetProgressBtn.getAttribute('data-user-reset-progress');
+      const email = resetProgressBtn.getAttribute('data-user-email') || 'this user';
+      const confirmed = confirm(
+        `Reset ALL progress for ${email}?\n\n` +
+        `This permanently deletes:\n` +
+        `• Main course lesson completions & module quiz scores\n` +
+        `• Know Your Country read progress (all 40 lessons)\n` +
+        `• Practice Interview attempt history\n\n` +
+        `Their plan, subscription, and login are not affected. This cannot be undone.`
+      );
+      if (!confirmed) return;
+
+      resetProgressBtn.disabled = true;
+      resetProgressBtn.textContent = 'Resetting…';
+      const results = await Promise.all([
+        supabaseClient.from('lesson_progress').delete().eq('user_id', id),
+        supabaseClient.from('module_quiz_results').delete().eq('user_id', id),
+        supabaseClient.from('country_lesson_progress').delete().eq('user_id', id),
+        supabaseClient.from('practice_quiz_attempts').delete().eq('user_id', id),
+      ]);
+      const failed = results.some((r) => r.error);
+      resetProgressBtn.disabled = false;
+      resetProgressBtn.textContent = failed ? 'Failed' : 'Reset ✓';
+      setTimeout(() => { resetProgressBtn.textContent = 'Reset Progress'; }, 2500);
     }
   });
 
