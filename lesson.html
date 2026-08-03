@@ -48,9 +48,15 @@
   .module-quiz-q:first-of-type { border-top:none; padding-top:0; }
   .module-quiz-q h4 { font-family: var(--font-sans); font-size:0.94rem; font-weight:600; margin:0 0 10px; }
   .module-quiz-options { display:flex; flex-direction:column; gap:1px; }
-  .module-quiz-option { display:flex; align-items:center; gap:10px; padding:7px 8px; border-radius:6px; cursor:pointer; font-size:0.9rem; }
+  .module-quiz-option { display:flex; align-items:center; gap:10px; padding:7px 8px; border-radius:6px; cursor:pointer; font-size:0.9rem; text-align:left; }
   .module-quiz-option:hover { background: var(--paper-dim); }
-  .module-quiz-option input { accent-color: var(--forest); }
+  /* Global form styles (styles.css `input { width:100%; padding:11px 14px; ... }`)
+     are meant for text/email/password fields — override them back to a
+     normal native radio button here, or the choice rows render broken and
+     the label text ends up pushed off to one side instead of sitting
+     flush left next to its radio. */
+  .module-quiz-option input[type="radio"] { width:auto; height:auto; padding:0; margin:0; border:none; flex-shrink:0; accent-color: var(--forest); }
+  .module-quiz-option span { text-align:left; }
   .module-quiz-option.correct { background:#F0F6F2; color: var(--forest); font-weight:600; }
   .module-quiz-option.incorrect { background:#FBF0EF; color: var(--danger); }
   .module-quiz-result-banner { border-radius: var(--radius-sm); padding:10px 14px; margin:16px 0; font-size:0.88rem; }
@@ -135,9 +141,7 @@
         <div class="lang-toggle">
           <button data-lang-btn="en" class="active">EN</button>
           <button data-lang-btn="es">ES</button>
-        </div>
-        <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
-        <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link" data-en="Log Out" data-es="Cerrar Sesión">Log Out</a>
+        </div>        <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link" data-en="Log Out" data-es="Cerrar Sesión">Log Out</a>
       </div>
     </div>
 
