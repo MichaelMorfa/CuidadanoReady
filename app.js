@@ -33,6 +33,41 @@ function getCurrentLang() {
 }
 window.getCurrentLang = getCurrentLang;
 
+// ---- Dark mode (member area) ------------------------------------------
+// The actual "apply before paint" logic lives in a tiny inline script in
+// each member page's <head> (avoids a flash of the light theme) — this is
+// just the toggle button wiring + shared helpers used after that.
+function getStoredTheme() {
+  try {
+    const saved = localStorage.getItem('ciudadanoready-theme');
+    if (saved === 'dark' || saved === 'light') return saved;
+  } catch (e) {}
+  return 'light';
+}
+window.getStoredTheme = getStoredTheme;
+
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
+  try { localStorage.setItem('ciudadanoready-theme', theme); } catch (e) {}
+  document.querySelectorAll('.theme-toggle-btn').forEach((btn) => {
+    btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+    btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+  });
+  document.querySelectorAll('[data-theme-radio]').forEach((input) => {
+    const isMatch = input.getAttribute('data-theme-radio') === theme;
+    input.checked = isMatch;
+    const wrap = input.closest('.theme-option-btn');
+    if (wrap) wrap.classList.toggle('checked', isMatch);
+  });
+  window.dispatchEvent(new CustomEvent('ciudadanoready:themechange', { detail: { theme } }));
+}
+window.setTheme = setTheme;
+
+function toggleTheme() {
+  setTheme(getStoredTheme() === 'dark' ? 'light' : 'dark');
+}
+window.toggleTheme = toggleTheme;
+
 // ---- Stripe checkout / billing portal helpers ---------------------------
 // Used by dashboard.html's billing banner (resubscribe / upgrade for an
 // account that already exists — new signups go through
@@ -90,6 +125,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('[data-lang-btn]').forEach((btn) => {
     btn.addEventListener('click', () => setLang(btn.getAttribute('data-lang-btn')));
+  });
+
+  // ---- Dark mode toggle button(s) --------------------------------------
+  // The <html data-theme> attribute is already set by the inline no-flash
+  // script in <head> before this runs — just sync the button icon(s) to
+  // match and wire clicks.
+  if (document.querySelector('.theme-toggle-btn') || document.querySelector('[data-theme-radio]')) {
+    setTheme(getStoredTheme());
+  }
+  document.querySelectorAll('.theme-toggle-btn').forEach((btn) => {
+    btn.addEventListener('click', toggleTheme);
+  });
+  document.querySelectorAll('[data-theme-radio]').forEach((input) => {
+    input.addEventListener('change', () => { if (input.checked) setTheme(input.getAttribute('data-theme-radio')); });
   });
 
   // ---- Mobile nav toggle ----------------------------------------------

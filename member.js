@@ -1086,6 +1086,122 @@ async function initPracticeQuizPage() {
   });
 }
 
+// ---- Settings page --------------------------------------------------------
+// Profile (name/email), password change, appearance (dark mode — the
+// toggle buttons themselves are wired generically in app.js since they're
+// shared with every member page's topbar), and a link out to the existing
+// Stripe billing portal (window.openBillingPortal, already used by the
+// dashboard's billing banner).
+function showSettingsMsg(el, text, isError) {
+  if (!el) return;
+  el.textContent = text;
+  el.classList.remove('success', 'error');
+  el.classList.add(isError ? 'error' : 'success');
+}
+
+async function initSettingsPage() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  const userId = session.user.id;
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('full_name, email, plan, subscription_status')
+    .eq('id', userId)
+    .single();
+
+  const nameInput = document.querySelector('#settings-full-name');
+  const emailInput = document.querySelector('#settings-email');
+  if (nameInput) nameInput.value = (profile && profile.full_name) || '';
+  if (emailInput) emailInput.value = (profile && profile.email) || session.user.email || '';
+
+  const planNameEl = document.querySelector('#settings-plan-name');
+  const planStatusEl = document.querySelector('#settings-plan-status');
+  if (planNameEl) {
+    const planLabels = { monthly: 'Monthly Plan', '2year': '2-Year Plan' };
+    planNameEl.textContent = (profile && planLabels[profile.plan]) || (profile && profile.plan) || 'No active plan';
+  }
+  if (planStatusEl) {
+    const statusLabels = { active: 'Active', trial: 'Trial', comp: 'Complimentary access', past_due: 'Payment issue', canceled: 'Canceled' };
+    planStatusEl.textContent = (profile && statusLabels[profile.subscription_status]) || '';
+  }
+  const manageBillingBtn = document.querySelector('#settings-manage-billing-btn');
+  if (manageBillingBtn) manageBillingBtn.onclick = () => window.openBillingPortal(manageBillingBtn);
+
+  // Sidebar module nav, same as every other member page.
+  const { data: lessons } = await supabaseClient.from('lessons').select('*').eq('published', true).order('module_number').order('sort_order');
+  const { data: progressRows } = await supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId);
+  const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
+  renderModuleNav('#settings-module-nav', lessons || [], completedIds, null);
+
+  const profileForm = document.querySelector('#profile-form');
+  if (profileForm) {
+    profileForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.querySelector('#profile-save-btn');
+      const msg = document.querySelector('#profile-msg');
+      const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+      btn.disabled = true;
+
+      const newName = nameInput.value.trim();
+      const newEmail = emailInput.value.trim();
+      const emailChanged = newEmail && newEmail !== session.user.email;
+
+      const { error: profileError } = await supabaseClient
+        .from('profiles')
+        .update({ full_name: newName })
+        .eq('id', userId);
+
+      let authError = null;
+      if (emailChanged) {
+        const { error } = await supabaseClient.auth.updateUser({ email: newEmail });
+        authError = error;
+      }
+
+      btn.disabled = false;
+      if (profileError || authError) {
+        showSettingsMsg(msg, (profileError && profileError.message) || (authError && authError.message) || 'Something went wrong.', true);
+      } else if (emailChanged) {
+        showSettingsMsg(msg, lang === 'es' ? 'Guardado. Revisa tu nuevo correo para confirmar el cambio de dirección.' : 'Saved. Check your new inbox to confirm the email change.', false);
+      } else {
+        showSettingsMsg(msg, lang === 'es' ? 'Guardado.' : 'Saved.', false);
+      }
+    });
+  }
+
+  const passwordForm = document.querySelector('#password-form');
+  if (passwordForm) {
+    passwordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.querySelector('#password-save-btn');
+      const msg = document.querySelector('#password-msg');
+      const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+      const newPw = document.querySelector('#settings-new-password').value;
+      const confirmPw = document.querySelector('#settings-confirm-password').value;
+
+      if (newPw !== confirmPw) {
+        showSettingsMsg(msg, lang === 'es' ? 'Las contraseñas no coinciden.' : 'Passwords do not match.', true);
+        return;
+      }
+      if (newPw.length < 6) {
+        showSettingsMsg(msg, lang === 'es' ? 'La contraseña debe tener al menos 6 caracteres.' : 'Password must be at least 6 characters.', true);
+        return;
+      }
+
+      btn.disabled = true;
+      const { error } = await supabaseClient.auth.updateUser({ password: newPw });
+      btn.disabled = false;
+
+      if (error) {
+        showSettingsMsg(msg, error.message || 'Could not update password.', true);
+      } else {
+        showSettingsMsg(msg, lang === 'es' ? 'Contraseña actualizada.' : 'Password updated.', false);
+        passwordForm.reset();
+      }
+    });
+  }
+}
+
 // ==========================================================================
 // "Know Your Country" — 40-lesson narrative U.S. history section.
 // Separate from the 7-stage naturalization process modules: this is
@@ -1476,6 +1592,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.body.hasAttribute('data-flashcards-page')) initFlashcardsPage();
   if (document.body.hasAttribute('data-practice-quiz-page')) initPracticeQuizPage();
   if (document.body.hasAttribute('data-kyc-page')) initKycPage();
+  if (document.body.hasAttribute('data-settings-page')) initSettingsPage();
 });
 
 // Re-render dynamic content in place when the visitor toggles EN/ES —

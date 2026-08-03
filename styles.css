@@ -14,6 +14,7 @@
   --danger: #B3492F;
   --line: #C9CED6;
   --white: #FFFFFF;
+  --surface: #FFFFFF;
 
   --font-serif: 'Source Serif 4', Georgia, serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -23,6 +24,29 @@
   --radius-sm: 8px;
   --shadow-card: 0 2px 6px rgba(28, 127, 184, 0.06);
   --shadow-card-hover: 0 8px 20px rgba(28, 127, 184, 0.14);
+}
+
+/* ---- Dark mode (member area only — toggled via #settings.html / topbar
+   button, persisted in localStorage as "ciudadanoready-theme", applied by
+   setting data-theme="dark" on <html>) --------------------------------
+   --white is deliberately left alone: it's used as *text* color on top of
+   accent buttons (ocean/forest/danger backgrounds), which stay saturated
+   in dark mode too, so white text on them is still correct. Only --surface
+   (card/sidebar/topbar backgrounds) and the base ink/paper/line trio need
+   to flip. */
+:root[data-theme="dark"] {
+  --ink: #E7E9EC;
+  --paper: #14171B;
+  --paper-dim: #1B1F24;
+  --surface: #20242A;
+  --slate: #9CA3AF;
+  --line: #333941;
+  --ocean: #5AB1E8;
+  --ocean-deep: #7CC3EE;
+  --forest: #59AC81;
+  --danger: #E58873;
+  --shadow-card: 0 2px 6px rgba(0, 0, 0, 0.35);
+  --shadow-card-hover: 0 8px 20px rgba(0, 0, 0, 0.45);
 }
 
 * { box-sizing: border-box; }
@@ -202,6 +226,22 @@ img { max-width: 100%; display: block; }
 }
 .lang-toggle button.active { background: var(--ocean); color: var(--white); }
 
+.theme-toggle-btn {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 20px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  cursor: pointer;
+  line-height: 1;
+  color: var(--slate);
+}
+.theme-toggle-btn:hover { border-color: var(--ocean); }
+
 .nav-toggle {
   display: none;
   background: none;
@@ -223,7 +263,7 @@ img { max-width: 100%; display: block; }
     flex-direction: column;
     align-items: stretch;
     gap: 0;
-    background: var(--white);
+    background: var(--surface);
     border-top: 1px solid var(--line);
     box-shadow: var(--shadow-card-hover);
     padding: 4px 0;
@@ -266,7 +306,7 @@ img { max-width: 100%; display: block; }
   font-size: 0.85rem;
   font-weight: 500;
   color: var(--slate);
-  background: var(--white);
+  background: var(--surface);
   flex-shrink: 0;
 }
 .stamp-circle.current { border-color: var(--ink); color: var(--ink); }
@@ -290,7 +330,7 @@ img { max-width: 100%; display: block; }
    Cards
    -------------------------------------------------------------------- */
 .card {
-  background: var(--white);
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   box-shadow: var(--shadow-card);
@@ -342,7 +382,7 @@ img { max-width: 100%; display: block; }
   padding: 4px 10px;
   border-radius: 20px;
   border: 1px solid var(--line);
-  background: var(--white);
+  background: var(--surface);
   color: var(--slate);
 }
 .badge-ocean { border-color: var(--ocean); color: var(--ocean); }
@@ -376,7 +416,7 @@ input, select, textarea {
   font-family: var(--font-sans);
   font-size: 0.95rem;
   color: var(--ink);
-  background: var(--white);
+  background: var(--surface);
   margin-bottom: 18px;
 }
 input:focus, select:focus, textarea:focus {
@@ -458,7 +498,7 @@ textarea { resize: vertical; min-height: 120px; }
   border-radius: var(--radius-sm);
   margin-bottom: 12px;
   overflow: hidden;
-  background: var(--white);
+  background: var(--surface);
 }
 .accordion-trigger {
   width: 100%;
@@ -490,7 +530,7 @@ textarea { resize: vertical; min-height: 120px; }
 /* --------------------------------------------------------------------
    Quiz components
    -------------------------------------------------------------------- */
-.quiz-box { border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); padding: 28px; }
+.quiz-box { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 28px; }
 .quiz-option {
   display: block;
   width: 100%;
@@ -498,7 +538,7 @@ textarea { resize: vertical; min-height: 120px; }
   padding: 14px 16px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  background: var(--white);
+  background: var(--surface);
   margin-bottom: 10px;
   cursor: pointer;
   font-family: var(--font-sans);
@@ -521,7 +561,7 @@ textarea { resize: vertical; min-height: 120px; }
 .app-sidebar {
   width: 250px;
   flex-shrink: 0;
-  background: var(--white);
+  background: var(--surface);
   border-right: 1px solid var(--line);
   padding: 24px 0;
   position: sticky;
@@ -561,7 +601,7 @@ textarea { resize: vertical; min-height: 120px; }
   justify-content: space-between;
   padding: 20px 32px;
   border-bottom: 1px solid var(--line);
-  background: var(--white);
+  background: var(--surface);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -598,7 +638,7 @@ tr:last-child td { border-bottom: none; }
   height: 40px;
   align-items: center;
   justify-content: center;
-  background: var(--white);
+  background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   font-size: 1.15rem;

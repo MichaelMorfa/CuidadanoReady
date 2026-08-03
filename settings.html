@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem("ciudadanoready-theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — Ciudadano Ready</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ===== Member Area theme (matches dashboard.html) ===== */
+  body { background: var(--paper-dim); }
+  .app-sidebar { background: var(--paper-dim); border-right: 1px solid var(--line); }
+  .app-nav a.active { color: var(--forest); background: var(--surface); border-left-color: var(--forest); }
+  .app-nav a:hover { color: var(--forest); }
+  .app-topbar { background: var(--paper-dim); border-bottom: 1px solid var(--line); }
+  .app-content .card { box-shadow: none; }
+  .app-content .card:hover { box-shadow: none; }
+  .btn-primary { background: var(--forest); }
+  .btn-primary:hover { background: #244F3B; }
+  .app-nav-group h4 { margin: 0 0 8px; }
+
+  .settings-section { max-width: 560px; margin-bottom: 28px; }
+  .settings-section h3 { margin-bottom:4px; }
+  .settings-section .section-desc { margin-bottom:18px; }
+  .settings-field { margin-bottom:16px; }
+  .settings-field label { display:block; font-size:0.82rem; font-weight:600; color: var(--slate); margin-bottom:6px; }
+  .settings-field input[type="text"], .settings-field input[type="email"], .settings-field input[type="password"] {
+    width:100%; padding:10px 14px; border:1px solid var(--line); border-radius: var(--radius-sm);
+    font-family: var(--font-sans); font-size:0.92rem; background: var(--surface); color: var(--ink);
+  }
+  .settings-field .small.muted { margin-top:6px; }
+  .settings-row { display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-top:1px solid var(--line); }
+  .settings-row:first-of-type { border-top:none; padding-top:0; }
+  .settings-msg { font-size:0.85rem; margin-top:10px; display:none; padding:9px 12px; border-radius: var(--radius-sm); }
+  .settings-msg.success { background:#F0F6F2; color: var(--forest); display:block; }
+  .settings-msg.error { background:#FBF0EF; color: var(--danger); display:block; }
+
+  .theme-switch-row { display:flex; align-items:center; gap:10px; }
+  .theme-option-btn {
+    display:flex; align-items:center; gap:8px; padding:10px 16px; border:1px solid var(--line);
+    border-radius: var(--radius-sm); background: var(--surface); cursor:pointer; font-size:0.88rem; color: var(--ink);
+    flex:1;
+  }
+  .theme-option-btn input { accent-color: var(--forest); }
+  .theme-option-btn.checked { border-color: var(--forest); background:#F0F6F2; color: var(--forest); font-weight:600; }
+  [data-theme="dark"] .theme-option-btn.checked { background: rgba(89,172,129,0.15); }
+
+  .plan-badge { display:inline-block; padding:4px 12px; border-radius:20px; font-family: var(--font-mono); font-size:0.72rem; border:1px solid var(--line); color: var(--slate); }
+  .plan-badge.active { border-color: var(--forest); color: var(--forest); }
+</style>
+<meta name="description" content="Manage your Ciudadano Ready account settings.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+</head>
+<body data-auth-required="true" data-settings-page="true">
+
+<div class="app-shell">
+  <div class="sidebar-backdrop"></div>
+  <aside class="app-sidebar">
+    <a href="dashboard.html" class="logo">Ciudadano<span class="dot">Ready</span></a>
+    <ul class="app-nav">
+      <li class="app-nav-group">
+        <h4 data-en="Overview" data-es="Resumen">Overview</h4>
+        <a href="dashboard.html" data-en="Continue Learning" data-es="Continuar Aprendiendo">Continue Learning</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="Modules" data-es="Módulos">Modules</h4>
+        <ul class="app-nav" id="settings-module-nav" style="padding:0;">
+          <li class="small muted" style="padding:10px 24px;">Loading…</li>
+        </ul>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="Practice" data-es="Práctica">Practice</h4>
+        <a href="flashcards.html" data-en="Flashcards" data-es="Tarjetas de Estudio">Flashcards</a>
+        <a href="practice-quiz.html" data-en="Practice Interview" data-es="Entrevista de Práctica">Practice Interview</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="Background" data-es="Contexto">Background</h4>
+        <a href="know-your-country.html" data-en="Know Your Country" data-es="Conoce Tu País">Know Your Country</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="More" data-es="Más">More</h4>
+        <a href="contact.html" data-en="Support" data-es="Soporte">Support</a>
+        <a href="settings.html" class="active" data-en="Settings" data-es="Configuración">Settings</a>
+      </li>
+    </ul>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-topbar">
+      <div class="flex gap-16 items-center">
+        <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
+        <div>
+          <span class="eyebrow" style="margin-bottom:0;" data-en="ACCOUNT" data-es="CUENTA">ACCOUNT</span>
+          <h3 style="margin:0;" data-en="Settings" data-es="Configuración">Settings</h3>
+        </div>
+      </div>
+      <div class="flex gap-16 items-center">
+        <div class="lang-toggle">
+          <button data-lang-btn="en" class="active">EN</button>
+          <button data-lang-btn="es">ES</button>
+        </div>
+        <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
+        <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link" data-en="Log Out" data-es="Cerrar Sesión">Log Out</a>
+      </div>
+    </div>
+
+    <div class="app-content">
+
+      <!-- Profile -->
+      <div class="card card-pad settings-section">
+        <h3 data-en="Profile" data-es="Perfil">Profile</h3>
+        <p class="small muted section-desc" data-en="Your name and email on file." data-es="Tu nombre y correo electrónico registrados.">Your name and email on file.</p>
+
+        <form id="profile-form">
+          <div class="settings-field">
+            <label data-en="Full Name" data-es="Nombre Completo">Full Name</label>
+            <input type="text" id="settings-full-name" placeholder="Jane Doe">
+          </div>
+          <div class="settings-field">
+            <label data-en="Email Address" data-es="Correo Electrónico">Email Address</label>
+            <input type="email" id="settings-email" placeholder="jane@example.com">
+            <p class="small muted" data-en="Changing your email sends a confirmation link to the new address before it takes effect." data-es="Cambiar tu correo envía un enlace de confirmación a la nueva dirección antes de que surta efecto.">Changing your email sends a confirmation link to the new address before it takes effect.</p>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm" id="profile-save-btn" data-en="Save Changes" data-es="Guardar Cambios">Save Changes</button>
+          <div class="settings-msg" id="profile-msg"></div>
+        </form>
+      </div>
+
+      <!-- Password -->
+      <div class="card card-pad settings-section">
+        <h3 data-en="Password" data-es="Contraseña">Password</h3>
+        <p class="small muted section-desc" data-en="Choose a new password for your account." data-es="Elige una nueva contraseña para tu cuenta.">Choose a new password for your account.</p>
+
+        <form id="password-form">
+          <div class="settings-field">
+            <label data-en="New Password" data-es="Nueva Contraseña">New Password</label>
+            <input type="password" id="settings-new-password" placeholder="At least 6 characters" minlength="6" required>
+          </div>
+          <div class="settings-field">
+            <label data-en="Confirm New Password" data-es="Confirmar Nueva Contraseña">Confirm New Password</label>
+            <input type="password" id="settings-confirm-password" placeholder="At least 6 characters" minlength="6" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm" id="password-save-btn" data-en="Update Password" data-es="Actualizar Contraseña">Update Password</button>
+          <div class="settings-msg" id="password-msg"></div>
+        </form>
+      </div>
+
+      <!-- Appearance -->
+      <div class="card card-pad settings-section">
+        <h3 data-en="Appearance" data-es="Apariencia">Appearance</h3>
+        <p class="small muted section-desc" data-en="Choose how Ciudadano Ready looks on this device." data-es="Elige cómo se ve Ciudadano Ready en este dispositivo.">Choose how Ciudadano Ready looks on this device.</p>
+        <div class="theme-switch-row">
+          <label class="theme-option-btn" id="theme-option-light">
+            <input type="radio" name="theme-choice" data-theme-radio="light">
+            <span>☀️ <span data-en="Light" data-es="Claro">Light</span></span>
+          </label>
+          <label class="theme-option-btn" id="theme-option-dark">
+            <input type="radio" name="theme-choice" data-theme-radio="dark">
+            <span>🌙 <span data-en="Dark" data-es="Oscuro">Dark</span></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Billing -->
+      <div class="card card-pad settings-section">
+        <h3 data-en="Plan &amp; Billing" data-es="Plan y Facturación">Plan &amp; Billing</h3>
+        <div class="settings-row">
+          <div>
+            <div style="font-weight:600;" id="settings-plan-name" data-en="Loading…" data-es="Cargando…">Loading…</div>
+            <p class="small muted" style="margin:2px 0 0;" id="settings-plan-status"></p>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="settings-manage-billing-btn" data-en="Manage Billing" data-es="Gestionar Facturación">Manage Billing</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="app.js"></script>
+<script src="member.js"></script>
+</body>
+</html>
