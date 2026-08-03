@@ -718,6 +718,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ---- Support notes ------------------------------------------------
+  // Replies are sent straight from here (via the reply_to_contact_submission
+  // RPC, which emails the customer through Resend and logs the reply) so an
+  // admin doesn't have to switch to a separate mail client mid-ticket.
   async function loadSupport() {
     const list = document.querySelector('#support-list');
     const { data, error } = await supabaseClient.from('contact_submissions').select('*').order('created_at', { ascending: false });
@@ -729,7 +732,28 @@ document.addEventListener('DOMContentLoaded', () => {
       list.innerHTML = '<p class="empty-state">No support messages yet.</p>';
       return;
     }
-    list.innerHTML = data.map((t) => `
+
+    const ids = data.map((t) => t.id);
+    const { data: repliesData } = await supabaseClient
+      .from('contact_replies')
+      .select('*')
+      .in('submission_id', ids)
+      .order('created_at', { ascending: true });
+    const repliesBySubmission = {};
+    (repliesData || []).forEach((r) => {
+      (repliesBySubmission[r.submission_id] = repliesBySubmission[r.submission_id] || []).push(r);
+    });
+
+    list.innerHTML = data.map((t) => {
+      const replies = repliesBySubmission[t.id] || [];
+      const repliesHtml = replies.map((r) => `
+        <div class="ticket-reply-row" style="margin-top:8px; padding:10px 12px; background:var(--paper-dim); border-radius:var(--radius-sm);">
+          <div class="small muted" style="margin-bottom:4px;">You replied · ${formatDate(r.created_at)}</div>
+          <p class="small" style="margin:0; white-space:pre-wrap;">${escapeHtml(r.message)}</p>
+        </div>
+      `).join('');
+
+      return `
       <div class="card card-pad" style="margin-bottom:14px;" data-ticket-card="${t.id}">
         <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:10px;">
           <div>
@@ -739,6 +763,13 @@ document.addEventListener('DOMContentLoaded', () => {
           <span class="small muted">${formatDate(t.created_at)}</span>
         </div>
         <p class="small" style="margin:10px 0;">${escapeHtml(t.message || '')}</p>
+        ${repliesHtml}
+        <label style="margin-bottom:4px; margin-top:14px;">Reply to Customer</label>
+        <textarea data-ticket-reply-text="${t.id}" placeholder="Type a reply — it will be emailed to ${escapeHtml(t.email || 'the customer')}…"></textarea>
+        <div class="flex gap-16 items-center" style="flex-wrap:wrap; margin-bottom:14px;">
+          <button class="btn btn-primary btn-sm" data-ticket-reply-send="${t.id}">Send Reply</button>
+          <span class="row-save-msg" data-ticket-reply-msg="${t.id}">Sent ✓</span>
+        </div>
         <label style="margin-bottom:4px;">Admin Notes</label>
         <textarea data-ticket-notes="${t.id}" placeholder="Internal notes…">${escapeHtml(t.admin_notes || '')}</textarea>
         <div class="flex gap-16 items-center" style="flex-wrap:wrap;">
@@ -751,23 +782,52 @@ document.addEventListener('DOMContentLoaded', () => {
           <span class="row-save-msg" data-ticket-msg="${t.id}">Saved ✓</span>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
 
   document.querySelector('#support-list')?.addEventListener('click', async (e) => {
     const saveBtn = e.target.closest('[data-ticket-save]');
-    if (!saveBtn) return;
-    const id = saveBtn.getAttribute('data-ticket-save');
-    const card = saveBtn.closest('[data-ticket-card]');
-    const status = card.querySelector(`[data-ticket-status="${id}"]`).value;
-    const admin_notes = card.querySelector(`[data-ticket-notes="${id}"]`).value;
-    saveBtn.disabled = true;
-    const { error } = await supabaseClient.from('contact_submissions').update({ status, admin_notes }).eq('id', id);
-    saveBtn.disabled = false;
-    const msg = card.querySelector(`[data-ticket-msg="${id}"]`);
-    if (!error && msg) {
-      msg.classList.add('show');
-      setTimeout(() => msg.classList.remove('show'), 2000);
+    const replySendBtn = e.target.closest('[data-ticket-reply-send]');
+
+    if (saveBtn) {
+      const id = saveBtn.getAttribute('data-ticket-save');
+      const card = saveBtn.closest('[data-ticket-card]');
+      const status = card.querySelector(`[data-ticket-status="${id}"]`).value;
+      const admin_notes = card.querySelector(`[data-ticket-notes="${id}"]`).value;
+      saveBtn.disabled = true;
+      const { error } = await supabaseClient.from('contact_submissions').update({ status, admin_notes }).eq('id', id);
+      saveBtn.disabled = false;
+      const msg = card.querySelector(`[data-ticket-msg="${id}"]`);
+      if (!error && msg) {
+        msg.classList.add('show');
+        setTimeout(() => msg.classList.remove('show'), 2000);
+      }
+    }
+
+    if (replySendBtn) {
+      const id = replySendBtn.getAttribute('data-ticket-reply-send');
+      const card = replySendBtn.closest('[data-ticket-card]');
+      const textarea = card.querySelector(`[data-ticket-reply-text="${id}"]`);
+      const message = (textarea.value || '').trim();
+      if (!message) { textarea.focus(); return; }
+
+      replySendBtn.disabled = true;
+      replySendBtn.textContent = 'Sending…';
+      const { data: result, error } = await supabaseClient.rpc('reply_to_contact_submission', {
+        p_submission_id: id,
+        p_message: message,
+      });
+      replySendBtn.disabled = false;
+      replySendBtn.textContent = 'Send Reply';
+
+      if (error || !result || !result.ok) {
+        alert('Could not send reply: ' + (error ? error.message : (result && result.error) || 'Unknown error'));
+        return;
+      }
+
+      textarea.value = '';
+      loadSupport();
     }
   });
 

@@ -264,8 +264,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ---- Contact form (writes to Supabase contact_submissions) ----------
+  // Two lightweight, no-external-service spam checks that run before the
+  // real insert: a honeypot field a script filling every input will trip,
+  // and a minimum time-on-page (a form submitted faster than a human could
+  // plausibly read + type it is almost certainly automated). Both fail
+  // silently — the bot sees the same "Sent ✓" a real visitor would, so
+  // there's no error response telling it to adapt.
   const contactForm = document.querySelector('#contact-form');
   if (contactForm && typeof supabaseClient !== 'undefined') {
+    const contactFormLoadedAt = Date.now();
+    const MIN_SECONDS_BEFORE_SUBMIT = 3;
+
     contactForm.addEventListener('submit', async (event) => {
       event.preventDefault();
       const submitBtn = document.querySelector('#contact-submit');
@@ -274,6 +283,18 @@ document.addEventListener('DOMContentLoaded', () => {
       if (errorEl) errorEl.style.display = 'none';
       submitBtn.disabled = true;
       submitBtn.textContent = 'Sending…';
+
+      const honeypot = document.querySelector('#contact-company');
+      const tooFast = (Date.now() - contactFormLoadedAt) / 1000 < MIN_SECONDS_BEFORE_SUBMIT;
+      const looksLikeBot = (honeypot && honeypot.value.trim() !== '') || tooFast;
+
+      if (looksLikeBot) {
+        setTimeout(() => {
+          submitBtn.textContent = 'Sent ✓';
+          contactForm.reset();
+        }, 400);
+        return;
+      }
 
       const { error } = await supabaseClient.from('contact_submissions').insert({
         name: document.querySelector('#contact-name').value,

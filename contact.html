@@ -94,6 +94,14 @@
         </select>
         <label data-en="Message" data-es="Mensaje">Message</label>
         <textarea id="contact-message" placeholder="How can we help?" required></textarea>
+        <!-- Honeypot: invisible to real visitors (off-screen, not display:none
+             so it still passes basic bot form-fillers that skip hidden fields),
+             but a script filling every field blindly will trip it. Left blank
+             by anyone using the real form. -->
+        <div style="position:absolute; left:-9999px; top:-9999px;" aria-hidden="true">
+          <label for="contact-company">Company</label>
+          <input type="text" id="contact-company" name="contact-company" tabindex="-1" autocomplete="off">
+        </div>
         <p id="contact-error" class="small" style="color: var(--danger); display:none;"></p>
         <button type="submit" class="btn btn-primary btn-block" id="contact-submit" data-en="Send Message" data-es="Enviar mensaje">Send Message</button>
       </form>
