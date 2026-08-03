@@ -111,6 +111,37 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       setStat('#stat-quiz-accuracy', 'No attempts yet');
     }
+
+    // In-house error log (see app.js's window.onerror/unhandledrejection
+    // handlers) — surfaces real breakage here instead of only via support
+    // emails.
+    const weekAgoErrors = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { count: errorCount } = await supabaseClient.from('client_error_log').select('*', { count: 'exact', head: true }).gte('created_at', weekAgoErrors);
+    setStat('#stat-client-errors', errorCount ?? 0);
+
+    const errorsListEl = document.querySelector('#client-errors-list');
+    if (errorsListEl) {
+      const { data: recentErrors, error: errorsErr } = await supabaseClient
+        .from('client_error_log')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (errorsErr) {
+        errorsListEl.innerHTML = `<p class="empty-state">Could not load errors: ${escapeHtml(errorsErr.message)}</p>`;
+      } else if (!recentErrors || !recentErrors.length) {
+        errorsListEl.innerHTML = '<p class="empty-state">No errors reported. 🎉</p>';
+      } else {
+        errorsListEl.innerHTML = recentErrors.map((e) => `
+          <div style="padding:10px 0; border-top:1px solid var(--line);">
+            <div class="flex justify-between items-center" style="gap:10px;">
+              <strong class="small" style="color:var(--danger);">${escapeHtml(e.message || 'Unknown error')}</strong>
+              <span class="small muted" style="white-space:nowrap;">${formatDate(e.created_at)}</span>
+            </div>
+            <div class="small muted">${escapeHtml(e.page || '')}${e.source ? ' · ' + escapeHtml(e.source) + (e.lineno ? ':' + e.lineno : '') : ''}</div>
+          </div>
+        `).join('');
+      }
+    }
   }
 
   // ---- Users -------------------------------------------------------------

@@ -3,6 +3,43 @@
    Language toggle, mobile nav, accordion, quiz interactions.
    ========================================================================== */
 
+// ---- Client-side error logging (in-house, no 3rd-party service) --------
+// Catches uncaught errors and unhandled promise rejections on every page
+// and logs them to client_error_log so problems surface in the admin
+// panel instead of only being discovered when a user emails support.
+// Fire-and-forget: never blocks or throws on top of the error it's
+// reporting, and silently no-ops if it can't reach Supabase.
+function logClientError(details) {
+  try {
+    if (typeof supabaseClient === 'undefined') return;
+    supabaseClient.from('client_error_log').insert({
+      page: location.pathname,
+      message: String((details && details.message) || 'Unknown error').slice(0, 2000),
+      source: String((details && details.source) || '').slice(0, 500),
+      lineno: (details && details.lineno) || null,
+      colno: (details && details.colno) || null,
+      stack: String((details && details.stack) || '').slice(0, 4000),
+      user_agent: (navigator.userAgent || '').slice(0, 500),
+    }).then(() => {}, () => {});
+  } catch (e) { /* never let logging itself throw */ }
+}
+window.addEventListener('error', (event) => {
+  logClientError({
+    message: event.message,
+    source: event.filename,
+    lineno: event.lineno,
+    colno: event.colno,
+    stack: event.error && event.error.stack,
+  });
+});
+window.addEventListener('unhandledrejection', (event) => {
+  const reason = event.reason;
+  logClientError({
+    message: (reason && reason.message) || String(reason),
+    stack: reason && reason.stack,
+  });
+});
+
 // ---- Language toggle -------------------------------------------------
 // Every translatable element carries data-en="..." and data-es="...".
 // Buttons with [data-lang-btn] switch which copy is shown.
@@ -69,9 +106,9 @@ function toggleTheme() {
 window.toggleTheme = toggleTheme;
 
 // ---- Stripe checkout / billing portal helpers ---------------------------
-// Used by dashboard.html's billing banner (resubscribe / upgrade for an
-// account that already exists — new signups go through
-// create-pending-checkout-session instead, since no account exists yet).
+// Used by dashboard.html's billing banner (resubscribe / upgrade), and now
+// also by the signup flow below right after the new account is created —
+// both paths land here once there's a real, signed-in Supabase session.
 window.startCheckoutRedirect = async function startCheckoutRedirect(plan, buttonEl) {
   if (typeof supabaseClient === 'undefined') return;
   const original = buttonEl ? buttonEl.textContent : null;
@@ -456,21 +493,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const plan = selectedPlan ? selectedPlan.getAttribute('data-plan') : 'monthly';
 
     btn.disabled = true;
+    btn.textContent = 'Creating your account…';
+
+    // The real Supabase account is created right here — password hashed by
+    // Supabase immediately, no plaintext holding table involved — then we
+    // sign in to get a working session, then reuse the same
+    // create-checkout-session function the dashboard billing banner uses.
+    // subscription_status stays 'incomplete' until the webhook confirms
+    // payment, so if anything below fails after this step, the account
+    // still exists and recoverably shows a "finish signing up" banner on
+    // next login instead of being lost.
+    const { data: createData, error: createError } = await supabaseClient.functions.invoke('create-account', {
+      body: { full_name: name, email: email, password: password, plan: plan },
+    });
+
+    if (createError || !createData || !createData.ok) {
+      btn.disabled = false;
+      btn.textContent = original;
+      if (errorEl) {
+        errorEl.textContent = (createData && createData.error) || (createError && createError.message) || 'Something went wrong creating your account.';
+        errorEl.style.display = 'block';
+      }
+      return;
+    }
+
     btn.textContent = 'Redirecting to secure checkout…';
 
-    // Pay-first: no account is created yet. This just validates the
-    // details and starts a Stripe Checkout Session — the real account
-    // (with this email/password) only gets created by the webhook the
-    // instant payment succeeds. Nothing is created if payment doesn't.
-    const { data, error } = await supabaseClient.functions.invoke('create-pending-checkout-session', {
-      body: { full_name: name, email: email, password: password, plan: plan },
+    const { error: signInError } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (signInError) {
+      btn.disabled = false;
+      btn.textContent = original;
+      if (errorEl) {
+        errorEl.textContent = 'Your account was created, but we could not sign you in automatically. Please log in to finish payment.';
+        errorEl.style.display = 'block';
+      }
+      return;
+    }
+
+    const { data, error } = await supabaseClient.functions.invoke('create-checkout-session', {
+      body: { plan: plan },
     });
 
     if (error || !data || !data.url) {
       btn.disabled = false;
       btn.textContent = original;
       if (errorEl) {
-        errorEl.textContent = (data && data.error) || (error && error.message) || 'Something went wrong starting checkout.';
+        errorEl.textContent = 'Your account was created. Log in any time to finish payment and start your course.';
         errorEl.style.display = 'block';
       }
       return;

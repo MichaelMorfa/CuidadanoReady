@@ -91,6 +91,14 @@
           <div class="card stat-card"><span class="eyebrow">PUBLISHED LESSONS</span><div class="stat-value" id="stat-lessons">—</div></div>
           <div class="card stat-card"><span class="eyebrow">QUIZ ACCURACY (ALL-TIME)</span><div class="stat-value" id="stat-quiz-accuracy">—</div></div>
         </div>
+        <div class="grid grid-3" style="margin-bottom:28px;">
+          <div class="card stat-card"><span class="eyebrow">JS ERRORS (7 DAYS)</span><div class="stat-value" id="stat-client-errors">—</div></div>
+        </div>
+        <div class="card card-pad" style="margin-bottom:28px;">
+          <span class="eyebrow">RECENT ERRORS</span>
+          <p class="small muted" style="margin:4px 0 14px;">Uncaught JavaScript errors and unhandled promise rejections reported from any page, most recent first. This is an in-house safety net, not a full monitoring service — it won't catch server-side/edge-function failures.</p>
+          <div id="client-errors-list"><p class="empty-state">Loading…</p></div>
+        </div>
         <div class="card card-pad">
           <span class="eyebrow">NOTE</span>
           <p class="small" style="margin:0;">Revenue and billing metrics (MRR, failed payments, refunds) will appear here once a payment processor is connected — those numbers should come straight from Stripe/Square rather than being tracked separately.</p>
