@@ -13,6 +13,17 @@
 
 const TOTAL_MODULES = 7;
 
+// A module's quiz (shown only on the last lesson of that module — see
+// initLessonPage/renderLessonPage) must be passed at this ratio or better
+// before the lesson can be marked complete. Weighted dashboard progress
+// (computeWeightedProgress) uses the same "quiz counts as X characters
+// worth of a lesson" and "video counts as Y characters worth" equivalences
+// so that a short module with a real quiz/video isn't worth less progress
+// than a long module with neither.
+const MODULE_QUIZ_PASS_RATIO = 0.8;
+const QUIZ_CHARS_PER_QUESTION = 700;
+const VIDEO_CHARS_EQUIVALENT = 2500;
+
 const MODULE_NAMES = {
   1: { en: 'Welcome', es: 'Bienvenida' },
   2: { en: 'Eligibility', es: 'Elegibilidad' },
@@ -244,6 +255,48 @@ function showCheckoutNotice() {
   }
 }
 
+// Progress % weighted by how much is actually in each module, instead of
+// a flat "completed lessons / total lessons" ratio. A lesson's "weight" is
+// its content length in characters (a genuine proxy for how much reading/
+// study it represents), plus a fixed chunk of weight for that lesson's
+// video (once it has one) and for its module's quiz (once published) —
+// both only counted as "earned" when the video's lesson is completed /
+// the quiz is passed, not just because they exist.
+async function computeWeightedProgress(userId, lessons, completedIds) {
+  const [{ data: quizRows }, { data: passedRows }] = await Promise.all([
+    supabaseClient.from('quiz_questions').select('module_number').eq('published', true),
+    supabaseClient.from('module_quiz_results').select('module_number, passed').eq('user_id', userId),
+  ]);
+
+  const quizCountByModule = {};
+  (quizRows || []).forEach((q) => {
+    quizCountByModule[q.module_number] = (quizCountByModule[q.module_number] || 0) + 1;
+  });
+  const passedModules = new Set((passedRows || []).filter((r) => r.passed).map((r) => r.module_number));
+
+  let totalWeight = 0;
+  let doneWeight = 0;
+  const modulesSeen = new Set();
+
+  lessons.forEach((l) => {
+    const contentWeight = Math.max((l.content || '').length, 1);
+    const videoWeight = l.video_url ? VIDEO_CHARS_EQUIVALENT : 0;
+    totalWeight += contentWeight + videoWeight;
+    if (completedIds.has(l.id)) doneWeight += contentWeight + videoWeight;
+    modulesSeen.add(l.module_number);
+  });
+
+  modulesSeen.forEach((m) => {
+    const qCount = quizCountByModule[m] || 0;
+    if (!qCount) return;
+    const quizWeight = qCount * QUIZ_CHARS_PER_QUESTION;
+    totalWeight += quizWeight;
+    if (passedModules.has(m)) doneWeight += quizWeight;
+  });
+
+  return totalWeight ? Math.round((doneWeight / totalWeight) * 100) : 0;
+}
+
 // ---- Dashboard --------------------------------------------------------
 // Cached so a language toggle can re-render instantly without refetching.
 let dashboardCache = null;
@@ -348,9 +401,7 @@ async function initDashboard() {
   mainContent.style.display = 'block';
 
   const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
-  const total = lessons.length;
-  const completedCount = lessons.filter((l) => completedIds.has(l.id)).length;
-  const pct = total ? Math.round((completedCount / total) * 100) : 0;
+  const pct = await computeWeightedProgress(userId, lessons, completedIds);
 
   document.querySelector('#stat-progress-pct').textContent = pct + '%';
   document.querySelector('#stat-progress-bar').style.width = pct + '%';
@@ -360,13 +411,113 @@ async function initDashboard() {
   renderDashboard();
 }
 
+// ---- Module quiz (submit-and-grade, shown only on the last lesson of a
+// module, gates that lesson's "Mark Complete") -----------------------------
+// Distinct from buildQuizBoxHtml (the older instant-feedback single-question
+// widget still used elsewhere): this renders every quiz question for the
+// whole module at once as a real form, only reveals right/wrong after the
+// member submits, and requires MODULE_QUIZ_PASS_RATIO correct to pass.
+const MODULE_QUIZ_LABELS = {
+  en: { instructions: (n) => `Answer all ${n} question${n === 1 ? '' : 's'}, then submit. You need ${Math.round(MODULE_QUIZ_PASS_RATIO * 100)}% correct to pass and complete this module.`, submit: 'Submit Quiz', passTitle: (s, t) => `Passed! ${s}/${t} correct.`, failTitle: (s, t) => `Not quite — ${s}/${t} correct.`, failBody: 'Review the highlighted answers below, then try again.', retry: 'Retry Quiz', unanswered: 'Please answer every question before submitting.' },
+  es: { instructions: (n) => `Responde las ${n} preguntas y envía tus respuestas. Necesitas ${Math.round(MODULE_QUIZ_PASS_RATIO * 100)}% correctas para aprobar y completar este módulo.`, submit: 'Enviar Cuestionario', passTitle: (s, t) => `¡Aprobado! ${s}/${t} correctas.`, failTitle: (s, t) => `Aún no — ${s}/${t} correctas.`, failBody: 'Revisa las respuestas resaltadas abajo e inténtalo de nuevo.', retry: 'Reintentar Cuestionario', unanswered: 'Por favor responde todas las preguntas antes de enviar.' },
+};
+
+function buildModuleQuizHtml(quizQs) {
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const ml = MODULE_QUIZ_LABELS[lang] || MODULE_QUIZ_LABELS.en;
+  const questionsHtml = quizQs.map((q, i) => {
+    const choices = shuffleArray([
+      ['a', localize(q, 'choice_a')],
+      ['b', localize(q, 'choice_b')],
+      ['c', localize(q, 'choice_c')],
+      ['d', localize(q, 'choice_d')],
+    ]);
+    const optionsHtml = choices.map(([key, text]) => `
+      <label class="module-quiz-option" data-key="${key}">
+        <input type="radio" name="mq-${q.id}" value="${key}">
+        <span>${escapeHtml(text)}</span>
+      </label>`).join('');
+    return `<div class="module-quiz-q" data-question-id="${q.id}" data-correct="${q.correct_choice}">
+      <h4>${i + 1}. ${escapeHtml(localize(q, 'question'))}</h4>
+      <div class="module-quiz-options">${optionsHtml}</div>
+    </div>`;
+  }).join('');
+
+  return `<p class="small muted" style="margin-bottom:18px;">${ml.instructions(quizQs.length)}</p>
+    <form id="module-quiz-form">${questionsHtml}
+      <div id="module-quiz-result"></div>
+      <button type="submit" class="btn btn-primary" id="module-quiz-submit-btn">${ml.submit}</button>
+    </form>`;
+}
+
+// Wires the submit handler for a rendered module quiz, grades it client-side
+// against each question's data-correct attribute, persists the attempt to
+// module_quiz_results (upsert — retaking replaces the prior score), and
+// calls onGraded(passed) so the caller can unlock "Mark Complete".
+function bindModuleQuiz(wrapEl, moduleNumber, userId, onGraded) {
+  const form = wrapEl.querySelector('#module-quiz-form');
+  if (!form) return;
+  const submitBtn = form.querySelector('#module-quiz-submit-btn');
+  const resultEl = form.querySelector('#module-quiz-result');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+    const ml = MODULE_QUIZ_LABELS[lang] || MODULE_QUIZ_LABELS.en;
+    const qBlocks = Array.from(form.querySelectorAll('.module-quiz-q'));
+
+    const unanswered = qBlocks.some((block) => !form.querySelector(`input[name="mq-${block.getAttribute('data-question-id')}"]:checked`));
+    if (unanswered) {
+      resultEl.innerHTML = `<div class="module-quiz-result-banner fail">${escapeHtml(ml.unanswered)}</div>`;
+      resultEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    let correctCount = 0;
+    qBlocks.forEach((block) => {
+      const qid = block.getAttribute('data-question-id');
+      const correctKey = block.getAttribute('data-correct');
+      const checked = form.querySelector(`input[name="mq-${qid}"]:checked`);
+      const isCorrect = checked && checked.value === correctKey;
+      if (isCorrect) correctCount += 1;
+      block.querySelectorAll('.module-quiz-option').forEach((opt) => {
+        opt.classList.remove('correct', 'incorrect');
+        if (opt.getAttribute('data-key') === correctKey) opt.classList.add('correct');
+        else if (checked && opt.getAttribute('data-key') === checked.value) opt.classList.add('incorrect');
+      });
+      form.querySelectorAll(`input[name="mq-${qid}"]`).forEach((r) => { r.disabled = true; });
+    });
+
+    const total = qBlocks.length;
+    const passed = correctCount >= Math.ceil(total * MODULE_QUIZ_PASS_RATIO);
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = ml.retry;
+    submitBtn.type = 'button';
+    submitBtn.onclick = () => { renderLessonPage(); };
+
+    resultEl.innerHTML = `<div class="module-quiz-result-banner ${passed ? 'pass' : 'fail'}">
+      <strong>${passed ? ml.passTitle(correctCount, total) : ml.failTitle(correctCount, total)}</strong>
+      ${passed ? '' : `<p style="margin:6px 0 0;">${escapeHtml(ml.failBody)}</p>`}
+    </div>`;
+
+    await supabaseClient.from('module_quiz_results').upsert(
+      { user_id: userId, module_number: moduleNumber, score: correctCount, total, passed },
+      { onConflict: 'user_id,module_number' }
+    );
+
+    if (lessonCache) lessonCache.moduleQuizResult = { module_number: moduleNumber, score: correctCount, total, passed };
+    if (onGraded) onGraded(passed);
+  });
+}
+
 // ---- Lesson page --------------------------------------------------------
 // Cached so a language toggle can re-render instantly without refetching.
 let lessonCache = null;
 
 function renderLessonPage() {
   if (!lessonCache) return;
-  const { lessons, lesson, completedIds, quizQs, userId } = lessonCache;
+  const { lessons, lesson, completedIds, moduleQuizQs, moduleQuizResult, isLastLessonOfModule, userId } = lessonCache;
 
   const pageLang = window.getCurrentLang ? window.getCurrentLang() : 'en';
   const stageWord = pageLang === 'es' ? 'ETAPA' : 'STAGE';
@@ -386,12 +537,33 @@ function renderLessonPage() {
 
   document.querySelector('#lesson-content').innerHTML = renderLessonBody(localize(lesson, 'content'));
 
+  const videoWrap = document.querySelector('#lesson-video-wrap');
+  const videoPlaceholder = document.querySelector('#lesson-video-placeholder');
+  if (lesson.video_url) {
+    videoWrap.style.display = 'block';
+    videoWrap.innerHTML = buildVideoEmbed(lesson.video_url);
+    videoPlaceholder.style.display = 'none';
+  } else {
+    videoWrap.style.display = 'none';
+    videoWrap.innerHTML = '';
+    videoPlaceholder.style.display = 'flex';
+  }
+
   const quizSection = document.querySelector('#lesson-quiz-section');
   const quizWrap = document.querySelector('#lesson-quiz-wrap');
-  if (quizQs && quizQs.length) {
+  const requiresQuizPass = isLastLessonOfModule && moduleQuizQs && moduleQuizQs.length > 0;
+  const alreadyPassedQuiz = !!(moduleQuizResult && moduleQuizResult.passed);
+
+  if (requiresQuizPass) {
     quizSection.style.display = 'block';
-    quizWrap.innerHTML = quizQs.map((q) => buildQuizBoxHtml(q)).join('<div style="height:16px;"></div>');
-    quizWrap.querySelectorAll('.quiz-box').forEach((box) => window.bindQuizBox(box));
+    if (alreadyPassedQuiz) {
+      const lang2 = window.getCurrentLang ? window.getCurrentLang() : 'en';
+      const ml = MODULE_QUIZ_LABELS[lang2] || MODULE_QUIZ_LABELS.en;
+      quizWrap.innerHTML = `<div class="module-quiz-result-banner pass">${escapeHtml(ml.passTitle(moduleQuizResult.score, moduleQuizResult.total))}</div>`;
+    } else {
+      quizWrap.innerHTML = buildModuleQuizHtml(moduleQuizQs);
+      bindModuleQuiz(quizWrap, lesson.module_number, userId, () => renderLessonPage());
+    }
   } else {
     quizSection.style.display = 'none';
     quizWrap.innerHTML = '';
@@ -411,17 +583,25 @@ function renderLessonPage() {
   }
 
   const nextLink = document.querySelector('#lesson-next-link');
+  const lockNote = document.querySelector('#lesson-quiz-lock-note');
   const alreadyDone = completedIds.has(lesson.id);
+  const isLocked = requiresQuizPass && !alreadyPassedQuiz && !alreadyDone;
   const labels = {
-    en: { next: 'Next Lesson →', markContinue: 'Mark Complete & Continue →', back: 'Back to Dashboard', markFinish: 'Mark Complete & Finish ✓' },
-    es: { next: 'Siguiente lección →', markContinue: 'Marcar completado y continuar →', back: 'Volver al panel', markFinish: 'Marcar completado y finalizar ✓' },
+    en: { next: 'Next Lesson →', markContinue: 'Mark Complete & Continue →', back: 'Back to Dashboard', markFinish: 'Mark Complete & Finish ✓', locked: 'Pass the Module Quiz to Continue 🔒' },
+    es: { next: 'Siguiente lección →', markContinue: 'Marcar completado y continuar →', back: 'Volver al panel', markFinish: 'Marcar completado y finalizar ✓', locked: 'Aprueba el Cuestionario para Continuar 🔒' },
   };
   const l = labels[lang] || labels.en;
-  nextLink.textContent = nextLesson
+  nextLink.textContent = isLocked ? l.locked : (nextLesson
     ? (alreadyDone ? l.next : l.markContinue)
-    : (alreadyDone ? l.back : l.markFinish);
+    : (alreadyDone ? l.back : l.markFinish));
+  nextLink.classList.toggle('locked', isLocked);
+  if (lockNote) lockNote.style.display = isLocked ? 'block' : 'none';
   nextLink.onclick = async (e) => {
     e.preventDefault();
+    if (isLocked) {
+      document.querySelector('#lesson-quiz-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
     nextLink.setAttribute('aria-busy', 'true');
     if (!alreadyDone) {
       await supabaseClient.from('lesson_progress').upsert(
@@ -476,30 +656,29 @@ async function initLessonPage() {
   mainContent.style.display = 'block';
   emptyState.style.display = 'none';
 
-  // Quiz questions don't have their own lesson_id column — instead each
-  // lesson "owns" every quiz question in its module whose sort_order falls
-  // between its own sort_order and the next lesson's sort_order (or, if
-  // it's the last lesson in the module, everything from its sort_order
-  // onward). This lets a single lesson carry more than one quiz question
-  // (e.g. a 2-question quiz at the end of one long lesson) while still
-  // keeping each lesson's quiz distinct when a module has one quiz per
-  // lesson.
+  // The module quiz is shown only on the last lesson of its module — it
+  // covers every quiz question published for that module_number, not just
+  // ones "assigned" to this specific lesson. Passing it (>= 80%) is what
+  // gates marking that final lesson complete, which is how a whole module
+  // gets marked done.
   const sortedModuleLessons = lessons
     .filter((l) => l.module_number === lesson.module_number)
     .sort((a, b) => a.sort_order - b.sort_order);
   const lessonIdxInModule = sortedModuleLessons.findIndex((l) => l.id === lesson.id);
-  const nextModuleLesson = sortedModuleLessons[lessonIdxInModule + 1];
+  const isLastLessonOfModule = lessonIdxInModule === sortedModuleLessons.length - 1;
 
-  let quizQuery = supabaseClient
-    .from('quiz_questions')
-    .select('*')
-    .eq('module_number', lesson.module_number)
-    .eq('published', true)
-    .gte('sort_order', lesson.sort_order);
-  if (nextModuleLesson) quizQuery = quizQuery.lt('sort_order', nextModuleLesson.sort_order);
-  const { data: quizQs } = await quizQuery.order('sort_order');
+  let moduleQuizQs = [];
+  let moduleQuizResult = null;
+  if (isLastLessonOfModule) {
+    const [{ data: quizQs }, { data: resultRow }] = await Promise.all([
+      supabaseClient.from('quiz_questions').select('*').eq('module_number', lesson.module_number).eq('published', true).order('sort_order'),
+      supabaseClient.from('module_quiz_results').select('*').eq('user_id', userId).eq('module_number', lesson.module_number).maybeSingle(),
+    ]);
+    moduleQuizQs = quizQs || [];
+    moduleQuizResult = resultRow || null;
+  }
 
-  lessonCache = { lessons, lesson, completedIds, quizQs, userId };
+  lessonCache = { lessons, lesson, completedIds, moduleQuizQs, moduleQuizResult, isLastLessonOfModule, userId };
   renderLessonPage();
 }
 
