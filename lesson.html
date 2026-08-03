@@ -59,8 +59,12 @@
   .module-quiz-passed-note { display:flex; align-items:center; gap:10px; font-size:0.88rem; color: var(--forest); }
   .module-quiz-passed-note button { font-size:0.82rem; }
   #module-quiz-submit-btn { margin-top:4px; }
-  #lesson-next-link.locked { opacity:0.5; cursor:not-allowed; }
-  #lesson-quiz-lock-note { font-size:0.82rem; color: var(--danger); margin-top:10px; display:none; }
+
+  /* Quiz lives on its own "screen" within the lesson page — reading view
+     and the quiz card are never shown at the same time, so the page never
+     reads as one long continuous scroll of content + quiz stacked together. */
+  #lesson-quiz-status-line { font-size:0.82rem; color: var(--slate); margin-top:8px; display:none; }
+  #lesson-quiz-status-line a { color: var(--forest); font-weight:600; cursor:pointer; }
 
   /* Sidebar group headings (h4) were inheriting the browser's default
      top margin (h4 isn't covered by the global h1–h3 reset in
@@ -153,27 +157,30 @@
         <span class="badge" style="border-color:var(--forest); color:var(--forest); margin-bottom:12px; display:inline-block;" id="lesson-badge">LESSON</span>
         <h1 id="lesson-title-h1">—</h1>
 
-        <div class="video-embed" id="lesson-video-wrap" style="display:none;"></div>
-        <div class="video-placeholder" id="lesson-video-placeholder" style="display:none;">
-          <span class="video-placeholder-icon">🎥</span>
-          <p data-en="Video for this lesson is coming soon." data-es="El video de esta lección estará disponible pronto.">Video for this lesson is coming soon.</p>
-        </div>
+        <div id="lesson-reading-view">
+          <div class="video-embed" id="lesson-video-wrap" style="display:none;"></div>
+          <div class="video-placeholder" id="lesson-video-placeholder" style="display:none;">
+            <span class="video-placeholder-icon">🎥</span>
+            <p data-en="Video for this lesson is coming soon." data-es="El video de esta lección estará disponible pronto.">Video for this lesson is coming soon.</p>
+          </div>
 
-        <div class="card card-pad" style="margin-bottom:28px;">
-          <h3 data-en="Study Guide" data-es="Guía de Estudio">Study Guide</h3>
-          <div id="lesson-content"></div>
+          <div class="card card-pad" style="margin-bottom:28px;">
+            <h3 data-en="Study Guide" data-es="Guía de Estudio">Study Guide</h3>
+            <div id="lesson-content"></div>
+          </div>
         </div>
 
         <div id="lesson-quiz-section" class="card card-pad" style="display:none; margin-bottom:28px;">
+          <a href="#" class="small" id="lesson-quiz-back-link" style="display:inline-block; margin-bottom:14px;" data-en="← Back to Lesson" data-es="← Volver a la Lección">← Back to Lesson</a>
           <h3 id="lesson-quiz-heading" data-en="Module Quiz" data-es="Cuestionario del Módulo">Module Quiz</h3>
           <div id="lesson-quiz-wrap"></div>
         </div>
 
-        <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:12px;">
+        <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:12px;" id="lesson-actions-row">
           <a href="#" class="btn btn-ghost" id="lesson-prev-link" data-en="← Previous Lesson" data-es="← Lección Anterior">← Previous Lesson</a>
           <div style="text-align:right;">
             <a href="#" class="btn btn-primary" id="lesson-next-link">Mark Complete &amp; Continue →</a>
-            <div id="lesson-quiz-lock-note" data-en="Pass the module quiz above to continue." data-es="Aprueba el cuestionario del módulo de arriba para continuar."></div>
+            <div id="lesson-quiz-status-line"></div>
           </div>
         </div>
       </div>

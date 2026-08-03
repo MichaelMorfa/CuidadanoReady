@@ -518,6 +518,7 @@ let lessonCache = null;
 function renderLessonPage() {
   if (!lessonCache) return;
   const { lessons, lesson, completedIds, moduleQuizQs, moduleQuizResult, isLastLessonOfModule, userId } = lessonCache;
+  const quizViewActive = !!lessonCache.quizViewActive;
 
   const pageLang = window.getCurrentLang ? window.getCurrentLang() : 'en';
   const stageWord = pageLang === 'es' ? 'ETAPA' : 'STAGE';
@@ -537,29 +538,53 @@ function renderLessonPage() {
 
   document.querySelector('#lesson-content').innerHTML = renderLessonBody(localize(lesson, 'content'));
 
-  const videoWrap = document.querySelector('#lesson-video-wrap');
-  const videoPlaceholder = document.querySelector('#lesson-video-placeholder');
-  if (lesson.video_url) {
-    videoWrap.style.display = 'block';
-    videoWrap.innerHTML = buildVideoEmbed(lesson.video_url);
-    videoPlaceholder.style.display = 'none';
-  } else {
-    videoWrap.style.display = 'none';
-    videoWrap.innerHTML = '';
-    videoPlaceholder.style.display = 'flex';
+  const requiresQuizPass = isLastLessonOfModule && moduleQuizQs && moduleQuizQs.length > 0;
+  const alreadyPassedQuiz = !!(moduleQuizResult && moduleQuizResult.passed);
+
+  // Reading view (video + Study Guide) and the quiz are two separate
+  // "screens" of this page — never shown together — so a lesson with a
+  // module quiz doesn't turn into one long scroll of content stacked on
+  // top of a quiz. quizViewActive flips between them; see the "Take Module
+  // Quiz" / "← Back to Lesson" wiring below.
+  const readingView = document.querySelector('#lesson-reading-view');
+  const showReading = !(requiresQuizPass && quizViewActive);
+  readingView.style.display = showReading ? 'block' : 'none';
+
+  if (showReading) {
+    const videoWrap = document.querySelector('#lesson-video-wrap');
+    const videoPlaceholder = document.querySelector('#lesson-video-placeholder');
+    if (lesson.video_url) {
+      videoWrap.style.display = 'block';
+      videoWrap.innerHTML = buildVideoEmbed(lesson.video_url);
+      videoPlaceholder.style.display = 'none';
+    } else {
+      videoWrap.style.display = 'none';
+      videoWrap.innerHTML = '';
+      videoPlaceholder.style.display = 'flex';
+    }
   }
 
   const quizSection = document.querySelector('#lesson-quiz-section');
   const quizWrap = document.querySelector('#lesson-quiz-wrap');
-  const requiresQuizPass = isLastLessonOfModule && moduleQuizQs && moduleQuizQs.length > 0;
-  const alreadyPassedQuiz = !!(moduleQuizResult && moduleQuizResult.passed);
+  const quizBackLink = document.querySelector('#lesson-quiz-back-link');
 
-  if (requiresQuizPass) {
+  if (requiresQuizPass && quizViewActive) {
     quizSection.style.display = 'block';
+    if (quizBackLink) {
+      quizBackLink.onclick = (e) => { e.preventDefault(); lessonCache.quizViewActive = false; renderLessonPage(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    }
     if (alreadyPassedQuiz) {
       const lang2 = window.getCurrentLang ? window.getCurrentLang() : 'en';
       const ml = MODULE_QUIZ_LABELS[lang2] || MODULE_QUIZ_LABELS.en;
-      quizWrap.innerHTML = `<div class="module-quiz-result-banner pass">${escapeHtml(ml.passTitle(moduleQuizResult.score, moduleQuizResult.total))}</div>`;
+      quizWrap.innerHTML = `<div class="module-quiz-passed-note">
+        <span>✓ ${escapeHtml(ml.passTitle(moduleQuizResult.score, moduleQuizResult.total))}</span>
+        <button type="button" class="btn btn-ghost btn-sm" id="module-quiz-retake-btn">${escapeHtml(ml.retakeLink)}</button>
+      </div>`;
+      const retakeBtn = quizWrap.querySelector('#module-quiz-retake-btn');
+      if (retakeBtn) retakeBtn.onclick = () => {
+        quizWrap.innerHTML = buildModuleQuizHtml(moduleQuizQs);
+        bindModuleQuiz(quizWrap, lesson.module_number, userId, () => renderLessonPage());
+      };
     } else {
       quizWrap.innerHTML = buildModuleQuizHtml(moduleQuizQs);
       bindModuleQuiz(quizWrap, lesson.module_number, userId, () => renderLessonPage());
@@ -583,34 +608,60 @@ function renderLessonPage() {
   }
 
   const nextLink = document.querySelector('#lesson-next-link');
-  const lockNote = document.querySelector('#lesson-quiz-lock-note');
+  const statusLine = document.querySelector('#lesson-quiz-status-line');
   const alreadyDone = completedIds.has(lesson.id);
-  const isLocked = requiresQuizPass && !alreadyPassedQuiz && !alreadyDone;
+  // Three states for the bottom button when this lesson gates on a quiz:
+  // not started yet (button becomes the entry point into quiz view),
+  // actively taking it (button hides — the quiz form has its own submit),
+  // or passed (button behaves exactly like a normal lesson's).
+  const needsToTakeQuiz = requiresQuizPass && !alreadyPassedQuiz;
+  const hideNextLink = needsToTakeQuiz && quizViewActive;
   const labels = {
-    en: { next: 'Next Lesson →', markContinue: 'Mark Complete & Continue →', back: 'Back to Dashboard', markFinish: 'Mark Complete & Finish ✓', locked: 'Pass the Module Quiz to Continue 🔒' },
-    es: { next: 'Siguiente lección →', markContinue: 'Marcar completado y continuar →', back: 'Volver al panel', markFinish: 'Marcar completado y finalizar ✓', locked: 'Aprueba el Cuestionario para Continuar 🔒' },
+    en: { next: 'Next Lesson →', markContinue: 'Mark Complete & Continue →', back: 'Back to Dashboard', markFinish: 'Mark Complete & Finish ✓', takeQuiz: 'Take Module Quiz →', intro: (n, pct) => `This module ends with a short quiz — ${n} questions, ${pct}% to pass.`, review: 'Review' },
+    es: { next: 'Siguiente lección →', markContinue: 'Marcar completado y continuar →', back: 'Volver al panel', markFinish: 'Marcar completado y finalizar ✓', takeQuiz: 'Tomar Cuestionario del Módulo →', intro: (n, pct) => `Este módulo termina con un cuestionario corto — ${n} preguntas, ${pct}% para aprobar.`, review: 'Revisar' },
   };
   const l = labels[lang] || labels.en;
-  nextLink.textContent = isLocked ? l.locked : (nextLesson
-    ? (alreadyDone ? l.next : l.markContinue)
-    : (alreadyDone ? l.back : l.markFinish));
-  nextLink.classList.toggle('locked', isLocked);
-  if (lockNote) lockNote.style.display = isLocked ? 'block' : 'none';
-  nextLink.onclick = async (e) => {
-    e.preventDefault();
-    if (isLocked) {
-      document.querySelector('#lesson-quiz-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
-      return;
+
+  nextLink.style.display = hideNextLink ? 'none' : 'inline-flex';
+  if (!hideNextLink) {
+    nextLink.textContent = needsToTakeQuiz ? l.takeQuiz : (nextLesson
+      ? (alreadyDone ? l.next : l.markContinue)
+      : (alreadyDone ? l.back : l.markFinish));
+    nextLink.onclick = async (e) => {
+      e.preventDefault();
+      if (needsToTakeQuiz) {
+        lessonCache.quizViewActive = true;
+        renderLessonPage();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      nextLink.setAttribute('aria-busy', 'true');
+      if (!alreadyDone) {
+        await supabaseClient.from('lesson_progress').upsert(
+          { user_id: userId, lesson_id: lesson.id },
+          { onConflict: 'user_id,lesson_id' }
+        );
+      }
+      window.location.href = nextLesson ? ('lesson.html?id=' + nextLesson.id) : 'dashboard.html';
+    };
+  }
+
+  if (statusLine) {
+    if (requiresQuizPass && !quizViewActive) {
+      statusLine.style.display = 'block';
+      if (alreadyPassedQuiz) {
+        const ml = MODULE_QUIZ_LABELS[lang] || MODULE_QUIZ_LABELS.en;
+        statusLine.innerHTML = `✓ ${escapeHtml(ml.passTitle(moduleQuizResult.score, moduleQuizResult.total))} · <a id="lesson-quiz-review-link">${escapeHtml(l.review)}</a>`;
+        const reviewLink = statusLine.querySelector('#lesson-quiz-review-link');
+        if (reviewLink) reviewLink.onclick = () => { lessonCache.quizViewActive = true; renderLessonPage(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+      } else {
+        statusLine.textContent = l.intro(moduleQuizQs.length, Math.round(MODULE_QUIZ_PASS_RATIO * 100));
+      }
+    } else {
+      statusLine.style.display = 'none';
+      statusLine.innerHTML = '';
     }
-    nextLink.setAttribute('aria-busy', 'true');
-    if (!alreadyDone) {
-      await supabaseClient.from('lesson_progress').upsert(
-        { user_id: userId, lesson_id: lesson.id },
-        { onConflict: 'user_id,lesson_id' }
-      );
-    }
-    window.location.href = nextLesson ? ('lesson.html?id=' + nextLesson.id) : 'dashboard.html';
-  };
+  }
 
   renderModuleNav('#lesson-module-nav', lessons, completedIds, lesson);
 }
@@ -678,7 +729,7 @@ async function initLessonPage() {
     moduleQuizResult = resultRow || null;
   }
 
-  lessonCache = { lessons, lesson, completedIds, moduleQuizQs, moduleQuizResult, isLastLessonOfModule, userId };
+  lessonCache = { lessons, lesson, completedIds, moduleQuizQs, moduleQuizResult, isLastLessonOfModule, userId, quizViewActive: false };
   renderLessonPage();
 }
 
