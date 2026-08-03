@@ -168,6 +168,12 @@ function firstAvailableLesson(lessons, completedIds) {
   return sorted.find((l) => !completedIds.has(l.id) && isLessonUnlocked(l, lessons, completedIds)) || null;
 }
 
+// Small line-art padlock (Feather-style) used for locked modules/lessons —
+// swapped in for the 🔒 emoji, which read as tacky/out of place against the
+// site's flat, minimal iconography. currentColor lets it inherit whatever
+// muted color the surrounding locked badge/check already uses.
+const LOCK_ICON_SVG = '<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>';
+
 function renderModuleNav(selector, lessons, completedIds, expandLesson) {
   const nav = document.querySelector(selector);
   if (!nav) return;
@@ -188,7 +194,7 @@ function renderModuleNav(selector, lessons, completedIds, expandLesson) {
     const lessonWord = lang === 'es' ? 'Lección' : 'Lesson';
 
     if (!unlocked) {
-      html += `<li><span class="module-nav-link module-nav-locked" title="${lockedWord}"><span class="module-nav-badge locked">🔒</span>${escapeHtml(moduleName(m))}</span></li>`;
+      html += `<li><span class="module-nav-link module-nav-locked" title="${lockedWord}"><span class="module-nav-badge locked">${LOCK_ICON_SVG}</span>${escapeHtml(moduleName(m))}</span></li>`;
       continue;
     }
 
@@ -200,7 +206,7 @@ function renderModuleNav(selector, lessons, completedIds, expandLesson) {
         const isCurrent = expandLesson.id === l.id;
         const lUnlocked = isLessonUnlocked(l, lessons, completedIds);
         if (!lUnlocked) {
-          html += `<li><span class="lesson-sub-locked" title="${lockedWord}"><span class="check">🔒</span><span class="lesson-sub-text"><span class="lesson-sub-label">${lessonWord} ${i + 1}</span><span class="lesson-sub-title">${escapeHtml(localize(l, 'title'))}</span></span></span></li>`;
+          html += `<li><span class="lesson-sub-locked" title="${lockedWord}"><span class="check locked">${LOCK_ICON_SVG}</span><span class="lesson-sub-text"><span class="lesson-sub-label">${lessonWord} ${i + 1}</span><span class="lesson-sub-title">${escapeHtml(localize(l, 'title'))}</span></span></span></li>`;
           return;
         }
         html += `<li><a href="lesson.html?id=${l.id}" class="${isCurrent ? 'current' : ''}"><span class="check${done ? ' done' : ''}">${done ? '✓' : ''}</span><span class="lesson-sub-text"><span class="lesson-sub-label">${lessonWord} ${i + 1}</span><span class="lesson-sub-title">${escapeHtml(localize(l, 'title'))}</span></span></a></li>`;

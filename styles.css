@@ -637,7 +637,8 @@ textarea { resize: vertical; min-height: 120px; }
 /* Locked modules/lessons — sequential progression. Rendered as a plain
    <span> (not an <a>) so they're genuinely non-clickable, not just styled
    to look disabled. */
-.module-nav-badge.locked { background: transparent; color: var(--slate); opacity: 0.6; font-size: 0.72rem; }
+.module-nav-badge.locked { background: transparent; color: var(--slate); opacity: 0.6; }
+.module-nav-badge.locked svg { display: block; }
 .module-nav-locked {
   display: flex; align-items: center; gap: 10px; padding: 10px 24px;
   font-weight: 600; color: var(--slate); opacity: 0.55; cursor: not-allowed;
@@ -646,7 +647,8 @@ textarea { resize: vertical; min-height: 120px; }
   display: flex; align-items: flex-start; gap: 8px; padding: 7px 0;
   font-size: 0.84rem; font-weight: 500; color: var(--slate); opacity: 0.55; cursor: not-allowed;
 }
-.lesson-sub-locked .check { font-size: 0.62rem; }
+.lesson-sub-locked .check { color: var(--slate); }
+.lesson-sub-locked .check svg { display: block; }
 
 .app-main { flex: 1; min-width: 0; }
 .app-topbar {
