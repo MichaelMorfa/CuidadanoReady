@@ -309,7 +309,7 @@ function buildQuizBoxHtml(q) {
     ['b', localize(q, 'choice_b')],
     ['c', localize(q, 'choice_c')],
     ['d', localize(q, 'choice_d')],
-  ]);
+  ].filter(([, text]) => text && String(text).trim()));
   const optionsHtml = choices.map(([key, text]) => `<button class="quiz-option" data-correct="${key === q.correct_choice ? 'true' : 'false'}">${escapeHtml(text)}</button>`).join('');
   const label = lang === 'es' ? 'PREGUNTA DE PRÁCTICA' : 'PRACTICE QUESTION';
   const correctMsg = lang === 'es' ? '¡Correcto!' : 'Correct!';
@@ -644,12 +644,15 @@ function buildModuleQuizHtml(quizQs) {
   const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
   const ml = MODULE_QUIZ_LABELS[lang] || MODULE_QUIZ_LABELS.en;
   const questionsHtml = quizQs.map((q, i) => {
+    // True/False questions only have 2 real answers — choice_c/choice_d are
+    // left blank (null) for those rather than padded with a placeholder
+    // like "N/A", so filter out any choice with no text before rendering.
     const choices = shuffleArray([
       ['a', localize(q, 'choice_a')],
       ['b', localize(q, 'choice_b')],
       ['c', localize(q, 'choice_c')],
       ['d', localize(q, 'choice_d')],
-    ]);
+    ].filter(([, text]) => text && String(text).trim()));
     const optionsHtml = choices.map(([key, text]) => `
       <label class="module-quiz-option" data-key="${key}">
         <input type="radio" name="mq-${q.id}" value="${key}">
@@ -724,7 +727,17 @@ function bindModuleQuiz(wrapEl, moduleNumber, userId, onGraded) {
       { onConflict: 'user_id,module_number' }
     );
 
-    if (lessonCache) lessonCache.moduleQuizResult = { module_number: moduleNumber, score: correctCount, total, passed };
+    if (lessonCache) {
+      lessonCache.moduleQuizResult = { module_number: moduleNumber, score: correctCount, total, passed };
+      // onGraded() below triggers a re-render of the whole lesson page (to
+      // unlock the "Mark Complete" button etc.), which would otherwise
+      // immediately rebuild this quiz form from scratch — wiping out the
+      // per-question right/wrong highlighting and pass/fail banner we just
+      // set above the instant the member submits. This flag tells
+      // renderLessonPage to leave the just-graded quiz DOM alone for that
+      // one render pass instead of rebuilding it.
+      lessonCache.quizJustGraded = true;
+    }
     if (onGraded) onGraded(passed);
   });
 }
@@ -791,7 +804,15 @@ function renderLessonPage() {
     if (quizBackLink) {
       quizBackLink.onclick = (e) => { e.preventDefault(); lessonCache.quizViewActive = false; renderLessonPage(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
     }
-    if (alreadyPassedQuiz) {
+    if (lessonCache.quizJustGraded) {
+      // The quiz was just submitted — bindModuleQuiz already painted the
+      // graded state (per-question correct/incorrect highlighting, the
+      // pass/fail banner, disabled inputs) directly into quizWrap. Leave it
+      // exactly as-is here instead of rebuilding, or that feedback vanishes
+      // the instant the member sees it. Consumed once so the next render
+      // (retry, back-to-lesson, revisit) rebuilds normally again.
+      lessonCache.quizJustGraded = false;
+    } else if (alreadyPassedQuiz) {
       const lang2 = window.getCurrentLang ? window.getCurrentLang() : 'en';
       const ml = MODULE_QUIZ_LABELS[lang2] || MODULE_QUIZ_LABELS.en;
       quizWrap.innerHTML = `<div class="module-quiz-passed-note">

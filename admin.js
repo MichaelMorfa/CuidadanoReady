@@ -441,8 +441,11 @@ document.addEventListener('DOMContentLoaded', () => {
       question: document.querySelector('#quiz-question').value,
       choice_a: document.querySelector('#quiz-choice-a').value,
       choice_b: document.querySelector('#quiz-choice-b').value,
-      choice_c: document.querySelector('#quiz-choice-c').value,
-      choice_d: document.querySelector('#quiz-choice-d').value,
+      // Left blank for True/False questions (only 2 real answers) — stored
+      // as null rather than a placeholder string like "N/A" so the member
+      // pages know to render only the choices that actually exist.
+      choice_c: document.querySelector('#quiz-choice-c').value.trim() || null,
+      choice_d: document.querySelector('#quiz-choice-d').value.trim() || null,
       question_es: document.querySelector('#quiz-question-es').value || null,
       choice_a_es: document.querySelector('#quiz-choice-a-es').value || null,
       choice_b_es: document.querySelector('#quiz-choice-b-es').value || null,
