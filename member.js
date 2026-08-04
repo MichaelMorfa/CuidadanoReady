@@ -58,6 +58,73 @@ function localize(obj, field) {
   return obj ? obj[field] : '';
 }
 
+// ---- Content caching (localStorage, short TTL) -------------------------
+// lessons / quiz_questions / flashcards / country_lessons only ever change
+// when an admin edits them — every member page was re-fetching the full
+// lessons table fresh from Postgres on every single load (it's needed for
+// the sidebar nav on all of them), which is redundant work repeated by
+// every visitor on every navigation. A 10-minute cache cuts that down
+// substantially while staying well within an acceptable staleness window
+// for admin-edited course content (nobody needs edits to appear
+// instantly — a page refresh a few minutes later is fine). Progress data
+// (lesson_progress, module_quiz_results, profiles, etc.) is NEVER cached
+// this way — it's per-user and must always be current.
+const CONTENT_CACHE_TTL_MS = 10 * 60 * 1000;
+const CONTENT_CACHE_PREFIX = 'cr-cache:';
+
+function getCachedContent(key) {
+  try {
+    const raw = localStorage.getItem(CONTENT_CACHE_PREFIX + key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || Date.now() > parsed.expires) {
+      localStorage.removeItem(CONTENT_CACHE_PREFIX + key);
+      return null;
+    }
+    return parsed.data;
+  } catch (e) {
+    return null;
+  }
+}
+function setCachedContent(key, data) {
+  try {
+    localStorage.setItem(CONTENT_CACHE_PREFIX + key, JSON.stringify({ data, expires: Date.now() + CONTENT_CACHE_TTL_MS }));
+  } catch (e) { /* storage full/unavailable/private-browsing — just skip caching, not fatal */ }
+}
+
+// Replaces the ~8 identical `lessons` fetches spread across every member
+// page's init function.
+async function fetchPublishedLessons() {
+  const cached = getCachedContent('lessons');
+  if (cached) return cached;
+  const { data } = await supabaseClient.from('lessons').select('*').eq('published', true).order('module_number').order('sort_order');
+  const lessons = data || [];
+  setCachedContent('lessons', lessons);
+  return lessons;
+}
+
+async function fetchCountryLessons() {
+  const cached = getCachedContent('country_lessons');
+  if (cached) return cached;
+  const { data } = await supabaseClient.from('country_lessons').select('*').eq('published', true).order('lesson_number');
+  const lessons = data || [];
+  setCachedContent('country_lessons', lessons);
+  return lessons;
+}
+
+// Flashcard banks are fetched on-demand (picking a test type), not on page
+// load, but the full 100/128-card bank is the heaviest payload in the app
+// and gets re-fetched every time someone starts a new session.
+async function fetchFlashcardBank(testType) {
+  const cacheKey = 'flashcards:' + testType;
+  const cached = getCachedContent(cacheKey);
+  if (cached) return { data: cached, error: null };
+  const { data, error } = await supabaseClient.from('flashcards').select('*').eq('test_type', testType).eq('published', true).order('sort_order');
+  if (error || !data) return { data: null, error };
+  setCachedContent(cacheKey, data);
+  return { data, error: null };
+}
+
 function escapeHtml(str) {
   if (str === null || str === undefined) return '';
   return String(str)
@@ -256,7 +323,55 @@ function buildQuizBoxHtml(q) {
 }
 
 // ---- Billing / paywall banner (shown when a profile hasn't paid) -------
+const BILLING_BANNER_LABELS = {
+  en: {
+    past_due: {
+      eyebrow: 'PAYMENT ISSUE',
+      title: "There's a problem with your payment",
+      message: "We couldn't process your last payment. Update your billing details to keep your course access.",
+    },
+    canceled: {
+      eyebrow: 'SUBSCRIPTION ENDED',
+      title: 'Your plan has ended',
+      message: 'Choose a plan below to pick up right where you left off.',
+    },
+    default: {
+      eyebrow: 'FINISH SIGNING UP',
+      title: 'One step left — choose a plan',
+      message: "Your account is set up, but you haven't completed payment yet. Choose a plan to unlock the full course.",
+    },
+    yearly: '2-Year Plan — $199.99',
+    monthly: 'Monthly — $19.99/mo',
+    manage: 'Manage Billing',
+  },
+  es: {
+    past_due: {
+      eyebrow: 'PROBLEMA DE PAGO',
+      title: 'Hay un problema con tu pago',
+      message: 'No pudimos procesar tu último pago. Actualiza tus datos de facturación para conservar el acceso al curso.',
+    },
+    canceled: {
+      eyebrow: 'SUSCRIPCIÓN FINALIZADA',
+      title: 'Tu plan ha finalizado',
+      message: 'Elige un plan abajo para retomar justo donde lo dejaste.',
+    },
+    default: {
+      eyebrow: 'FALTA UN PASO',
+      title: 'Un paso más — elige un plan',
+      message: 'Tu cuenta ya está creada, pero aún no completaste el pago. Elige un plan para desbloquear el curso completo.',
+    },
+    yearly: 'Plan de 2 Años — $199.99',
+    monthly: 'Mensual — $19.99/mes',
+    manage: 'Administrar Facturación',
+  },
+};
+
+// Kept so the banner can be re-rendered in the new language if the visitor
+// toggles EN/ES while it's showing.
+let billingBannerStatus = undefined;
+
 function showBillingBanner(status) {
+  billingBannerStatus = status;
   const banner = document.querySelector('#dashboard-billing-banner');
   const eyebrow = document.querySelector('#billing-banner-eyebrow');
   const title = document.querySelector('#billing-banner-title');
@@ -269,49 +384,87 @@ function showBillingBanner(status) {
   document.querySelector('#dashboard-main-content').style.display = 'none';
   banner.style.display = 'block';
 
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const bl = BILLING_BANNER_LABELS[lang] || BILLING_BANNER_LABELS.en;
+  const copy = (status === 'past_due' || status === 'canceled') ? bl[status] : bl.default;
+  eyebrow.textContent = copy.eyebrow;
+  title.textContent = copy.title;
+  message.textContent = copy.message;
+
   if (status === 'past_due') {
-    eyebrow.textContent = 'PAYMENT ISSUE';
-    title.textContent = "There's a problem with your payment";
-    message.textContent = "We couldn't process your last payment. Update your billing details to keep your course access.";
     planButtons.style.display = 'none';
     manageBtn.style.display = 'inline-flex';
-  } else if (status === 'canceled') {
-    eyebrow.textContent = 'SUBSCRIPTION ENDED';
-    title.textContent = 'Your plan has ended';
-    message.textContent = 'Choose a plan below to pick up right where you left off.';
-    planButtons.style.display = 'flex';
-    manageBtn.style.display = 'none';
   } else {
-    eyebrow.textContent = 'FINISH SIGNING UP';
-    title.textContent = 'One step left — choose a plan';
-    message.textContent = "Your account is set up, but you haven't completed payment yet. Choose a plan to unlock the full course.";
     planButtons.style.display = 'flex';
     manageBtn.style.display = 'none';
   }
 
   const monthlyBtn = document.querySelector('#billing-choose-monthly');
   const yearlyBtn = document.querySelector('#billing-choose-2year');
-  if (monthlyBtn) monthlyBtn.onclick = () => window.startCheckoutRedirect('monthly', monthlyBtn);
-  if (yearlyBtn) yearlyBtn.onclick = () => window.startCheckoutRedirect('2year', yearlyBtn);
-  if (manageBtn) manageBtn.onclick = () => window.openBillingPortal(manageBtn);
+  if (monthlyBtn) { monthlyBtn.textContent = bl.monthly; monthlyBtn.onclick = () => window.startCheckoutRedirect('monthly', monthlyBtn); }
+  if (yearlyBtn) { yearlyBtn.textContent = bl.yearly; yearlyBtn.onclick = () => window.startCheckoutRedirect('2year', yearlyBtn); }
+  if (manageBtn) { manageBtn.textContent = bl.manage; manageBtn.onclick = () => window.openBillingPortal(manageBtn); }
 }
 
+// Re-renders the billing banner in place (used on langchange) without
+// touching which status it's showing.
+function reshowBillingBannerIfVisible() {
+  const banner = document.querySelector('#dashboard-billing-banner');
+  if (banner && banner.style.display !== 'none' && billingBannerStatus !== undefined) {
+    showBillingBanner(billingBannerStatus);
+  }
+}
+
+const CHECKOUT_NOTICE_LABELS = {
+  en: {
+    success: {
+      eyebrow: 'PAYMENT RECEIVED',
+      title: 'Welcome in! 🎉',
+      body: "Your payment went through — it can take a few seconds to unlock. Refresh if the course doesn't appear right away.",
+    },
+    cancelled: {
+      eyebrow: 'CHECKOUT CANCELLED',
+      title: 'No charge was made',
+      body: "You can pick a plan below whenever you're ready.",
+    },
+  },
+  es: {
+    success: {
+      eyebrow: 'PAGO RECIBIDO',
+      title: '¡Bienvenido! 🎉',
+      body: 'Tu pago se procesó correctamente — puede tardar unos segundos en desbloquearse. Actualiza la página si el curso no aparece de inmediato.',
+    },
+    cancelled: {
+      eyebrow: 'PAGO CANCELADO',
+      title: 'No se realizó ningún cargo',
+      body: 'Puedes elegir un plan abajo cuando estés listo.',
+    },
+  },
+};
+
+// Reads the ?checkout= URL param once, remembers the result in
+// checkoutNoticeState, and cleans the URL so refreshing doesn't keep
+// re-showing the banner. Call renderCheckoutNotice() to (re-)paint it.
 function showCheckoutNotice() {
-  const notice = document.querySelector('#dashboard-checkout-notice');
-  if (!notice) return;
   const params = new URLSearchParams(window.location.search);
   const checkout = params.get('checkout');
-  if (checkout === 'success') {
-    notice.style.display = 'block';
-    notice.innerHTML = '<span class="eyebrow">PAYMENT RECEIVED</span><h3 style="margin-top:6px;">Welcome in! 🎉</h3><p class="small" style="margin:0;">Your payment went through — it can take a few seconds to unlock. Refresh if the course doesn\'t appear right away.</p>';
-  } else if (checkout === 'cancelled') {
-    notice.style.display = 'block';
-    notice.innerHTML = '<span class="eyebrow">CHECKOUT CANCELLED</span><h3 style="margin-top:6px;">No charge was made</h3><p class="small" style="margin:0;">You can pick a plan below whenever you\'re ready.</p>';
-  }
-  if (checkout) {
-    // Clean the URL so refreshing doesn't keep re-showing the banner.
+  if (checkout === 'success' || checkout === 'cancelled') {
+    checkoutNoticeState = checkout;
     window.history.replaceState({}, '', window.location.pathname);
   }
+  renderCheckoutNotice();
+}
+
+// Paints #dashboard-checkout-notice from checkoutNoticeState in the
+// current language. Safe to call repeatedly (e.g. on langchange).
+function renderCheckoutNotice() {
+  const notice = document.querySelector('#dashboard-checkout-notice');
+  if (!notice || !checkoutNoticeState) return;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const cl = (CHECKOUT_NOTICE_LABELS[lang] || CHECKOUT_NOTICE_LABELS.en)[checkoutNoticeState];
+  if (!cl) return;
+  notice.style.display = 'block';
+  notice.innerHTML = `<span class="eyebrow">${escapeHtml(cl.eyebrow)}</span><h3 style="margin-top:6px;">${escapeHtml(cl.title)}</h3><p class="small" style="margin:0;">${escapeHtml(cl.body)}</p>`;
 }
 
 // Progress % weighted by how much is actually in each module, instead of
@@ -359,6 +512,10 @@ async function computeWeightedProgress(userId, lessons, completedIds) {
 // ---- Dashboard --------------------------------------------------------
 // Cached so a language toggle can re-render instantly without refetching.
 let dashboardCache = null;
+// 'success' | 'cancelled' | null — set once from the ?checkout= URL param,
+// kept around so the notice can be re-rendered in the new language if the
+// visitor toggles EN/ES (the URL param itself gets stripped immediately).
+let checkoutNoticeState = null;
 
 function renderDashboard() {
   if (!dashboardCache) return;
@@ -424,16 +581,18 @@ async function initDashboard() {
       if (emailEl) emailEl.textContent = profile.email || session.user.email || 'your email';
       if (resendBtn) {
         resendBtn.onclick = async () => {
+          const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
           const original = resendBtn.textContent;
           resendBtn.disabled = true;
-          resendBtn.textContent = 'Sending…';
+          resendBtn.textContent = lang === 'es' ? 'Enviando…' : 'Sending…';
           const { data: resendData, error: resendError } = await supabaseClient.rpc('resend_verification_email');
           resendBtn.disabled = false;
           if (resendError || !resendData || !resendData.ok) {
             resendBtn.textContent = original;
-            alert((resendData && resendData.error) || (resendError && resendError.message) || 'Could not resend email.');
+            const fallback = lang === 'es' ? 'No se pudo reenviar el correo.' : 'Could not resend email.';
+            alert((resendData && resendData.error) || (resendError && resendError.message) || fallback);
           } else {
-            resendBtn.textContent = 'Sent!';
+            resendBtn.textContent = lang === 'es' ? '¡Enviado!' : 'Sent!';
             setTimeout(() => { resendBtn.textContent = original; }, 4000);
           }
         };
@@ -441,8 +600,8 @@ async function initDashboard() {
     }
   }
 
-  const [{ data: lessons }, { data: progressRows }] = await Promise.all([
-    supabaseClient.from('lessons').select('*').eq('published', true).order('module_number').order('sort_order'),
+  const [lessons, { data: progressRows }] = await Promise.all([
+    fetchPublishedLessons(),
     supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId),
   ]);
 
@@ -741,7 +900,7 @@ async function initLessonPage() {
     return;
   }
 
-  const { data: lessons } = await supabaseClient.from('lessons').select('*').eq('published', true).order('module_number').order('sort_order');
+  const lessons = await fetchPublishedLessons();
 
   const emptyState = document.querySelector('#lesson-empty-state');
   const mainContent = document.querySelector('#lesson-main-content');
@@ -878,7 +1037,7 @@ async function initFlashcardsPage() {
   }
 
   // Sidebar module nav, same as dashboard/lesson pages.
-  const { data: lessons } = await supabaseClient.from('lessons').select('*').eq('published', true).order('module_number').order('sort_order');
+  const lessons = await fetchPublishedLessons();
   const { data: progressRows } = await supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId);
   const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
   renderModuleNav('#fc-page-module-nav', lessons || [], completedIds, null);
@@ -888,12 +1047,7 @@ async function initFlashcardsPage() {
     btn.addEventListener('click', async () => {
       const testType = btn.getAttribute('data-test-type');
       btn.setAttribute('aria-busy', 'true');
-      const { data: cards, error } = await supabaseClient
-        .from('flashcards')
-        .select('*')
-        .eq('test_type', testType)
-        .eq('published', true)
-        .order('sort_order');
+      const { data: cards, error } = await fetchFlashcardBank(testType);
       btn.removeAttribute('aria-busy');
       if (error || !cards || !cards.length) {
         alert('Could not load flashcards. Please try again.');
@@ -1128,7 +1282,7 @@ async function initPracticeQuizPage() {
     return;
   }
 
-  const { data: lessons } = await supabaseClient.from('lessons').select('*').eq('published', true).order('module_number').order('sort_order');
+  const lessons = await fetchPublishedLessons();
   const { data: progressRows } = await supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId);
   const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
   renderModuleNav('#pq-page-module-nav', lessons || [], completedIds, null);
@@ -1137,11 +1291,7 @@ async function initPracticeQuizPage() {
 
   async function beginQuiz(testType) {
     const config = PRACTICE_QUIZ_CONFIG[testType] || PRACTICE_QUIZ_CONFIG.test_100;
-    const { data: cards, error } = await supabaseClient
-      .from('flashcards')
-      .select('*')
-      .eq('test_type', testType)
-      .eq('published', true);
+    const { data: cards, error } = await fetchFlashcardBank(testType);
     if (error || !cards || !cards.length) {
       alert('Could not load practice questions. Please try again.');
       return;
@@ -1281,7 +1431,7 @@ async function initSettingsPage() {
   if (manageBillingBtn) manageBillingBtn.onclick = () => window.openBillingPortal(manageBillingBtn);
 
   // Sidebar module nav, same as every other member page.
-  const { data: lessons } = await supabaseClient.from('lessons').select('*').eq('published', true).order('module_number').order('sort_order');
+  const lessons = await fetchPublishedLessons();
   const { data: progressRows } = await supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId);
   const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
   renderModuleNav('#settings-module-nav', lessons || [], completedIds, null);
@@ -1521,8 +1671,8 @@ async function initProgressPage() {
     return;
   }
 
-  const [{ data: lessons }, { data: progressRows }, { data: moduleQuizRows }, { data: practiceAttemptsRaw }, { data: flashcardRows }] = await Promise.all([
-    supabaseClient.from('lessons').select('*').eq('published', true).order('module_number').order('sort_order'),
+  const [lessons, { data: progressRows }, { data: moduleQuizRows }, { data: practiceAttemptsRaw }, { data: flashcardRows }] = await Promise.all([
+    fetchPublishedLessons(),
     supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId),
     supabaseClient.from('module_quiz_results').select('score, total').eq('user_id', userId),
     supabaseClient.from('practice_quiz_attempts').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
@@ -1884,12 +2034,12 @@ async function initKycPage() {
     return;
   }
 
-  const { data: courseLessons } = await supabaseClient.from('lessons').select('*').eq('published', true).order('module_number').order('sort_order');
+  const courseLessons = await fetchPublishedLessons();
   const { data: courseProgress } = await supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId);
   renderModuleNav('#kyc-page-module-nav', courseLessons || [], new Set((courseProgress || []).map((p) => p.lesson_id)), null);
 
-  const [{ data: kycLessons }, { data: kycProgress }] = await Promise.all([
-    supabaseClient.from('country_lessons').select('*').eq('published', true).order('lesson_number'),
+  const [kycLessons, { data: kycProgress }] = await Promise.all([
+    fetchCountryLessons(),
     supabaseClient.from('country_lesson_progress').select('lesson_number').eq('user_id', userId),
   ]);
 
@@ -1991,7 +2141,11 @@ document.addEventListener('DOMContentLoaded', () => {
 // no refetch needed since app.js's setLang() only changed which language
 // is "current"; the underlying data we already loaded hasn't changed.
 window.addEventListener('ciudadanoready:langchange', () => {
-  if (document.body.hasAttribute('data-dashboard-page')) renderDashboard();
+  if (document.body.hasAttribute('data-dashboard-page')) {
+    renderDashboard();
+    renderCheckoutNotice();
+    reshowBillingBannerIfVisible();
+  }
   if (document.body.hasAttribute('data-lesson-page')) renderLessonPage();
   if (document.body.hasAttribute('data-flashcards-page')) renderFlashcardsStudy();
   if (document.body.hasAttribute('data-practice-quiz-page')) {

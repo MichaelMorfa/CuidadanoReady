@@ -366,12 +366,19 @@
         <div id="country-lessons-list"><p class="empty-state">Loading…</p></div>
       </section>
 
-      <!-- ================= REVENUE (placeholder until Stripe/Square) ================= -->
+      <!-- ================= REVENUE / REFUNDS ================= -->
       <section class="admin-panel" data-panel="revenue">
-        <div class="card card-pad text-center">
-          <span class="eyebrow">PAYMENTS & MEMBERSHIPS</span>
-          <h3 style="margin-top:8px;">No payment processor connected yet</h3>
-          <p class="small" style="max-width:460px; margin:0 auto;">Once Stripe or Square is wired up, subscription management, payment history, failed payments, refunds, and coupons should be handled in their dashboards — this tab will show a summary pulled from their API rather than duplicating that system.</p>
+        <div class="card card-pad" style="margin-bottom:20px;">
+          <span class="eyebrow">REFUNDS</span>
+          <p class="small muted" style="margin:4px 0 0;">Search for a paying customer, pull up their Stripe charges, and issue a full or partial refund. For anything beyond refunds — coupons, dunning, detailed revenue reporting — use the Stripe Dashboard directly; this is a convenience tool, not a replacement for it.</p>
+        </div>
+        <div class="search-row">
+          <input type="text" id="revenue-user-search" placeholder="Search by name or email…">
+        </div>
+        <div id="revenue-user-results"><p class="empty-state">Loading…</p></div>
+        <div id="revenue-charges-panel" style="display:none; margin-top:24px;">
+          <h3 id="revenue-charges-user-label" style="margin-bottom:12px;"></h3>
+          <div id="revenue-charges-list"></div>
         </div>
       </section>
 

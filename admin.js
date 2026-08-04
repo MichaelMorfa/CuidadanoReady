@@ -63,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (name === 'quizzes') loadQuizzes();
     if (name === 'flashcards') loadFlashcards();
     if (name === 'country-lessons') loadCountryLessons();
+    if (name === 'revenue') loadRevenue();
     if (name === 'support') loadSupport();
   }
 
@@ -745,6 +746,162 @@ document.addEventListener('DOMContentLoaded', () => {
       const { error } = await supabaseClient.from('country_lessons').delete().eq('id', id);
       if (error) { alert('Could not delete: ' + error.message); return; }
       loadCountryLessons();
+    }
+  });
+
+  // ---- Revenue / Refunds ---------------------------------------------
+  // Charges are fetched live from Stripe per customer (via admin-list-charges)
+  // rather than mirrored into Supabase — Stripe stays the single source of
+  // truth for payment history, this is just a convenience window into it.
+  let revenueUsersCache = [];
+  let currentRevenueUserId = null;
+
+  function formatMoney(cents, currency) {
+    return (cents / 100).toLocaleString('en-US', { style: 'currency', currency: (currency || 'usd').toUpperCase() });
+  }
+
+  async function loadRevenue() {
+    const resultsEl = document.querySelector('#revenue-user-results');
+    const { data, error } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .not('stripe_customer_id', 'is', null)
+      .order('created_at', { ascending: false });
+    if (error) {
+      resultsEl.innerHTML = `<p class="empty-state">Could not load users: ${escapeHtml(error.message)}</p>`;
+      return;
+    }
+    revenueUsersCache = data || [];
+    renderRevenueUsers(revenueUsersCache);
+  }
+
+  function renderRevenueUsers(users) {
+    const resultsEl = document.querySelector('#revenue-user-results');
+    if (!users.length) {
+      resultsEl.innerHTML = '<p class="empty-state">No paying customers yet — nobody has a Stripe customer ID on file.</p>';
+      return;
+    }
+    resultsEl.innerHTML = `<div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>User</th><th>Plan</th><th>Status</th><th></th></tr></thead>
+      <tbody>${users.map((u) => `
+        <tr>
+          <td><strong>${escapeHtml(u.full_name || '(no name)')}</strong><br><span class="small muted">${escapeHtml(u.email || '')}</span></td>
+          <td>${escapeHtml(u.plan || '')}</td>
+          <td><span class="badge ${u.subscription_status === 'active' ? 'badge-forest' : ''}">${escapeHtml(u.subscription_status || '')}</span></td>
+          <td><button class="btn btn-ghost btn-sm" data-revenue-view="${u.id}">View Charges</button></td>
+        </tr>`).join('')}
+      </tbody></table></div></div>`;
+  }
+
+  document.querySelector('#revenue-user-search')?.addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    if (!q) { renderRevenueUsers(revenueUsersCache); return; }
+    renderRevenueUsers(revenueUsersCache.filter((u) =>
+      (u.full_name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q)
+    ));
+  });
+
+  async function loadChargesForUser(userId, userLabel) {
+    currentRevenueUserId = userId;
+    const panel = document.querySelector('#revenue-charges-panel');
+    const labelEl = document.querySelector('#revenue-charges-user-label');
+    const listEl = document.querySelector('#revenue-charges-list');
+    panel.style.display = 'block';
+    if (labelEl && userLabel) labelEl.textContent = userLabel;
+    listEl.innerHTML = '<p class="empty-state">Loading charges…</p>';
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    const { data, error } = await supabaseClient.functions.invoke('admin-list-charges', { body: { user_id: userId } });
+    if (error || !data || !data.ok) {
+      listEl.innerHTML = `<p class="empty-state">Could not load charges: ${escapeHtml((data && data.error) || (error && error.message) || 'Unknown error')}</p>`;
+      return;
+    }
+    if (!data.charges.length) {
+      listEl.innerHTML = '<p class="empty-state">No charges found for this customer in Stripe.</p>';
+      return;
+    }
+    listEl.innerHTML = data.charges.map((c) => {
+      const remaining = c.amount - c.amount_refunded;
+      const fullyRefunded = remaining <= 0;
+      return `<div class="card card-pad" style="margin-bottom:10px;" data-charge-card="${c.id}">
+        <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:8px;">
+          <div>
+            <strong>${formatMoney(c.amount, c.currency)}</strong>
+            <span class="small muted" style="margin-left:8px;">${formatDate(c.created_at)} · ${escapeHtml(c.status)}${c.amount_refunded > 0 ? ' · Refunded ' + formatMoney(c.amount_refunded, c.currency) : ''}</span>
+          </div>
+          ${fullyRefunded
+            ? '<span class="badge">Fully Refunded</span>'
+            : `<button class="btn btn-ghost btn-sm" data-refund-open="${c.id}">Refund</button>`}
+        </div>
+        <div class="refund-form" data-refund-form="${c.id}" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid var(--line);">
+          <label style="margin-bottom:4px;">Refund Amount (USD)</label>
+          <input type="number" step="0.01" min="0.01" max="${(remaining / 100).toFixed(2)}" data-refund-amount="${c.id}" value="${(remaining / 100).toFixed(2)}">
+          <div class="flex gap-8">
+            <button class="btn btn-sm" style="background:var(--danger); border-color:var(--danger); color:var(--white);" data-refund-confirm="${c.id}">Confirm Refund</button>
+            <button class="btn btn-ghost btn-sm" data-refund-cancel="${c.id}">Cancel</button>
+          </div>
+          <p class="small" style="color:var(--danger); display:none; margin-top:8px;" data-refund-error="${c.id}"></p>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  document.querySelector('#revenue-user-results')?.addEventListener('click', (e) => {
+    const viewBtn = e.target.closest('[data-revenue-view]');
+    if (!viewBtn) return;
+    const id = viewBtn.getAttribute('data-revenue-view');
+    const user = revenueUsersCache.find((u) => u.id === id);
+    loadChargesForUser(id, user ? `${user.full_name || '(no name)'} — ${user.email || ''}` : 'Charges');
+  });
+
+  document.querySelector('#revenue-charges-list')?.addEventListener('click', async (e) => {
+    const openBtn = e.target.closest('[data-refund-open]');
+    const cancelBtn = e.target.closest('[data-refund-cancel]');
+    const confirmBtn = e.target.closest('[data-refund-confirm]');
+
+    if (openBtn) {
+      const id = openBtn.getAttribute('data-refund-open');
+      document.querySelector(`[data-refund-form="${id}"]`).style.display = 'block';
+      openBtn.style.display = 'none';
+    }
+    if (cancelBtn) {
+      const id = cancelBtn.getAttribute('data-refund-cancel');
+      document.querySelector(`[data-refund-form="${id}"]`).style.display = 'none';
+      const openBtnEl = document.querySelector(`[data-refund-open="${id}"]`);
+      if (openBtnEl) openBtnEl.style.display = 'inline-flex';
+    }
+    if (confirmBtn) {
+      const id = confirmBtn.getAttribute('data-refund-confirm');
+      const amountInput = document.querySelector(`[data-refund-amount="${id}"]`);
+      const errorEl = document.querySelector(`[data-refund-error="${id}"]`);
+      const amountUsd = parseFloat(amountInput.value);
+      if (errorEl) errorEl.style.display = 'none';
+      if (!amountUsd || amountUsd <= 0) {
+        if (errorEl) { errorEl.textContent = 'Enter a valid amount.'; errorEl.style.display = 'block'; }
+        return;
+      }
+      const confirmed = confirm(`Refund ${amountUsd.toFixed(2)} USD? This charges back to the customer's original payment method and cannot be undone.`);
+      if (!confirmed) return;
+
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = 'Refunding…';
+      const { data, error } = await supabaseClient.functions.invoke('admin-refund-charge', {
+        body: { charge_id: id, amount_cents: Math.round(amountUsd * 100) },
+      });
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = 'Confirm Refund';
+
+      if (error || !data || !data.ok) {
+        if (errorEl) {
+          errorEl.textContent = 'Refund failed: ' + ((data && data.error) || (error && error.message) || 'Unknown error');
+          errorEl.style.display = 'block';
+        }
+        return;
+      }
+      if (currentRevenueUserId) {
+        const user = revenueUsersCache.find((u) => u.id === currentRevenueUserId);
+        loadChargesForUser(currentRevenueUserId, user ? `${user.full_name || '(no name)'} — ${user.email || ''}` : 'Charges');
+      }
     }
   });
 
