@@ -2271,6 +2271,34 @@ async function initKycPage() {
   }
 }
 
+// ---- Support (member-area contact form) --------------------------------
+// support.html reuses the exact #contact-form markup/IDs from the public
+// contact.html, so the shared submit handler in app.js (honeypot + timing
+// spam checks, insert into contact_submissions) works here unmodified —
+// this just pre-fills name/email from the signed-in member's profile and
+// renders the sidebar module nav, same as every other member page.
+async function initSupportPage() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  const userId = session.user.id;
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('full_name, email')
+    .eq('id', userId)
+    .single();
+
+  const nameInput = document.querySelector('#contact-name');
+  const emailInput = document.querySelector('#contact-email');
+  if (nameInput) nameInput.value = (profile && profile.full_name) || '';
+  if (emailInput) emailInput.value = (profile && profile.email) || session.user.email || '';
+
+  const lessons = await fetchPublishedLessons();
+  const { data: progressRows } = await supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId);
+  const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
+  renderModuleNav('#support-module-nav', lessons || [], completedIds, null);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof supabaseClient === 'undefined') return;
   if (document.body.hasAttribute('data-dashboard-page')) initDashboard();
@@ -2280,6 +2308,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.body.hasAttribute('data-kyc-page')) initKycPage();
   if (document.body.hasAttribute('data-settings-page')) initSettingsPage();
   if (document.body.hasAttribute('data-progress-page')) initProgressPage();
+  if (document.body.hasAttribute('data-support-page')) initSupportPage();
 });
 
 // Re-render dynamic content in place when the visitor toggles EN/ES —
