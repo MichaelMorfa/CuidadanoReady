@@ -57,9 +57,26 @@
   .module-quiz-result-banner { border-radius: var(--radius-sm); padding:10px 14px; margin:16px 0; font-size:0.88rem; }
   .module-quiz-result-banner.pass { background:#F0F6F2; color: var(--forest); }
   .module-quiz-result-banner.fail { background:#FBF0EF; color: var(--danger); }
-  .module-quiz-passed-note { display:flex; align-items:center; gap:10px; font-size:0.88rem; color: var(--forest); }
-  .module-quiz-passed-note button { font-size:0.82rem; }
   #module-quiz-submit-btn { margin-top:4px; }
+
+  /* Quiz stats card — shown when revisiting a quiz that's already been
+     attempted at least once (best score, attempt count, last practiced),
+     with Review Answers / Retake Quiz actions. */
+  .module-quiz-stats-grid { display:flex; flex-wrap:wrap; gap:24px; margin:16px 0 4px; }
+  .module-quiz-stat { display:flex; flex-direction:column; gap:2px; }
+  .module-quiz-stat-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.04em; color: var(--slate); }
+  .module-quiz-stat-value { font-family: var(--font-sans); font-size:1.1rem; font-weight:600; }
+
+  /* Review mode — read-only list of what was actually selected on a past
+     attempt, mirroring the Practice Interview review list styling. */
+  .module-quiz-review-item { display:flex; gap:14px; padding:14px 0; border-top:1px solid var(--line); }
+  .module-quiz-review-item:first-of-type { border-top:none; padding-top:0; }
+  .module-quiz-review-icon { width:24px; height:24px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:0.75rem; color:#fff; margin-top:2px; }
+  .module-quiz-review-icon.correct { background: var(--forest); }
+  .module-quiz-review-icon.incorrect { background: var(--danger); }
+  .module-quiz-review-question { font-weight:600; margin:0 0 4px; font-size:0.92rem; }
+  .module-quiz-review-answer { margin:0; color: var(--slate); font-size:0.87rem; }
+  .module-quiz-review-answer.correct-answer { color: var(--forest); margin-top:2px; }
 
   /* Quiz lives on its own "screen" within the lesson page — reading view
      and the quiz card are never shown at the same time, so the page never

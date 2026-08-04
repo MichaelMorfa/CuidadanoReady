@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
       resetProgressBtn.textContent = 'Resetting…';
       const results = await Promise.all([
         supabaseClient.from('lesson_progress').delete().eq('user_id', id),
-        supabaseClient.from('module_quiz_results').delete().eq('user_id', id),
+        supabaseClient.from('module_quiz_attempts').delete().eq('user_id', id),
         supabaseClient.from('country_lesson_progress').delete().eq('user_id', id),
         supabaseClient.from('practice_quiz_attempts').delete().eq('user_id', id),
       ]);

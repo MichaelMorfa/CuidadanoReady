@@ -477,7 +477,10 @@ function renderCheckoutNotice() {
 async function computeWeightedProgress(userId, lessons, completedIds) {
   const [{ data: quizRows }, { data: passedRows }] = await Promise.all([
     supabaseClient.from('quiz_questions').select('module_number').eq('published', true),
-    supabaseClient.from('module_quiz_results').select('module_number, passed').eq('user_id', userId),
+    // module_quiz_attempts holds one row per attempt now (not one per
+    // module) — the Set below still collapses that fine, since we only
+    // care whether a module has ANY passing attempt, ever.
+    supabaseClient.from('module_quiz_attempts').select('module_number, passed').eq('user_id', userId),
   ]);
 
   const quizCountByModule = {};
@@ -636,8 +639,22 @@ async function initDashboard() {
 // whole module at once as a real form, only reveals right/wrong after the
 // member submits, and requires MODULE_QUIZ_PASS_RATIO correct to pass.
 const MODULE_QUIZ_LABELS = {
-  en: { instructions: (n) => `Answer all ${n} question${n === 1 ? '' : 's'}, then submit. You need ${Math.round(MODULE_QUIZ_PASS_RATIO * 100)}% correct to pass and complete this module.`, submit: 'Submit Quiz', passTitle: (s, t) => `Passed! ${s}/${t} correct.`, failTitle: (s, t) => `Not quite — ${s}/${t} correct.`, failBody: 'Review the highlighted answers below, then try again.', retry: 'Retry Quiz', unanswered: 'Please answer every question before submitting.' },
-  es: { instructions: (n) => `Responde las ${n} preguntas y envía tus respuestas. Necesitas ${Math.round(MODULE_QUIZ_PASS_RATIO * 100)}% correctas para aprobar y completar este módulo.`, submit: 'Enviar Cuestionario', passTitle: (s, t) => `¡Aprobado! ${s}/${t} correctas.`, failTitle: (s, t) => `Aún no — ${s}/${t} correctas.`, failBody: 'Revisa las respuestas resaltadas abajo e inténtalo de nuevo.', retry: 'Reintentar Cuestionario', unanswered: 'Por favor responde todas las preguntas antes de enviar.' },
+  en: {
+    instructions: (n) => `Answer all ${n} question${n === 1 ? '' : 's'}, then submit. You need ${Math.round(MODULE_QUIZ_PASS_RATIO * 100)}% correct to pass and complete this module.`,
+    submit: 'Submit Quiz', passTitle: (s, t) => `Passed! ${s}/${t} correct.`, failTitle: (s, t) => `Not quite — ${s}/${t} correct.`,
+    failBody: 'Review the highlighted answers below, then try again.', retry: 'Retry Quiz', unanswered: 'Please answer every question before submitting.',
+    completed: 'Completed', notPassing: 'Not yet passing', bestScore: 'Best Score', attempts: 'Attempts', lastPracticed: 'Last Practiced',
+    reviewAnswers: 'Review Answers', retakeQuiz: 'Retake Quiz', yourAnswer: 'Your answer:', correctAnswer: 'Correct answer:',
+    noAnswerDetail: "Answer detail wasn't recorded for this attempt.", back: '← Back',
+  },
+  es: {
+    instructions: (n) => `Responde las ${n} preguntas y envía tus respuestas. Necesitas ${Math.round(MODULE_QUIZ_PASS_RATIO * 100)}% correctas para aprobar y completar este módulo.`,
+    submit: 'Enviar Cuestionario', passTitle: (s, t) => `¡Aprobado! ${s}/${t} correctas.`, failTitle: (s, t) => `Aún no — ${s}/${t} correctas.`,
+    failBody: 'Revisa las respuestas resaltadas abajo e inténtalo de nuevo.', retry: 'Reintentar Cuestionario', unanswered: 'Por favor responde todas las preguntas antes de enviar.',
+    completed: 'Completado', notPassing: 'Aún no aprobado', bestScore: 'Mejor Puntaje', attempts: 'Intentos', lastPracticed: 'Última Práctica',
+    reviewAnswers: 'Revisar Respuestas', retakeQuiz: 'Reintentar Cuestionario', yourAnswer: 'Tu respuesta:', correctAnswer: 'Respuesta correcta:',
+    noAnswerDetail: 'No se registró el detalle de respuestas para este intento.', back: '← Volver',
+  },
 };
 
 function buildModuleQuizHtml(quizQs) {
@@ -672,9 +689,12 @@ function buildModuleQuizHtml(quizQs) {
 }
 
 // Wires the submit handler for a rendered module quiz, grades it client-side
-// against each question's data-correct attribute, persists the attempt to
-// module_quiz_results (upsert — retaking replaces the prior score), and
-// calls onGraded(passed) so the caller can unlock "Mark Complete".
+// against each question's data-correct attribute, and inserts a new row into
+// module_quiz_attempts (never upserts/overwrites — every submission is kept
+// as its own historical attempt, with the actual choice picked for each
+// question, so Review can show real answers later and a bad retake never
+// erases a prior pass). Calls onGraded(passed) so the caller can unlock
+// "Mark Complete".
 function bindModuleQuiz(wrapEl, moduleNumber, userId, onGraded) {
   const form = wrapEl.querySelector('#module-quiz-form');
   if (!form) return;
@@ -695,12 +715,14 @@ function bindModuleQuiz(wrapEl, moduleNumber, userId, onGraded) {
     }
 
     let correctCount = 0;
+    const answersPayload = [];
     qBlocks.forEach((block) => {
       const qid = block.getAttribute('data-question-id');
       const correctKey = block.getAttribute('data-correct');
       const checked = form.querySelector(`input[name="mq-${qid}"]:checked`);
       const isCorrect = checked && checked.value === correctKey;
       if (isCorrect) correctCount += 1;
+      answersPayload.push({ question_id: qid, selected_choice: checked ? checked.value : null, correct: !!isCorrect });
       block.querySelectorAll('.module-quiz-option').forEach((opt) => {
         opt.classList.remove('correct', 'incorrect');
         if (opt.getAttribute('data-key') === correctKey) opt.classList.add('correct');
@@ -722,13 +744,13 @@ function bindModuleQuiz(wrapEl, moduleNumber, userId, onGraded) {
       ${passed ? '' : `<p style="margin:6px 0 0;">${escapeHtml(ml.failBody)}</p>`}
     </div>`;
 
-    await supabaseClient.from('module_quiz_results').upsert(
-      { user_id: userId, module_number: moduleNumber, score: correctCount, total, passed },
-      { onConflict: 'user_id,module_number' }
-    );
+    const { data: inserted } = await supabaseClient.from('module_quiz_attempts')
+      .insert({ user_id: userId, module_number: moduleNumber, score: correctCount, total, passed, answers: answersPayload })
+      .select().single();
 
     if (lessonCache) {
-      lessonCache.moduleQuizResult = { module_number: moduleNumber, score: correctCount, total, passed };
+      const newAttempt = inserted || { module_number: moduleNumber, score: correctCount, total, passed, answers: answersPayload, created_at: new Date().toISOString() };
+      lessonCache.moduleQuizAttempts = [...(lessonCache.moduleQuizAttempts || []), newAttempt];
       // onGraded() below triggers a re-render of the whole lesson page (to
       // unlock the "Mark Complete" button etc.), which would otherwise
       // immediately rebuild this quiz form from scratch — wiping out the
@@ -742,13 +764,106 @@ function bindModuleQuiz(wrapEl, moduleNumber, userId, onGraded) {
   });
 }
 
+// ---- Module quiz stats card + Review mode (shown once there's at least
+// one prior attempt) --------------------------------------------------
+// "Best" is ranked by percentage correct so quizzes with a different
+// question count stay comparable; ties keep the earliest attempt.
+function bestModuleQuizAttempt(attempts) {
+  return attempts.reduce((best, a) => {
+    const pct = a.total ? a.score / a.total : 0;
+    const bestPct = best && best.total ? best.score / best.total : -1;
+    return pct > bestPct ? a : best;
+  }, null);
+}
+
+function buildModuleQuizStatsCardHtml(attempts, lang) {
+  const ml = MODULE_QUIZ_LABELS[lang] || MODULE_QUIZ_LABELS.en;
+  const latest = attempts[attempts.length - 1];
+  const best = bestModuleQuizAttempt(attempts);
+  const passed = attempts.some((a) => a.passed);
+  const bestPct = best.total ? Math.round((best.score / best.total) * 100) : 0;
+  const dateFmt = (iso) => new Date(iso).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  return `<div class="module-quiz-stats-card">
+    <span class="badge ${passed ? 'badge-forest' : ''}" style="${passed ? '' : 'border-color:var(--danger); color:var(--danger);'}">${passed ? '✓ ' + escapeHtml(ml.completed) : escapeHtml(ml.notPassing)}</span>
+    <div class="module-quiz-stats-grid">
+      <div class="module-quiz-stat"><span class="module-quiz-stat-label">${escapeHtml(ml.bestScore)}</span><span class="module-quiz-stat-value">${best.score}/${best.total} (${bestPct}%)</span></div>
+      <div class="module-quiz-stat"><span class="module-quiz-stat-label">${escapeHtml(ml.attempts)}</span><span class="module-quiz-stat-value">${attempts.length}</span></div>
+      <div class="module-quiz-stat"><span class="module-quiz-stat-label">${escapeHtml(ml.lastPracticed)}</span><span class="module-quiz-stat-value">${dateFmt(latest.created_at)}</span></div>
+    </div>
+    <div class="flex gap-8" style="margin-top:16px; flex-wrap:wrap;">
+      <button type="button" class="btn btn-ghost btn-sm" id="module-quiz-review-btn">${escapeHtml(ml.reviewAnswers)}</button>
+      <button type="button" class="btn btn-primary btn-sm" id="module-quiz-retake-btn">${escapeHtml(ml.retakeQuiz)}</button>
+    </div>
+  </div>`;
+}
+
+// Read-only review of one attempt's actual selected answers, matched back
+// against the live quiz_questions rows by id. Attempts migrated from the
+// old score-only table (or any future edge case with no answers[]) fall
+// back to a "not available" note instead of an empty list.
+function buildModuleQuizReviewHtml(attempt, quizQs, lang) {
+  const ml = MODULE_QUIZ_LABELS[lang] || MODULE_QUIZ_LABELS.en;
+  const qById = {};
+  quizQs.forEach((q) => { qById[q.id] = q; });
+  const answers = attempt.answers || [];
+  const itemsHtml = answers.length ? answers.map((a, i) => {
+    const q = qById[a.question_id];
+    if (!q) return '';
+    const choiceText = (key) => (key ? localize(q, 'choice_' + key) : '');
+    const isCorrect = a.selected_choice === q.correct_choice;
+    return `<div class="module-quiz-review-item">
+      <div class="module-quiz-review-icon ${isCorrect ? 'correct' : 'incorrect'}">${isCorrect ? '✓' : '✗'}</div>
+      <div>
+        <p class="module-quiz-review-question">${i + 1}. ${escapeHtml(localize(q, 'question'))}</p>
+        <p class="module-quiz-review-answer">${escapeHtml(ml.yourAnswer)} <strong>${escapeHtml(choiceText(a.selected_choice))}</strong></p>
+        ${!isCorrect ? `<p class="module-quiz-review-answer correct-answer">${escapeHtml(ml.correctAnswer)} <strong>${escapeHtml(choiceText(q.correct_choice))}</strong></p>` : ''}
+      </div>
+    </div>`;
+  }).join('') : `<p class="small muted">${escapeHtml(ml.noAnswerDetail)}</p>`;
+
+  return `<div class="module-quiz-result-banner ${attempt.passed ? 'pass' : 'fail'}">
+      <strong>${attempt.passed ? ml.passTitle(attempt.score, attempt.total) : ml.failTitle(attempt.score, attempt.total)}</strong>
+    </div>
+    ${itemsHtml}
+    <div class="flex gap-8" style="margin-top:16px; flex-wrap:wrap;">
+      <button type="button" class="btn btn-ghost btn-sm" id="module-quiz-review-back-btn">${escapeHtml(ml.back)}</button>
+      <button type="button" class="btn btn-primary btn-sm" id="module-quiz-retake-btn">${escapeHtml(ml.retakeQuiz)}</button>
+    </div>`;
+}
+
+function showModuleQuizStats(quizWrap, moduleQuizQs, moduleNumber, userId, attempts) {
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  quizWrap.innerHTML = buildModuleQuizStatsCardHtml(attempts, lang);
+  const reviewBtn = quizWrap.querySelector('#module-quiz-review-btn');
+  const retakeBtn = quizWrap.querySelector('#module-quiz-retake-btn');
+  if (reviewBtn) reviewBtn.onclick = () => showModuleQuizReview(quizWrap, moduleQuizQs, moduleNumber, userId, attempts);
+  if (retakeBtn) retakeBtn.onclick = () => {
+    quizWrap.innerHTML = buildModuleQuizHtml(moduleQuizQs);
+    bindModuleQuiz(quizWrap, moduleNumber, userId, () => renderLessonPage());
+  };
+}
+
+function showModuleQuizReview(quizWrap, moduleQuizQs, moduleNumber, userId, attempts) {
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const latest = attempts[attempts.length - 1];
+  quizWrap.innerHTML = buildModuleQuizReviewHtml(latest, moduleQuizQs, lang);
+  const backBtn = quizWrap.querySelector('#module-quiz-review-back-btn');
+  const retakeBtn = quizWrap.querySelector('#module-quiz-retake-btn');
+  if (backBtn) backBtn.onclick = () => showModuleQuizStats(quizWrap, moduleQuizQs, moduleNumber, userId, attempts);
+  if (retakeBtn) retakeBtn.onclick = () => {
+    quizWrap.innerHTML = buildModuleQuizHtml(moduleQuizQs);
+    bindModuleQuiz(quizWrap, moduleNumber, userId, () => renderLessonPage());
+  };
+}
+
 // ---- Lesson page --------------------------------------------------------
 // Cached so a language toggle can re-render instantly without refetching.
 let lessonCache = null;
 
 function renderLessonPage() {
   if (!lessonCache) return;
-  const { lessons, lesson, completedIds, moduleQuizQs, moduleQuizResult, isLastLessonOfModule, userId } = lessonCache;
+  const { lessons, lesson, completedIds, moduleQuizQs, moduleQuizAttempts, isLastLessonOfModule, userId } = lessonCache;
+  const quizAttempts = moduleQuizAttempts || [];
   const quizViewActive = !!lessonCache.quizViewActive;
 
   const pageLang = window.getCurrentLang ? window.getCurrentLang() : 'en';
@@ -770,7 +885,9 @@ function renderLessonPage() {
   document.querySelector('#lesson-content').innerHTML = renderLessonBody(localize(lesson, 'content'));
 
   const requiresQuizPass = isLastLessonOfModule && moduleQuizQs && moduleQuizQs.length > 0;
-  const alreadyPassedQuiz = !!(moduleQuizResult && moduleQuizResult.passed);
+  // Once passed, always passed — a later low-scoring practice retake never
+  // un-completes the module (matches "never reset completion" below).
+  const alreadyPassedQuiz = quizAttempts.some((a) => a.passed);
 
   // Reading view (video + Study Guide) and the quiz are two separate
   // "screens" of this page — never shown together — so a lesson with a
@@ -812,18 +929,12 @@ function renderLessonPage() {
       // the instant the member sees it. Consumed once so the next render
       // (retry, back-to-lesson, revisit) rebuilds normally again.
       lessonCache.quizJustGraded = false;
-    } else if (alreadyPassedQuiz) {
-      const lang2 = window.getCurrentLang ? window.getCurrentLang() : 'en';
-      const ml = MODULE_QUIZ_LABELS[lang2] || MODULE_QUIZ_LABELS.en;
-      quizWrap.innerHTML = `<div class="module-quiz-passed-note">
-        <span>✓ ${escapeHtml(ml.passTitle(moduleQuizResult.score, moduleQuizResult.total))}</span>
-        <button type="button" class="btn btn-ghost btn-sm" id="module-quiz-retake-btn">${escapeHtml(ml.retakeLink)}</button>
-      </div>`;
-      const retakeBtn = quizWrap.querySelector('#module-quiz-retake-btn');
-      if (retakeBtn) retakeBtn.onclick = () => {
-        quizWrap.innerHTML = buildModuleQuizHtml(moduleQuizQs);
-        bindModuleQuiz(quizWrap, lesson.module_number, userId, () => renderLessonPage());
-      };
+    } else if (quizAttempts.length > 0) {
+      // Prior attempt(s) exist — show the stats summary (best score,
+      // attempt count, last practiced) with Review Answers / Retake Quiz,
+      // instead of either a bare pass note or silently dropping them into
+      // a blank quiz.
+      showModuleQuizStats(quizWrap, moduleQuizQs, lesson.module_number, userId, quizAttempts);
     } else {
       quizWrap.innerHTML = buildModuleQuizHtml(moduleQuizQs);
       bindModuleQuiz(quizWrap, lesson.module_number, userId, () => renderLessonPage());
@@ -890,7 +1001,8 @@ function renderLessonPage() {
       statusLine.style.display = 'block';
       if (alreadyPassedQuiz) {
         const ml = MODULE_QUIZ_LABELS[lang] || MODULE_QUIZ_LABELS.en;
-        statusLine.innerHTML = `✓ ${escapeHtml(ml.passTitle(moduleQuizResult.score, moduleQuizResult.total))} · <a id="lesson-quiz-review-link">${escapeHtml(l.review)}</a>`;
+        const best = bestModuleQuizAttempt(quizAttempts);
+        statusLine.innerHTML = `✓ ${escapeHtml(ml.passTitle(best.score, best.total))} · <a id="lesson-quiz-review-link">${escapeHtml(l.review)}</a>`;
         const reviewLink = statusLine.querySelector('#lesson-quiz-review-link');
         if (reviewLink) reviewLink.onclick = () => { lessonCache.quizViewActive = true; renderLessonPage(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
       } else {
@@ -969,17 +1081,17 @@ async function initLessonPage() {
   const isLastLessonOfModule = lessonIdxInModule === sortedModuleLessons.length - 1;
 
   let moduleQuizQs = [];
-  let moduleQuizResult = null;
+  let moduleQuizAttempts = [];
   if (isLastLessonOfModule) {
-    const [{ data: quizQs }, { data: resultRow }] = await Promise.all([
+    const [{ data: quizQs }, { data: attemptRows }] = await Promise.all([
       supabaseClient.from('quiz_questions').select('*').eq('module_number', lesson.module_number).eq('published', true).order('sort_order'),
-      supabaseClient.from('module_quiz_results').select('*').eq('user_id', userId).eq('module_number', lesson.module_number).maybeSingle(),
+      supabaseClient.from('module_quiz_attempts').select('*').eq('user_id', userId).eq('module_number', lesson.module_number).order('created_at', { ascending: true }),
     ]);
     moduleQuizQs = quizQs || [];
-    moduleQuizResult = resultRow || null;
+    moduleQuizAttempts = attemptRows || [];
   }
 
-  lessonCache = { lessons, lesson, completedIds, moduleQuizQs, moduleQuizResult, isLastLessonOfModule, userId, quizViewActive: false };
+  lessonCache = { lessons, lesson, completedIds, moduleQuizQs, moduleQuizAttempts, isLastLessonOfModule, userId, quizViewActive: false };
   renderLessonPage();
 }
 
@@ -1695,7 +1807,7 @@ async function initProgressPage() {
   const [lessons, { data: progressRows }, { data: moduleQuizRows }, { data: practiceAttemptsRaw }, { data: flashcardRows }] = await Promise.all([
     fetchPublishedLessons(),
     supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId),
-    supabaseClient.from('module_quiz_results').select('score, total').eq('user_id', userId),
+    supabaseClient.from('module_quiz_attempts').select('module_number, score, total').eq('user_id', userId),
     supabaseClient.from('practice_quiz_attempts').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
     supabaseClient.from('flashcards').select('test_type').eq('published', true),
   ]);
@@ -1703,10 +1815,22 @@ async function initProgressPage() {
   const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
   const courseCompletionPct = await computeWeightedProgress(userId, lessons || [], completedIds);
 
+  // module_quiz_attempts holds one row per attempt (retakes included) —
+  // reduce to each module's BEST attempt so a practice retake that scored
+  // lower never drags this average down, and "modules attempted" counts
+  // distinct modules rather than every individual attempt.
   const quizRows = moduleQuizRows || [];
-  const moduleQuizCount = quizRows.length;
+  const bestPctByModule = {};
+  quizRows.forEach((r) => {
+    const pct = r.total ? (r.score / r.total) * 100 : 0;
+    if (!(r.module_number in bestPctByModule) || pct > bestPctByModule[r.module_number]) {
+      bestPctByModule[r.module_number] = pct;
+    }
+  });
+  const bestPcts = Object.values(bestPctByModule);
+  const moduleQuizCount = bestPcts.length;
   const moduleQuizAvg = moduleQuizCount
-    ? Math.round(quizRows.reduce((sum, r) => sum + (r.total ? (r.score / r.total) * 100 : 0), 0) / moduleQuizCount)
+    ? Math.round(bestPcts.reduce((sum, p) => sum + p, 0) / moduleQuizCount)
     : 0;
 
   // Flashcard "mastery": for each question bank, the most recent time each
