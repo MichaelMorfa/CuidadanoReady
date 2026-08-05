@@ -93,11 +93,17 @@
         </div>
         <div class="grid grid-3" style="margin-bottom:28px;">
           <div class="card stat-card"><span class="eyebrow">JS ERRORS (7 DAYS)</span><div class="stat-value" id="stat-client-errors">—</div></div>
+          <div class="card stat-card"><span class="eyebrow">FAQ BOT: UNANSWERED / TOTAL (7 DAYS)</span><div class="stat-value" id="stat-faq-bot">—</div></div>
         </div>
         <div class="card card-pad" style="margin-bottom:28px;">
           <span class="eyebrow">RECENT ERRORS</span>
           <p class="small muted" style="margin:4px 0 14px;">Uncaught JavaScript errors and unhandled promise rejections reported from any page, most recent first. This is an in-house safety net, not a full monitoring service — it won't catch server-side/edge-function failures.</p>
           <div id="client-errors-list"><p class="empty-state">Loading…</p></div>
+        </div>
+        <div class="card card-pad" style="margin-bottom:28px;">
+          <span class="eyebrow">FAQ BOT — UNANSWERED QUESTIONS</span>
+          <p class="small muted" style="margin:4px 0 14px;">Questions visitors typed into the site's FAQ chat widget that didn't match anything in site_faq_entries. Real signal for what content is missing — worth adding as new entries.</p>
+          <div id="faq-bot-unmatched-list"><p class="empty-state">Loading…</p></div>
         </div>
         <div class="card card-pad">
           <span class="eyebrow">NOTE</span>

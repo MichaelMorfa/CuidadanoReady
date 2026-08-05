@@ -547,3 +547,272 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = data.url;
   });
 });
+
+// ==========================================================================
+// Public-site FAQ chat widget — bottom-right bubble, marketing pages only.
+// ==========================================================================
+// Shown only where neither data-auth-required (member area) nor
+// data-admin-required (admin panel) is set on <body> — every public page
+// already carries neither attribute, so this needs no per-page opt-in.
+//
+// Answers come from site_faq_entries, matched client-side against what the
+// visitor types (see matchFaqEntry) rather than a real model call. This is
+// intentionally a first version: matchFaqEntry and the fallback path are
+// the only two places a future real-AI backend would plug in (swap the
+// matching step for an edge-function call to an LLM grounded in the same
+// site_faq_entries content) — the widget UI itself wouldn't need to change.
+// Every question typed is logged to faq_bot_queries, matched or not, so
+// unanswered questions are visible in admin as real signal for what FAQ
+// content is missing.
+
+const FAQ_BOT_CACHE_KEY = 'cr-cache:faq-bot-entries';
+const FAQ_BOT_CACHE_TTL_MS = 10 * 60 * 1000;
+
+function getFaqBotCache() {
+  try {
+    const raw = localStorage.getItem(FAQ_BOT_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.expires || Date.now() > parsed.expires) {
+      localStorage.removeItem(FAQ_BOT_CACHE_KEY);
+      return null;
+    }
+    return parsed.data;
+  } catch (e) { return null; }
+}
+function setFaqBotCache(data) {
+  try { localStorage.setItem(FAQ_BOT_CACHE_KEY, JSON.stringify({ data, expires: Date.now() + FAQ_BOT_CACHE_TTL_MS })); } catch (e) {}
+}
+
+const FAQ_BOT_STOPWORDS = new Set([
+  'the', 'a', 'an', 'is', 'are', 'do', 'does', 'can', 'i', 'my', 'me', 'to', 'of', 'for', 'and', 'or',
+  'in', 'on', 'at', 'it', 'this', 'that', 'you', 'your', 'what', 'how', 'who', 'when', 'where', 'why',
+  'with', 'be', 'have', 'has', 'if', 'so', 'will', 'would', 'there', 'about',
+  'de', 'la', 'el', 'en', 'y', 'o', 'un', 'una', 'qué', 'como', 'cómo', 'quién', 'cuándo', 'dónde',
+  'por', 'para', 'con', 'es', 'son', 'tengo', 'mi', 'me', 'se', 'su', 'hay', 'los', 'las',
+]);
+
+// Lowercases, strips accents (so "está" and "esta" match the same token)
+// and punctuation, then drops short/stop words — leaves only the words
+// carrying real meaning to compare between the visitor's question and a
+// FAQ entry's question + keywords.
+function tokenizeFaqText(text) {
+  return (text || '')
+    .toLowerCase()
+    .normalize('NFD').replace(new RegExp('[\\u0300-\\u036f]', 'g'), '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !FAQ_BOT_STOPWORDS.has(w));
+}
+
+// Scores every entry by how many of the visitor's significant words show
+// up in that entry's question/keywords, returns the best match — or null
+// if nothing shares even one meaningful word, which triggers the fallback
+// "here's how to reach a real person" response instead of a wrong guess.
+function matchFaqEntry(entries, userText) {
+  const queryWords = new Set(tokenizeFaqText(userText));
+  if (!queryWords.size) return null;
+  let best = null;
+  let bestScore = 0;
+  entries.forEach((entry) => {
+    const haystack = tokenizeFaqText([entry.question, entry.question_es, entry.keywords].filter(Boolean).join(' '));
+    let score = 0;
+    haystack.forEach((w) => { if (queryWords.has(w)) score += 1; });
+    if (score > bestScore) { bestScore = score; best = entry; }
+  });
+  return bestScore > 0 ? best : null;
+}
+
+function logFaqBotQuery(questionText, matchedEntry, lang) {
+  try {
+    if (typeof supabaseClient === 'undefined') return;
+    supabaseClient.from('faq_bot_queries').insert({
+      question_text: String(questionText || '').slice(0, 1000),
+      matched_entry_id: matchedEntry ? matchedEntry.id : null,
+      matched: !!matchedEntry,
+      lang: lang || 'en',
+    }).then(() => {}, () => {});
+  } catch (e) { /* logging never blocks the actual answer */ }
+}
+
+const FAQ_BOT_LABELS = {
+  en: {
+    title: 'Ask CiudadanoReady',
+    subtitle: "Answers from our FAQ — for anything else, use Support.",
+    placeholder: 'Type your question…',
+    send: 'Send',
+    greeting: 'Hi! Ask me anything about the course, pricing, or how it works.',
+    fallback: "I don't have an answer for that yet. Our team can help — reach out and we'll get back to you within 24–48 hours.",
+    suggestions: ['How much does it cost?', 'What does the course include?', 'Is it available in Spanish?'],
+    contactCta: 'Contact Support',
+  },
+  es: {
+    title: 'Pregúntale a CiudadanoReady',
+    subtitle: 'Respondemos desde nuestras preguntas frecuentes — para todo lo demás, usa Soporte.',
+    placeholder: 'Escribe tu pregunta…',
+    send: 'Enviar',
+    greeting: '¡Hola! Pregúntame lo que quieras sobre el curso, los precios o cómo funciona.',
+    fallback: 'Aún no tengo una respuesta para eso. Nuestro equipo puede ayudarte — contáctanos y te responderemos en 24 a 48 horas.',
+    suggestions: ['¿Cuánto cuesta?', '¿Qué incluye el curso?', '¿Está disponible en español?'],
+    contactCta: 'Contactar Soporte',
+  },
+};
+
+let faqBotEntriesCache = null;
+
+async function fetchFaqBotEntries() {
+  if (faqBotEntriesCache) return faqBotEntriesCache;
+  const cached = getFaqBotCache();
+  if (cached) { faqBotEntriesCache = cached; return cached; }
+  const { data, error } = await supabaseClient.from('site_faq_entries').select('*').eq('published', true).order('sort_order');
+  if (error || !data) return [];
+  faqBotEntriesCache = data;
+  setFaqBotCache(data);
+  return data;
+}
+
+function initFaqBotWidget() {
+  if (typeof supabaseClient === 'undefined') return;
+  if (document.body.hasAttribute('data-auth-required') || document.body.hasAttribute('data-admin-required')) return;
+  if (document.querySelector('#faq-bot-bubble')) return;
+
+  const bubble = document.createElement('button');
+  bubble.id = 'faq-bot-bubble';
+  bubble.type = 'button';
+  bubble.setAttribute('aria-label', 'Chat with CiudadanoReady');
+  bubble.textContent = '💬';
+
+  const panel = document.createElement('div');
+  panel.id = 'faq-bot-panel';
+
+  const header = document.createElement('div');
+  header.id = 'faq-bot-header';
+  const headerText = document.createElement('div');
+  const titleEl = document.createElement('div');
+  titleEl.id = 'faq-bot-title';
+  const subtitleEl = document.createElement('div');
+  subtitleEl.id = 'faq-bot-subtitle';
+  subtitleEl.className = 'small';
+  headerText.appendChild(titleEl);
+  headerText.appendChild(subtitleEl);
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.id = 'faq-bot-close';
+  closeBtn.setAttribute('aria-label', 'Close');
+  closeBtn.textContent = '✕';
+  header.appendChild(headerText);
+  header.appendChild(closeBtn);
+
+  const messages = document.createElement('div');
+  messages.id = 'faq-bot-messages';
+
+  const suggestions = document.createElement('div');
+  suggestions.id = 'faq-bot-suggestions';
+
+  const form = document.createElement('form');
+  form.id = 'faq-bot-form';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.id = 'faq-bot-input';
+  input.autocomplete = 'off';
+  const sendBtn = document.createElement('button');
+  sendBtn.type = 'submit';
+  sendBtn.id = 'faq-bot-send';
+  form.appendChild(input);
+  form.appendChild(sendBtn);
+
+  panel.appendChild(header);
+  panel.appendChild(messages);
+  panel.appendChild(suggestions);
+  panel.appendChild(form);
+
+  document.body.appendChild(bubble);
+  document.body.appendChild(panel);
+
+  function addMessage(text, from) {
+    const el = document.createElement('div');
+    el.className = 'faq-bot-msg ' + (from === 'user' ? 'faq-bot-msg-user' : 'faq-bot-msg-bot');
+    el.textContent = text;
+    messages.appendChild(el);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function renderStatic() {
+    const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+    const fl = FAQ_BOT_LABELS[lang] || FAQ_BOT_LABELS.en;
+    titleEl.textContent = fl.title;
+    subtitleEl.textContent = fl.subtitle;
+    input.placeholder = fl.placeholder;
+    sendBtn.textContent = fl.send;
+    if (!suggestions.hasChildNodes()) {
+      fl.suggestions.forEach((s) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'faq-bot-suggestion';
+        btn.textContent = s;
+        btn.addEventListener('click', () => submitQuestion(s));
+        suggestions.appendChild(btn);
+      });
+    }
+  }
+  renderStatic();
+  window.addEventListener('ciudadanoready:langchange', renderStatic);
+
+  async function submitQuestion(text) {
+    const trimmed = (text || '').trim();
+    if (!trimmed) return;
+    const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+    const fl = FAQ_BOT_LABELS[lang] || FAQ_BOT_LABELS.en;
+    addMessage(trimmed, 'user');
+    input.value = '';
+    suggestions.style.display = 'none';
+
+    const entries = await fetchFaqBotEntries();
+    const match = matchFaqEntry(entries, trimmed);
+    logFaqBotQuery(trimmed, match, lang);
+
+    if (match) {
+      const answer = (lang === 'es' && match.answer_es) ? match.answer_es : match.answer;
+      addMessage(answer, 'bot');
+    } else {
+      addMessage(fl.fallback, 'bot');
+      const cta = document.createElement('a');
+      cta.href = 'contact.html';
+      cta.className = 'btn btn-primary btn-sm';
+      cta.style.marginTop = '4px';
+      cta.textContent = fl.contactCta;
+      messages.appendChild(cta);
+      messages.scrollTop = messages.scrollHeight;
+    }
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    submitQuestion(input.value);
+  });
+
+  let opened = false;
+  bubble.addEventListener('click', () => {
+    opened = !opened;
+    panel.classList.toggle('open', opened);
+    bubble.classList.toggle('open', opened);
+    if (opened) {
+      if (!messages.hasChildNodes()) {
+        const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+        const fl = FAQ_BOT_LABELS[lang] || FAQ_BOT_LABELS.en;
+        addMessage(fl.greeting, 'bot');
+      }
+      input.focus();
+      fetchFaqBotEntries(); // warm the cache as soon as someone opens the panel
+    }
+  });
+  closeBtn.addEventListener('click', () => {
+    opened = false;
+    panel.classList.remove('open');
+    bubble.classList.remove('open');
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initFaqBotWidget();
+});

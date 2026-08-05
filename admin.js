@@ -143,6 +143,43 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
       }
     }
+
+    // Public-site FAQ chat widget (see app.js) — every question a visitor
+    // types is logged, matched or not. Unmatched questions are the useful
+    // signal here: real gaps in site_faq_entries coverage, worth adding as
+    // new entries (or, later, feeding into a real-AI version's context).
+    const weekAgoFaq = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: faqQueries } = await supabaseClient
+      .from('faq_bot_queries')
+      .select('matched')
+      .gte('created_at', weekAgoFaq);
+    const faqTotal = (faqQueries || []).length;
+    const faqUnmatched = (faqQueries || []).filter((q) => !q.matched).length;
+    setStat('#stat-faq-bot', faqTotal ? `${faqUnmatched} / ${faqTotal}` : '0');
+
+    const faqListEl = document.querySelector('#faq-bot-unmatched-list');
+    if (faqListEl) {
+      const { data: recentUnmatched, error: faqErr } = await supabaseClient
+        .from('faq_bot_queries')
+        .select('*')
+        .eq('matched', false)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (faqErr) {
+        faqListEl.innerHTML = `<p class="empty-state">Could not load queries: ${escapeHtml(faqErr.message)}</p>`;
+      } else if (!recentUnmatched || !recentUnmatched.length) {
+        faqListEl.innerHTML = '<p class="empty-state">No unanswered questions. 🎉</p>';
+      } else {
+        faqListEl.innerHTML = recentUnmatched.map((q) => `
+          <div style="padding:10px 0; border-top:1px solid var(--line);">
+            <div class="flex justify-between items-center" style="gap:10px;">
+              <span class="small">${escapeHtml(q.question_text || '')}</span>
+              <span class="small muted" style="white-space:nowrap;">${formatDate(q.created_at)}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
   }
 
   // ---- Users -------------------------------------------------------------
