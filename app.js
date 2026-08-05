@@ -638,24 +638,32 @@ function logFaqBotQuery(questionText, matchedEntry, lang) {
 const FAQ_BOT_LABELS = {
   en: {
     title: 'Ask CiudadanoReady',
-    subtitle: "Answers from our FAQ — for anything else, use Support.",
+    subtitle: 'Browse a question below or type your own — for anything else, use Support.',
     placeholder: 'Type your question…',
     send: 'Send',
-    greeting: 'Hi! Ask me anything about the course, pricing, or how it works.',
+    greeting: 'Hi! Pick a question below, or type your own about the course, pricing, or how it works.',
     fallback: "I don't have an answer for that yet. Our team can help — reach out and we'll get back to you within 24–48 hours.",
-    suggestions: ['How much does it cost?', 'What does the course include?', 'Is it available in Spanish?'],
+    browseLoading: 'Loading questions…',
     contactCta: 'Contact Support',
   },
   es: {
     title: 'Pregúntale a CiudadanoReady',
-    subtitle: 'Respondemos desde nuestras preguntas frecuentes — para todo lo demás, usa Soporte.',
+    subtitle: 'Elige una pregunta abajo o escribe la tuya — para todo lo demás, usa Soporte.',
     placeholder: 'Escribe tu pregunta…',
     send: 'Enviar',
-    greeting: '¡Hola! Pregúntame lo que quieras sobre el curso, los precios o cómo funciona.',
+    greeting: '¡Hola! Elige una pregunta abajo, o escribe la tuya sobre el curso, los precios o cómo funciona.',
     fallback: 'Aún no tengo una respuesta para eso. Nuestro equipo puede ayudarte — contáctanos y te responderemos en 24 a 48 horas.',
-    suggestions: ['¿Cuánto cuesta?', '¿Qué incluye el curso?', '¿Está disponible en español?'],
+    browseLoading: 'Cargando preguntas…',
     contactCta: 'Contactar Soporte',
   },
+};
+
+const FAQ_BOT_CATEGORY_ORDER = ['General', 'Course Content', 'Pricing & Billing', 'Technical'];
+const FAQ_BOT_CATEGORY_LABELS = {
+  General: { en: 'General', es: 'General' },
+  'Course Content': { en: 'Course Content', es: 'Contenido del Curso' },
+  'Pricing & Billing': { en: 'Pricing & Billing', es: 'Precios y Facturación' },
+  Technical: { en: 'Technical', es: 'Soporte Técnico' },
 };
 
 let faqBotEntriesCache = null;
@@ -737,6 +745,42 @@ function initFaqBotWidget() {
     messages.scrollTop = messages.scrollHeight;
   }
 
+  let faqBotEntriesForWidget = null;
+
+  function renderFaqBrowseList() {
+    if (!faqBotEntriesForWidget || !faqBotEntriesForWidget.length) return;
+    const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+    const groups = {};
+    const groupOrder = [];
+    faqBotEntriesForWidget.forEach((entry) => {
+      const cat = entry.category || 'General';
+      if (!groups[cat]) { groups[cat] = []; groupOrder.push(cat); }
+      groups[cat].push(entry);
+    });
+    groupOrder.sort((a, b) => a.localeCompare(b));
+    Object.keys(groups).forEach((cat) => groups[cat].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)));
+    const orderedCats = FAQ_BOT_CATEGORY_ORDER.filter((c) => groups[c]).concat(groupOrder.filter((c) => !FAQ_BOT_CATEGORY_ORDER.includes(c)));
+
+    suggestions.innerHTML = '';
+    orderedCats.forEach((cat) => {
+      const catLabelObj = FAQ_BOT_CATEGORY_LABELS[cat];
+      const catLabel = catLabelObj ? (catLabelObj[lang] || catLabelObj.en) : cat;
+      const header = document.createElement('div');
+      header.className = 'faq-bot-cat-header';
+      header.textContent = catLabel;
+      suggestions.appendChild(header);
+      groups[cat].forEach((entry) => {
+        const qText = (lang === 'es' && entry.question_es) ? entry.question_es : entry.question;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'faq-bot-suggestion';
+        btn.textContent = qText;
+        btn.addEventListener('click', () => submitQuestion(qText));
+        suggestions.appendChild(btn);
+      });
+    });
+  }
+
   function renderStatic() {
     const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
     const fl = FAQ_BOT_LABELS[lang] || FAQ_BOT_LABELS.en;
@@ -744,16 +788,7 @@ function initFaqBotWidget() {
     subtitleEl.textContent = fl.subtitle;
     input.placeholder = fl.placeholder;
     sendBtn.textContent = fl.send;
-    if (!suggestions.hasChildNodes()) {
-      fl.suggestions.forEach((s) => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'faq-bot-suggestion';
-        btn.textContent = s;
-        btn.addEventListener('click', () => submitQuestion(s));
-        suggestions.appendChild(btn);
-      });
-    }
+    renderFaqBrowseList();
   }
   renderStatic();
   window.addEventListener('ciudadanoready:langchange', renderStatic);
@@ -765,7 +800,6 @@ function initFaqBotWidget() {
     const fl = FAQ_BOT_LABELS[lang] || FAQ_BOT_LABELS.en;
     addMessage(trimmed, 'user');
     input.value = '';
-    suggestions.style.display = 'none';
 
     const entries = await fetchFaqBotEntries();
     const match = matchFaqEntry(entries, trimmed);
@@ -792,18 +826,27 @@ function initFaqBotWidget() {
   });
 
   let opened = false;
-  bubble.addEventListener('click', () => {
+  bubble.addEventListener('click', async () => {
     opened = !opened;
     panel.classList.toggle('open', opened);
     bubble.classList.toggle('open', opened);
     if (opened) {
+      const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+      const fl = FAQ_BOT_LABELS[lang] || FAQ_BOT_LABELS.en;
       if (!messages.hasChildNodes()) {
-        const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
-        const fl = FAQ_BOT_LABELS[lang] || FAQ_BOT_LABELS.en;
         addMessage(fl.greeting, 'bot');
       }
       input.focus();
-      fetchFaqBotEntries(); // warm the cache as soon as someone opens the panel
+      if (!faqBotEntriesForWidget) {
+        suggestions.innerHTML = '';
+        const loadingEl = document.createElement('div');
+        loadingEl.className = 'faq-bot-loading small';
+        loadingEl.textContent = fl.browseLoading;
+        suggestions.appendChild(loadingEl);
+        const entries = await fetchFaqBotEntries();
+        faqBotEntriesForWidget = entries;
+        renderFaqBrowseList();
+      }
     }
   });
   closeBtn.addEventListener('click', () => {
