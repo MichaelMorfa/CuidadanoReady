@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* ==========================================================================
-   Ciudadano Ready — pre-deploy sanity check
+   Ciudadano Ready | pre-deploy sanity check
    ==========================================================================
    A lightweight, dependency-free safety net for a project with no build
    step and no automated test suite: catches the classes of mistakes that
@@ -9,12 +9,12 @@
    string shipped without its Spanish counterpart).
 
    Run locally before packaging the zip:   node scripts/pre-deploy-check.js
-   Also runs automatically in CI on every push — see
+   Also runs automatically in CI on every push, see
    .github/workflows/ci.yml. That workflow triggers on ANY push to the
    repo, including files added via GitHub's web "Upload files" UI, so it
    works with a drag-and-drop deploy flow with no git/CLI access required.
 
-   This is intentionally NOT a full test suite — it doesn't spin up a
+   This is intentionally NOT a full test suite; it doesn't spin up a
    browser or talk to Supabase. It's static analysis: fast, zero-setup,
    and catches an entire class of "oops, broke the page" mistakes before
    they ship.
@@ -60,7 +60,7 @@ for (const file of jsFiles) {
     execFileSync(process.execPath, ['--check', file], { stdio: 'pipe' });
     pass(path.relative(ROOT, file));
   } catch (e) {
-    fail(`${path.relative(ROOT, file)} — ${e.stderr.toString().split('\n').slice(0, 3).join(' ')}`);
+    fail(`${path.relative(ROOT, file)}: ${e.stderr.toString().split('\n').slice(0, 3).join(' ')}`);
   }
 }
 
@@ -75,7 +75,7 @@ for (const file of htmlFiles) {
     const closeCount = (html.match(new RegExp(`</${tag}>`, 'gi')) || []).length;
     if (openCount !== closeCount) mismatches.push(`<${tag}> open=${openCount} close=${closeCount}`);
   }
-  if (mismatches.length) fail(`${path.relative(ROOT, file)} — ${mismatches.join(', ')}`);
+  if (mismatches.length) fail(`${path.relative(ROOT, file)}: ${mismatches.join(', ')}`);
   else pass(path.relative(ROOT, file));
 }
 
@@ -113,7 +113,7 @@ for (const file of htmlFiles) {
   while ((match = DATA_EN_RE.exec(html))) {
     const tagHtml = match[0];
     if (!/\bdata-es="/.test(tagHtml)) {
-      warn(`${path.relative(ROOT, file)} — data-en="${match[1].slice(0, 40)}" has no data-es`);
+      warn(`${path.relative(ROOT, file)}: data-en="${match[1].slice(0, 40)}" has no data-es`);
       missingInFile++;
     }
   }
@@ -126,6 +126,6 @@ if (failures) {
   console.log(`\x1b[31m${failures} check(s) failed\x1b[0m, ${warnings} warning(s). Fix failures before deploying.`);
   process.exit(1);
 } else {
-  console.log(`\x1b[32mAll checks passed.\x1b[0m ${warnings} warning(s) (missing Spanish translations — not blocking).`);
+  console.log(`\x1b[32mAll checks passed.\x1b[0m ${warnings} warning(s) (missing Spanish translations, not blocking).`);
   process.exit(0);
 }

@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <script>(function(){try{if(localStorage.getItem("ciudadanoready-theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lesson — Ciudadano Ready</title>
+<title>Lesson | Ciudadano Ready</title>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <style>
   /* ===== Member Area theme (matches dashboard.html) =====
-     Soft grey background, flatter cards, forest-green accent instead of ocean blue —
+     Soft grey background, flatter cards, forest-green accent instead of ocean blue;
      signals this is inside the signed-in course experience, not the public site. */
   body { background: var(--paper-dim); }
   .app-sidebar { background: var(--paper-dim); border-right: 1px solid var(--line); }
@@ -32,11 +32,11 @@
   .video-placeholder p { margin:0; font-size:0.88rem; }
 
   /* Module quiz (submit-and-grade, gates lesson completion on the final
-     lesson of each module) — distinct from the older instant-feedback
+     lesson of each module), distinct from the older instant-feedback
      .quiz-option buttons used elsewhere so the two don't share click
      bindings. Lives inside a plain .card (same as the Study Guide box
      above it) so it reads as one more section of the page instead of a
-     separate heavy block — flat option rows instead of a bordered button
+     separate heavy block; flat option rows instead of a bordered button
      per choice, a thin divider between questions instead of big gaps. */
   .module-quiz-intro { font-size:0.85rem; color: var(--slate); margin:2px 0 18px; }
   .module-quiz-q { padding:16px 0; border-top: 1px solid var(--line); }
@@ -46,7 +46,7 @@
   .module-quiz-option { display:flex; align-items:center; gap:10px; padding:7px 8px; border-radius:6px; cursor:pointer; font-size:0.9rem; text-align:left; }
   .module-quiz-option:hover { background: var(--paper-dim); }
   /* Global form styles (styles.css `input { width:100%; padding:11px 14px; ... }`)
-     are meant for text/email/password fields — override them back to a
+     are meant for text/email/password fields; override them back to a
      normal native radio button here, or the choice rows render broken and
      the label text ends up pushed off to one side instead of sitting
      flush left next to its radio. */
@@ -59,7 +59,7 @@
   .module-quiz-result-banner.fail { background:#FBF0EF; color: var(--danger); }
   #module-quiz-submit-btn { margin-top:4px; }
 
-  /* Quiz stats card — shown when revisiting a quiz that's already been
+  /* Quiz stats card, shown when revisiting a quiz that's already been
      attempted at least once (best score, attempt count, last practiced),
      with Review Answers / Retake Quiz actions. */
   .module-quiz-stats-grid { display:flex; flex-wrap:wrap; gap:24px; margin:16px 0 4px; }
@@ -67,7 +67,7 @@
   .module-quiz-stat-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.04em; color: var(--slate); }
   .module-quiz-stat-value { font-family: var(--font-sans); font-size:1.1rem; font-weight:600; }
 
-  /* Review mode — read-only list of what was actually selected on a past
+  /* Review mode: read-only list of what was actually selected on a past
      attempt, mirroring the Practice Interview review list styling. */
   .module-quiz-review-item { display:flex; gap:14px; padding:14px 0; border-top:1px solid var(--line); }
   .module-quiz-review-item:first-of-type { border-top:none; padding-top:0; }
@@ -78,7 +78,7 @@
   .module-quiz-review-answer { margin:0; color: var(--slate); font-size:0.87rem; }
   .module-quiz-review-answer.correct-answer { color: var(--forest); margin-top:2px; }
 
-  /* Quiz lives on its own "screen" within the lesson page — reading view
+  /* Quiz lives on its own "screen" within the lesson page; reading view
      and the quiz card are never shown at the same time, so the page never
      reads as one long continuous scroll of content + quiz stacked together. */
   #lesson-quiz-status-line { font-size:0.82rem; color: var(--slate); margin-top:8px; display:none; }
@@ -98,12 +98,12 @@
 <link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Ciudadano Ready">
-<meta property="og:title" content="Lesson — Ciudadano Ready">
+<meta property="og:title" content="Lesson | Ciudadano Ready">
 <meta property="og:description" content="A Ciudadano Ready lesson.">
 <meta property="og:image" content="https://ciudadanoready.com/og-image.png">
 <meta property="og:url" content="https://ciudadanoready.com/lesson.html">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Lesson — Ciudadano Ready">
+<meta name="twitter:title" content="Lesson | Ciudadano Ready">
 <meta name="twitter:description" content="A Ciudadano Ready lesson.">
 <meta name="twitter:image" content="https://ciudadanoready.com/og-image.png">
 </head>
@@ -146,8 +146,8 @@
       <div class="flex gap-16 items-center">
         <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
         <div>
-          <span class="eyebrow" style="margin-bottom:0;" id="lesson-stage-eyebrow">STAGE — OF 7</span>
-          <h3 style="margin:0;" id="lesson-stage-title">—</h3>
+          <span class="eyebrow" style="margin-bottom:0;" id="lesson-stage-eyebrow">STAGE OF 7</span>
+          <h3 style="margin:0;" id="lesson-stage-title">–</h3>
         </div>
       </div>
       <div class="flex gap-16 items-center">
@@ -172,7 +172,7 @@
         <div class="stamp-path small" style="margin-bottom: 28px;" id="lesson-stamp-path"></div>
 
         <span class="badge" style="border-color:var(--forest); color:var(--forest); margin-bottom:12px; display:inline-block;" id="lesson-badge">LESSON</span>
-        <h1 id="lesson-title-h1">—</h1>
+        <h1 id="lesson-title-h1">–</h1>
 
         <div id="lesson-reading-view">
           <div class="video-embed" id="lesson-video-wrap" style="display:none;"></div>

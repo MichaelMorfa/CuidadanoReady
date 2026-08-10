@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Ciudadano Ready — shared front-end behavior
+   Ciudadano Ready | shared front-end behavior
    Language toggle, mobile nav, accordion, quiz interactions.
    ========================================================================== */
 
@@ -72,7 +72,7 @@ window.getCurrentLang = getCurrentLang;
 
 // ---- Dark mode (member area) ------------------------------------------
 // The actual "apply before paint" logic lives in a tiny inline script in
-// each member page's <head> (avoids a flash of the light theme) — this is
+// each member page's <head> (avoids a flash of the light theme), this is
 // just the toggle button wiring + shared helpers used after that.
 function getStoredTheme() {
   try {
@@ -107,7 +107,7 @@ window.toggleTheme = toggleTheme;
 
 // ---- Stripe checkout / billing portal helpers ---------------------------
 // Used by dashboard.html's billing banner (resubscribe / upgrade), and now
-// also by the signup flow below right after the new account is created —
+// also by the signup flow below right after the new account is created;
 // both paths land here once there's a real, signed-in Supabase session.
 window.startCheckoutRedirect = async function startCheckoutRedirect(plan, buttonEl) {
   if (typeof supabaseClient === 'undefined') return;
@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---- Dark mode toggle button(s) --------------------------------------
   // The <html data-theme> attribute is already set by the inline no-flash
-  // script in <head> before this runs — just sync the button icon(s) to
+  // script in <head> before this runs, just sync the button icon(s) to
   // match and wire clicks.
   if (document.querySelector('.theme-toggle-btn') || document.querySelector('[data-theme-radio]')) {
     setTheme(getStoredTheme());
@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---- Admin guard (admin/index.html only) -------------------------------
   // Signed-out visitors bounce to login; signed-in non-admins bounce to
   // their own dashboard instead of seeing the admin panel.
-  // Absolute paths here on purpose — this page lives one folder deep at /admin.
+  // Absolute paths here on purpose, this page lives one folder deep at /admin.
   if (document.body.hasAttribute('data-admin-required') && typeof supabaseClient !== 'undefined') {
     supabaseClient.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) {
@@ -305,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // real insert: a honeypot field a script filling every input will trip,
   // and a minimum time-on-page (a form submitted faster than a human could
   // plausibly read + type it is almost certainly automated). Both fail
-  // silently — the bot sees the same "Sent ✓" a real visitor would, so
+  // silently, the bot sees the same "Sent ✓" a real visitor would, so
   // there's no error response telling it to adapt.
   const contactForm = document.querySelector('#contact-form');
   if (contactForm && typeof supabaseClient !== 'undefined') {
@@ -378,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ---- Password show/hide toggle -----------------------------------------
-  // Auto-applies to every password field on the page — no per-page markup needed.
+  // Auto-applies to every password field on the page, no per-page markup needed.
   const EYE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
   const EYE_OFF_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a20.3 20.3 0 0 1 5.06-5.94M9.9 4.24A10.4 10.4 0 0 1 12 4c7 0 11 7 11 7a20.5 20.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>';
   document.querySelectorAll('input[type="password"]').forEach((input) => {
@@ -434,7 +434,7 @@ window.bindQuizBox = function bindQuizBox(box) {
       if (feedback) {
         feedback.textContent = isCorrect
           ? (feedback.getAttribute('data-correct-msg') || 'Correct!')
-          : (feedback.getAttribute('data-incorrect-msg') || 'Not quite — review the highlighted answer.');
+          : (feedback.getAttribute('data-incorrect-msg') || 'Not quite. Review the highlighted answer.');
         feedback.classList.add(isCorrect ? 'correct' : 'incorrect');
       }
       if (questionId && typeof supabaseClient !== 'undefined') {
@@ -495,8 +495,8 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.disabled = true;
     btn.textContent = 'Creating your account…';
 
-    // The real Supabase account is created right here — password hashed by
-    // Supabase immediately, no plaintext holding table involved — then we
+    // The real Supabase account is created right here, password hashed by
+    // Supabase immediately, no plaintext holding table involved, then we
     // sign in to get a working session, then reuse the same
     // create-checkout-session function the dashboard billing banner uses.
     // subscription_status stays 'incomplete' until the webhook confirms
@@ -549,10 +549,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================================================
-// Public-site FAQ chat widget — bottom-right bubble, marketing pages only.
+// Public-site FAQ chat widget, bottom-right bubble, marketing pages only.
 // ==========================================================================
 // Shown only where neither data-auth-required (member area) nor
-// data-admin-required (admin panel) is set on <body> — every public page
+// data-admin-required (admin panel) is set on <body>, every public page
 // already carries neither attribute, so this needs no per-page opt-in.
 //
 // Answers come from site_faq_entries, matched client-side against what the
@@ -560,7 +560,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // intentionally a first version: matchFaqEntry and the fallback path are
 // the only two places a future real-AI backend would plug in (swap the
 // matching step for an edge-function call to an LLM grounded in the same
-// site_faq_entries content) — the widget UI itself wouldn't need to change.
+// site_faq_entries content), the widget UI itself wouldn't need to change.
 // Every question typed is logged to faq_bot_queries, matched or not, so
 // unanswered questions are visible in admin as real signal for what FAQ
 // content is missing.
@@ -593,7 +593,7 @@ const FAQ_BOT_STOPWORDS = new Set([
 ]);
 
 // Lowercases, strips accents (so "está" and "esta" match the same token)
-// and punctuation, then drops short/stop words — leaves only the words
+// and punctuation, then drops short/stop words, leaves only the words
 // carrying real meaning to compare between the visitor's question and a
 // FAQ entry's question + keywords.
 function tokenizeFaqText(text) {
@@ -606,7 +606,7 @@ function tokenizeFaqText(text) {
 }
 
 // Scores every entry by how many of the visitor's significant words show
-// up in that entry's question/keywords, returns the best match — or null
+// up in that entry's question/keywords, returns the best match, or null
 // if nothing shares even one meaningful word, which triggers the fallback
 // "here's how to reach a real person" response instead of a wrong guess.
 function matchFaqEntry(entries, userText) {
@@ -638,21 +638,21 @@ function logFaqBotQuery(questionText, matchedEntry, lang) {
 const FAQ_BOT_LABELS = {
   en: {
     title: 'Ask CiudadanoReady',
-    subtitle: 'Browse a question below or type your own — for anything else, use Support.',
+    subtitle: 'Browse a question below or type your own. For anything else, use Support.',
     placeholder: 'Type your question…',
     send: 'Send',
     greeting: 'Hi! Pick a question below, or type your own about the course, pricing, or how it works.',
-    fallback: "I don't have an answer for that yet. Our team can help — reach out and we'll get back to you within 24–48 hours.",
+    fallback: "I don't have an answer for that yet. Our team can help: reach out and we'll get back to you within 24–48 hours.",
     browseLoading: 'Loading questions…',
     contactCta: 'Contact Support',
   },
   es: {
     title: 'Pregúntale a CiudadanoReady',
-    subtitle: 'Elige una pregunta abajo o escribe la tuya — para todo lo demás, usa Soporte.',
+    subtitle: 'Elige una pregunta abajo o escribe la tuya. Para todo lo demás, usa Soporte.',
     placeholder: 'Escribe tu pregunta…',
     send: 'Enviar',
     greeting: '¡Hola! Elige una pregunta abajo, o escribe la tuya sobre el curso, los precios o cómo funciona.',
-    fallback: 'Aún no tengo una respuesta para eso. Nuestro equipo puede ayudarte — contáctanos y te responderemos en 24 a 48 horas.',
+    fallback: 'Aún no tengo una respuesta para eso. Nuestro equipo puede ayudarte: contáctanos y te responderemos en 24 a 48 horas.',
     browseLoading: 'Cargando preguntas…',
     contactCta: 'Contactar Soporte',
   },

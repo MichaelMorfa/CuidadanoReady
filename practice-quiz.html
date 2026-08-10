@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>(function(){try{if(localStorage.getItem("ciudadanoready-theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Practice Interview — Ciudadano Ready</title>
+<title>Practice Interview | Ciudadano Ready</title>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <style>
@@ -81,12 +81,12 @@
 <link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Ciudadano Ready">
-<meta property="og:title" content="Practice Interview — Ciudadano Ready">
+<meta property="og:title" content="Practice Interview | Ciudadano Ready">
 <meta property="og:description" content="Practice the USCIS civics interview with a randomized quiz.">
 <meta property="og:image" content="https://ciudadanoready.com/og-image.png">
 <meta property="og:url" content="https://ciudadanoready.com/practice-quiz.html">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Practice Interview — Ciudadano Ready">
+<meta name="twitter:title" content="Practice Interview | Ciudadano Ready">
 <meta name="twitter:description" content="Practice the USCIS civics interview with a randomized quiz.">
 <meta name="twitter:image" content="https://ciudadanoready.com/og-image.png">
 </head>
@@ -154,12 +154,12 @@
           <button class="card pq-picker-card" data-test-type="test_128">
             <span class="badge badge-forest" data-en="CURRENT · 2025 VERSION" data-es="ACTUAL · VERSIÓN 2025">CURRENT · 2025 VERSION</span>
             <div class="pq-picker-count">20 <span style="font-size:1rem; color:var(--slate); font-weight:500;" data-en="questions asked" data-es="preguntas">questions asked</span></div>
-            <p class="small" style="margin:0;" data-en="From the 128-question bank. Need 12 of 20 correct to pass — the real 2025 threshold." data-es="Del banco de 128 preguntas. Necesitas 12 de 20 correctas para aprobar — el umbral real de 2025.">From the 128-question bank. Need 12 of 20 correct to pass — the real 2025 threshold.</p>
+            <p class="small" style="margin:0;" data-en="From the 128-question bank. Need 12 of 20 correct to pass: the real 2025 threshold." data-es="Del banco de 128 preguntas. Necesitas 12 de 20 correctas para aprobar: el umbral real de 2025.">From the 128-question bank. Need 12 of 20 correct to pass: the real 2025 threshold.</p>
           </button>
           <button class="card pq-picker-card" data-test-type="test_100">
             <span class="badge" data-en="LEGACY · 2008 VERSION" data-es="ANTERIOR · VERSIÓN 2008">LEGACY · 2008 VERSION</span>
             <div class="pq-picker-count">10 <span style="font-size:1rem; color:var(--slate); font-weight:500;" data-en="questions asked" data-es="preguntas">questions asked</span></div>
-            <p class="small" style="margin:0;" data-en="From the 100-question bank. Need 6 of 10 correct to pass — the real 2008 threshold." data-es="Del banco de 100 preguntas. Necesitas 6 de 10 correctas para aprobar — el umbral real de 2008.">From the 100-question bank. Need 6 of 10 correct to pass — the real 2008 threshold.</p>
+            <p class="small" style="margin:0;" data-en="From the 100-question bank. Need 6 of 10 correct to pass: the real 2008 threshold." data-es="Del banco de 100 preguntas. Necesitas 6 de 10 correctas para aprobar: el umbral real de 2008.">From the 100-question bank. Need 6 of 10 correct to pass: the real 2008 threshold.</p>
           </button>
           <button class="card pq-picker-card" data-test-type="test_20">
             <span class="badge badge-ocean" data-en="65/20 SPECIAL CONSIDERATION" data-es="CONSIDERACIÓN ESPECIAL 65/20">65/20 SPECIAL CONSIDERATION</span>
@@ -170,7 +170,7 @@
 
         <h3 data-en="Your Past Attempts" data-es="Tus Intentos Anteriores">Your Past Attempts</h3>
         <div class="card card-pad" id="pq-history-card">
-          <p class="small muted" style="margin:0;" id="pq-history-empty" data-en="No practice tests taken yet — try one above." data-es="Aún no has tomado ninguna prueba de práctica — intenta una arriba.">No practice tests taken yet — try one above.</p>
+          <p class="small muted" style="margin:0;" id="pq-history-empty" data-en="No practice tests taken yet. Try one above." data-es="Aún no has tomado ninguna prueba de práctica. Intenta una arriba.">No practice tests taken yet. Try one above.</p>
           <div id="pq-history-list"></div>
         </div>
       </div>
@@ -179,14 +179,14 @@
       <div id="pq-quiz-view" style="display:none;">
         <div class="pq-stage">
           <div class="pq-progress-row">
-            <span class="badge" id="pq-active-test-badge">—</span>
+            <span class="badge" id="pq-active-test-badge">–</span>
             <span class="pq-progress-text" id="pq-progress-text">1 / 10</span>
           </div>
           <div class="progress-bar" style="margin-bottom:24px;"><div class="progress-bar-fill" id="pq-progress-bar" style="width:0%;"></div></div>
 
           <div class="card pq-question-card">
             <span class="eyebrow" data-en="THE OFFICER ASKS" data-es="EL OFICIAL PREGUNTA">THE OFFICER ASKS</span>
-            <h3 id="pq-question-text">—</h3>
+            <h3 id="pq-question-text">–</h3>
 
             <div class="pq-answer-reveal" id="pq-answer-reveal">
               <span class="eyebrow" data-en="ACCEPTABLE ANSWERS" data-es="RESPUESTAS ACEPTABLES">ACCEPTABLE ANSWERS</span>
@@ -216,7 +216,7 @@
             <div class="pq-score-circle" id="pq-score-circle">
               <span class="pq-score-frac" id="pq-score-frac">0/0</span>
             </div>
-            <span class="pq-pass-badge" id="pq-pass-badge">—</span>
+            <span class="pq-pass-badge" id="pq-pass-badge">–</span>
             <p class="small" style="margin:16px auto 0; max-width:420px;" id="pq-results-message"></p>
           </div>
 

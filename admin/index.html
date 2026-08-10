@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel — Ciudadano Ready</title>
+<title>Admin Panel | Ciudadano Ready</title>
 <meta name="robots" content="noindex">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../styles.css">
@@ -81,33 +81,33 @@
       <!-- ================= OVERVIEW ================= -->
       <section class="admin-panel active" data-panel="overview">
         <div class="grid grid-4" style="margin-bottom:28px;">
-          <div class="card stat-card"><span class="eyebrow">TOTAL USERS</span><div class="stat-value" id="stat-total-users">—</div></div>
-          <div class="card stat-card"><span class="eyebrow">ACTIVE SUBSCRIPTIONS</span><div class="stat-value" id="stat-active-subs">—</div></div>
-          <div class="card stat-card"><span class="eyebrow">NEW THIS WEEK</span><div class="stat-value" id="stat-new-week">—</div></div>
-          <div class="card stat-card"><span class="eyebrow">OPEN SUPPORT TICKETS</span><div class="stat-value" id="stat-open-tickets">—</div></div>
+          <div class="card stat-card"><span class="eyebrow">TOTAL USERS</span><div class="stat-value" id="stat-total-users">–</div></div>
+          <div class="card stat-card"><span class="eyebrow">ACTIVE SUBSCRIPTIONS</span><div class="stat-value" id="stat-active-subs">–</div></div>
+          <div class="card stat-card"><span class="eyebrow">NEW THIS WEEK</span><div class="stat-value" id="stat-new-week">–</div></div>
+          <div class="card stat-card"><span class="eyebrow">OPEN SUPPORT TICKETS</span><div class="stat-value" id="stat-open-tickets">–</div></div>
         </div>
         <div class="grid grid-3" style="margin-bottom:28px;">
-          <div class="card stat-card"><span class="eyebrow">NEW THIS MONTH</span><div class="stat-value" id="stat-new-month">—</div></div>
-          <div class="card stat-card"><span class="eyebrow">PUBLISHED LESSONS</span><div class="stat-value" id="stat-lessons">—</div></div>
-          <div class="card stat-card"><span class="eyebrow">QUIZ ACCURACY (ALL-TIME)</span><div class="stat-value" id="stat-quiz-accuracy">—</div></div>
+          <div class="card stat-card"><span class="eyebrow">NEW THIS MONTH</span><div class="stat-value" id="stat-new-month">–</div></div>
+          <div class="card stat-card"><span class="eyebrow">PUBLISHED LESSONS</span><div class="stat-value" id="stat-lessons">–</div></div>
+          <div class="card stat-card"><span class="eyebrow">QUIZ ACCURACY (ALL-TIME)</span><div class="stat-value" id="stat-quiz-accuracy">–</div></div>
         </div>
         <div class="grid grid-3" style="margin-bottom:28px;">
-          <div class="card stat-card"><span class="eyebrow">JS ERRORS (7 DAYS)</span><div class="stat-value" id="stat-client-errors">—</div></div>
-          <div class="card stat-card"><span class="eyebrow">FAQ BOT: UNANSWERED / TOTAL (7 DAYS)</span><div class="stat-value" id="stat-faq-bot">—</div></div>
+          <div class="card stat-card"><span class="eyebrow">JS ERRORS (7 DAYS)</span><div class="stat-value" id="stat-client-errors">–</div></div>
+          <div class="card stat-card"><span class="eyebrow">FAQ BOT: UNANSWERED / TOTAL (7 DAYS)</span><div class="stat-value" id="stat-faq-bot">–</div></div>
         </div>
         <div class="card card-pad" style="margin-bottom:28px;">
           <span class="eyebrow">RECENT ERRORS</span>
-          <p class="small muted" style="margin:4px 0 14px;">Uncaught JavaScript errors and unhandled promise rejections reported from any page, most recent first. This is an in-house safety net, not a full monitoring service — it won't catch server-side/edge-function failures.</p>
+          <p class="small muted" style="margin:4px 0 14px;">Uncaught JavaScript errors and unhandled promise rejections reported from any page, most recent first. This is an in-house safety net, not a full monitoring service. It won't catch server-side/edge-function failures.</p>
           <div id="client-errors-list"><p class="empty-state">Loading…</p></div>
         </div>
         <div class="card card-pad" style="margin-bottom:28px;">
-          <span class="eyebrow">FAQ BOT — UNANSWERED QUESTIONS</span>
-          <p class="small muted" style="margin:4px 0 14px;">Questions visitors typed into the site's FAQ chat widget that didn't match anything in site_faq_entries. Real signal for what content is missing — worth adding as new entries.</p>
+          <span class="eyebrow">FAQ BOT: UNANSWERED QUESTIONS</span>
+          <p class="small muted" style="margin:4px 0 14px;">Questions visitors typed into the site's FAQ chat widget that didn't match anything in site_faq_entries. Real signal for what content is missing. Worth adding as new entries.</p>
           <div id="faq-bot-unmatched-list"><p class="empty-state">Loading…</p></div>
         </div>
         <div class="card card-pad">
           <span class="eyebrow">NOTE</span>
-          <p class="small" style="margin:0;">Revenue and billing metrics (MRR, failed payments, refunds) will appear here once a payment processor is connected — those numbers should come straight from Stripe/Square rather than being tracked separately.</p>
+          <p class="small" style="margin:0;">Revenue and billing metrics (MRR, failed payments, refunds) will appear here once a payment processor is connected. Those numbers should come straight from Stripe/Square rather than being tracked separately.</p>
         </div>
       </section>
 
@@ -135,13 +135,13 @@
             <div>
               <label>Module</label>
               <select id="lesson-module" required>
-                <option value="1">1 — Welcome</option>
-                <option value="2">2 — Eligibility</option>
-                <option value="3">3 — N-400 Application</option>
-                <option value="4">4 — Biometrics</option>
-                <option value="5">5 — Interview &amp; Exam Prep</option>
-                <option value="6">6 — The Interview</option>
-                <option value="7">7 — Oath Ceremony</option>
+                <option value="1">1. Welcome</option>
+                <option value="2">2. Eligibility</option>
+                <option value="3">3. N-400 Application</option>
+                <option value="4">4. Biometrics</option>
+                <option value="5">5. Interview &amp; Exam Prep</option>
+                <option value="6">6. The Interview</option>
+                <option value="7">7. Oath Ceremony</option>
               </select>
             </div>
             <div>
@@ -157,11 +157,11 @@
               <textarea id="lesson-content" placeholder="Lesson text/notes… (separate bullet lines with • and blank lines between paragraphs)"></textarea>
             </div>
             <div class="span-2">
-              <label>Título de la lección (Spanish — optional)</label>
+              <label>Título de la lección (Spanish, optional)</label>
               <input type="text" id="lesson-title-es" placeholder="Se usará el inglés si se deja en blanco">
             </div>
             <div class="span-2">
-              <label>Contenido (Spanish — optional)</label>
+              <label>Contenido (Spanish, optional)</label>
               <textarea id="lesson-content-es" placeholder="Se usará el inglés si se deja en blanco"></textarea>
             </div>
             <div>
@@ -189,13 +189,13 @@
             <div>
               <label>Module</label>
               <select id="quiz-module" required>
-                <option value="1">1 — Welcome</option>
-                <option value="2">2 — Eligibility</option>
-                <option value="3">3 — N-400 Application</option>
-                <option value="4">4 — Biometrics</option>
-                <option value="5">5 — Interview &amp; Exam Prep</option>
-                <option value="6">6 — The Interview</option>
-                <option value="7">7 — Oath Ceremony</option>
+                <option value="1">1. Welcome</option>
+                <option value="2">2. Eligibility</option>
+                <option value="3">3. N-400 Application</option>
+                <option value="4">4. Biometrics</option>
+                <option value="5">5. Interview &amp; Exam Prep</option>
+                <option value="6">6. The Interview</option>
+                <option value="7">7. Oath Ceremony</option>
               </select>
             </div>
             <div>
@@ -215,15 +215,15 @@
               <input type="text" id="quiz-choice-b" required>
             </div>
             <div>
-              <label>Choice C (English — leave blank for True/False)</label>
+              <label>Choice C (English, leave blank for True/False)</label>
               <input type="text" id="quiz-choice-c">
             </div>
             <div>
-              <label>Choice D (English — leave blank for True/False)</label>
+              <label>Choice D (English, leave blank for True/False)</label>
               <input type="text" id="quiz-choice-d">
             </div>
             <div class="span-2">
-              <label>Pregunta (Spanish — optional)</label>
+              <label>Pregunta (Spanish, optional)</label>
               <input type="text" id="quiz-question-es" placeholder="Se usará el inglés si se deja en blanco">
             </div>
             <div>
@@ -290,11 +290,11 @@
               <textarea id="flashcard-answer" placeholder="One answer per line if there are multiple acceptable answers" required></textarea>
             </div>
             <div class="span-2">
-              <label>Pregunta (Spanish — optional)</label>
+              <label>Pregunta (Spanish, optional)</label>
               <input type="text" id="flashcard-question-es" placeholder="Se usará el inglés si se deja en blanco">
             </div>
             <div class="span-2">
-              <label>Respuesta (Spanish — optional)</label>
+              <label>Respuesta (Spanish, optional)</label>
               <textarea id="flashcard-answer-es" placeholder="Se usará el inglés si se deja en blanco"></textarea>
             </div>
             <div style="display:flex; align-items:flex-end; gap:8px; padding-bottom:11px;">
@@ -345,15 +345,15 @@
               <textarea id="cl-content" style="min-height:220px;" placeholder="Blank line between paragraphs. Lines starting with • become a bulleted list. **bold** and *italic* are supported." required></textarea>
             </div>
             <div class="span-2">
-              <label>Título de la Unidad (Spanish — optional)</label>
+              <label>Título de la Unidad (Spanish, optional)</label>
               <input type="text" id="cl-unit-title-es" placeholder="Se usará el inglés si se deja en blanco">
             </div>
             <div class="span-2">
-              <label>Título de la Lección (Spanish — optional)</label>
+              <label>Título de la Lección (Spanish, optional)</label>
               <input type="text" id="cl-title-es" placeholder="Se usará el inglés si se deja en blanco">
             </div>
             <div class="span-2">
-              <label>Contenido (Spanish — optional)</label>
+              <label>Contenido (Spanish, optional)</label>
               <textarea id="cl-content-es" style="min-height:220px;" placeholder="Se usará el inglés si se deja en blanco"></textarea>
             </div>
             <div style="display:flex; align-items:flex-end; gap:8px; padding-bottom:11px;">
@@ -376,7 +376,7 @@
       <section class="admin-panel" data-panel="revenue">
         <div class="card card-pad" style="margin-bottom:20px;">
           <span class="eyebrow">REFUNDS</span>
-          <p class="small muted" style="margin:4px 0 0;">Search for a paying customer, pull up their Stripe charges, and issue a full or partial refund. For anything beyond refunds — coupons, dunning, detailed revenue reporting — use the Stripe Dashboard directly; this is a convenience tool, not a replacement for it.</p>
+          <p class="small muted" style="margin:4px 0 0;">Search for a paying customer, pull up their Stripe charges, and issue a full or partial refund. For anything beyond refunds (coupons, dunning, detailed revenue reporting), use the Stripe Dashboard directly; this is a convenience tool, not a replacement for it.</p>
         </div>
         <div class="search-row">
           <input type="text" id="revenue-user-search" placeholder="Search by name or email…">

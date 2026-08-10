@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Ciudadano Ready — Admin panel logic
+   Ciudadano Ready | Admin panel logic
    Only loaded on admin/index.html. Assumes supabaseClient + the
    data-admin-required guard in app.js have already run.
    ========================================================================== */
@@ -30,7 +30,7 @@ function escapeHtml(str) {
 }
 
 function formatDate(iso) {
-  if (!iso) return '—';
+  if (!iso) return '–';
   const d = new Date(iso);
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // In-house error log (see app.js's window.onerror/unhandledrejection
-    // handlers) — surfaces real breakage here instead of only via support
+    // handlers), surfaces real breakage here instead of only via support
     // emails.
     const weekAgoErrors = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const { count: errorCount } = await supabaseClient.from('client_error_log').select('*', { count: 'exact', head: true }).gte('created_at', weekAgoErrors);
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Public-site FAQ chat widget (see app.js) — every question a visitor
+    // Public-site FAQ chat widget (see app.js), every question a visitor
     // types is logged, matched or not. Unmatched questions are the useful
     // signal here: real gaps in site_faq_entries coverage, worth adding as
     // new entries (or, later, feeding into a real-AI version's context).
@@ -315,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     if (!data || !data.length) {
-      list.innerHTML = '<p class="empty-state">No lessons yet — add your first one above.</p>';
+      list.innerHTML = '<p class="empty-state">No lessons yet. Add your first one above.</p>';
       return;
     }
     let html = '';
@@ -323,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
     data.forEach((lesson) => {
       if (lesson.module_number !== currentModule) {
         currentModule = lesson.module_number;
-        html += `<div class="module-heading">Module ${currentModule} — ${escapeHtml(MODULE_NAMES[currentModule] || '')}</div>`;
+        html += `<div class="module-heading">Module ${currentModule}: ${escapeHtml(MODULE_NAMES[currentModule] || '')}</div>`;
       }
       html += `
         <div class="card card-pad" style="margin-bottom:12px;" data-lesson-card="${lesson.id}">
@@ -426,7 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     if (!data || !data.length) {
-      list.innerHTML = '<p class="empty-state">No quiz questions yet — add your first one above.</p>';
+      list.innerHTML = '<p class="empty-state">No quiz questions yet. Add your first one above.</p>';
       return;
     }
     let html = '';
@@ -434,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
     data.forEach((q) => {
       if (q.module_number !== currentModule) {
         currentModule = q.module_number;
-        html += `<div class="module-heading">Module ${currentModule} — ${escapeHtml(MODULE_NAMES[currentModule] || '')}</div>`;
+        html += `<div class="module-heading">Module ${currentModule}: ${escapeHtml(MODULE_NAMES[currentModule] || '')}</div>`;
       }
       const total = (q.times_correct || 0) + (q.times_incorrect || 0);
       const accuracy = total > 0 ? Math.round((q.times_correct / total) * 100) : null;
@@ -478,7 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
       question: document.querySelector('#quiz-question').value,
       choice_a: document.querySelector('#quiz-choice-a').value,
       choice_b: document.querySelector('#quiz-choice-b').value,
-      // Left blank for True/False questions (only 2 real answers) — stored
+      // Left blank for True/False questions (only 2 real answers), stored
       // as null rather than a placeholder string like "N/A" so the member
       // pages know to render only the choices that actually exist.
       choice_c: document.querySelector('#quiz-choice-c').value.trim() || null,
@@ -565,7 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (countEl) countEl.textContent = `${rows.length} card${rows.length === 1 ? '' : 's'}`;
     if (!rows.length) {
-      list.innerHTML = '<p class="empty-state">No flashcards in this set yet — add one above.</p>';
+      list.innerHTML = '<p class="empty-state">No flashcards in this set yet. Add one above.</p>';
       return;
     }
 
@@ -686,7 +686,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const countEl = document.querySelector('#cl-count');
     if (countEl) countEl.textContent = `${allCountryLessons.length} lesson${allCountryLessons.length === 1 ? '' : 's'}`;
     if (!allCountryLessons.length) {
-      list.innerHTML = '<p class="empty-state">No lessons yet — add one above.</p>';
+      list.innerHTML = '<p class="empty-state">No lessons yet. Add one above.</p>';
       return;
     }
 
@@ -695,7 +695,7 @@ document.addEventListener('DOMContentLoaded', () => {
     allCountryLessons.forEach((l) => {
       if (l.unit_number !== currentUnit) {
         currentUnit = l.unit_number;
-        html += `<div class="module-heading">Unit ${l.unit_number} — ${escapeHtml(l.unit_title)}</div>`;
+        html += `<div class="module-heading">Unit ${l.unit_number}: ${escapeHtml(l.unit_title)}</div>`;
       }
       html += `
         <div class="card card-pad" style="margin-bottom:12px;" data-country-lesson-card="${l.id}">
@@ -791,7 +791,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---- Revenue / Refunds ---------------------------------------------
   // Charges are fetched live from Stripe per customer (via admin-list-charges)
-  // rather than mirrored into Supabase — Stripe stays the single source of
+  // rather than mirrored into Supabase, Stripe stays the single source of
   // truth for payment history, this is just a convenience window into it.
   let revenueUsersCache = [];
   let currentRevenueUserId = null;
@@ -818,7 +818,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderRevenueUsers(users) {
     const resultsEl = document.querySelector('#revenue-user-results');
     if (!users.length) {
-      resultsEl.innerHTML = '<p class="empty-state">No paying customers yet — nobody has a Stripe customer ID on file.</p>';
+      resultsEl.innerHTML = '<p class="empty-state">No paying customers yet. Nobody has a Stripe customer ID on file.</p>';
       return;
     }
     resultsEl.innerHTML = `<div class="card"><div class="table-wrap"><table>
@@ -891,7 +891,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!viewBtn) return;
     const id = viewBtn.getAttribute('data-revenue-view');
     const user = revenueUsersCache.find((u) => u.id === id);
-    loadChargesForUser(id, user ? `${user.full_name || '(no name)'} — ${user.email || ''}` : 'Charges');
+    loadChargesForUser(id, user ? `${user.full_name || '(no name)'} – ${user.email || ''}` : 'Charges');
   });
 
   document.querySelector('#revenue-charges-list')?.addEventListener('click', async (e) => {
@@ -940,7 +940,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (currentRevenueUserId) {
         const user = revenueUsersCache.find((u) => u.id === currentRevenueUserId);
-        loadChargesForUser(currentRevenueUserId, user ? `${user.full_name || '(no name)'} — ${user.email || ''}` : 'Charges');
+        loadChargesForUser(currentRevenueUserId, user ? `${user.full_name || '(no name)'} – ${user.email || ''}` : 'Charges');
       }
     }
   });
@@ -993,7 +993,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <p class="small" style="margin:10px 0;">${escapeHtml(t.message || '')}</p>
         ${repliesHtml}
         <label style="margin-bottom:4px; margin-top:14px;">Reply to Customer</label>
-        <textarea data-ticket-reply-text="${t.id}" placeholder="Type a reply — it will be emailed to ${escapeHtml(t.email || 'the customer')}…"></textarea>
+        <textarea data-ticket-reply-text="${t.id}" placeholder="Type a reply. It will be emailed to ${escapeHtml(t.email || 'the customer')}…"></textarea>
         <div class="flex gap-16 items-center" style="flex-wrap:wrap; margin-bottom:14px;">
           <button class="btn btn-primary btn-sm" data-ticket-reply-send="${t.id}">Send Reply</button>
           <span class="row-save-msg" data-ticket-reply-msg="${t.id}">Sent ✓</span>

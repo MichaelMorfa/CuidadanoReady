@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <script>(function(){try{if(localStorage.getItem("ciudadanoready-theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Dashboard — Ciudadano Ready</title>
+<title>My Dashboard | Ciudadano Ready</title>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <style>
   /* ===== Member Area theme =====
      Distinct from the marketing site on purpose: soft grey background, flatter
-     cards (no hover shadow), and a forest-green accent instead of ocean blue —
+     cards (no hover shadow), and a forest-green accent instead of ocean blue,
      so blue always means "public site" and green always means "your account." */
   body { background: var(--paper-dim); }
   .app-sidebar { background: var(--paper-dim); border-right: 1px solid var(--line); }
@@ -34,7 +34,7 @@
 
   /* "Your Path" stretch: circles stay a fixed size, but the connecting
      lines grow to fill the full card width instead of leaving a gap on
-     the right — matches how it already looks in Spanish, where longer
+     the right, matching how it already looks in Spanish, where longer
      module-name labels happened to push the row wider. */
   #dashboard-stamp-path { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
   #dashboard-stamp-path .stamp-connector { flex: 1 1 auto; min-width: 16px; }
@@ -47,12 +47,12 @@
 <link rel="manifest" href="/site.webmanifest">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Ciudadano Ready">
-<meta property="og:title" content="Member Dashboard — Ciudadano Ready">
+<meta property="og:title" content="Member Dashboard | Ciudadano Ready">
 <meta property="og:description" content="Your Ciudadano Ready member dashboard.">
 <meta property="og:image" content="https://ciudadanoready.com/og-image.png">
 <meta property="og:url" content="https://ciudadanoready.com/dashboard.html">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Member Dashboard — Ciudadano Ready">
+<meta name="twitter:title" content="Member Dashboard | Ciudadano Ready">
 <meta name="twitter:description" content="Your Ciudadano Ready member dashboard.">
 <meta name="twitter:image" content="https://ciudadanoready.com/og-image.png">
 </head>
@@ -125,11 +125,11 @@
       <div id="dashboard-billing-banner" style="display:none;">
         <div class="card card-pad text-center" style="max-width:560px; margin:0 auto;">
           <span class="eyebrow" id="billing-banner-eyebrow">FINISH SIGNING UP</span>
-          <h3 style="margin-top:8px;" id="billing-banner-title">One step left — choose a plan</h3>
+          <h3 style="margin-top:8px;" id="billing-banner-title">One step left: choose a plan</h3>
           <p class="small" id="billing-banner-message" style="max-width:440px; margin:0 auto 20px;">Your account is set up, but you haven't completed payment yet. Choose a plan to unlock the full course.</p>
           <div id="billing-banner-plan-buttons" class="flex gap-16 justify-center" style="flex-wrap:wrap;">
-            <button class="btn btn-primary" id="billing-choose-2year">2-Year Plan — $199.99</button>
-            <button class="btn btn-ghost" id="billing-choose-monthly">Monthly — $19.99/mo</button>
+            <button class="btn btn-primary" id="billing-choose-2year">2-Year Plan – $199.99</button>
+            <button class="btn btn-ghost" id="billing-choose-monthly">Monthly – $19.99/mo</button>
           </div>
           <button class="btn btn-ghost btn-sm" id="billing-manage-link" style="display:none; margin-top:16px;">Manage Billing</button>
         </div>
@@ -139,14 +139,14 @@
         <div class="card card-pad text-center">
           <span class="eyebrow">GETTING STARTED</span>
           <h3 style="margin-top:8px;">Course content is on its way</h3>
-          <p class="small" style="max-width:420px; margin:0 auto;">Lessons haven't been published yet — check back soon, or reach out to support if you think this is a mistake.</p>
+          <p class="small" style="max-width:420px; margin:0 auto;">Lessons haven't been published yet. Check back soon, or reach out to support if you think this is a mistake.</p>
         </div>
       </div>
 
       <div id="dashboard-main-content" style="display:none;">
         <div class="grid grid-3" style="margin-bottom:28px;">
           <div class="card stat-card"><span class="eyebrow" data-en="OVERALL PROGRESS" data-es="PROGRESO GENERAL">OVERALL PROGRESS</span><div class="stat-value" id="stat-progress-pct">0%</div><div class="progress-bar" style="margin-top:10px;"><div class="progress-bar-fill" id="stat-progress-bar" style="width:0%;"></div></div></div>
-          <div class="card stat-card"><span class="eyebrow" data-en="CURRENT STAGE" data-es="ETAPA ACTUAL">CURRENT STAGE</span><div class="stat-value" style="font-size:1.4rem;" id="stat-current-stage">—</div><span class="stat-delta" id="stat-current-lesson-count"></span></div>
+          <div class="card stat-card"><span class="eyebrow" data-en="CURRENT STAGE" data-es="ETAPA ACTUAL">CURRENT STAGE</span><div class="stat-value" style="font-size:1.4rem;" id="stat-current-stage">–</div><span class="stat-delta" id="stat-current-lesson-count"></span></div>
           <div class="card stat-card"><span class="eyebrow" data-en="PRACTICE STREAK" data-es="RACHA DE PRÁCTICA">PRACTICE STREAK</span><div class="stat-value" id="stat-streak">0 days</div><span class="stat-delta" id="stat-streak-note" data-en="Complete a lesson to start your streak" data-es="Completa una lección para comenzar tu racha">Complete a lesson to start your streak</span></div>
         </div>
 
@@ -154,7 +154,7 @@
           <span class="eyebrow" data-en="CONTINUE LEARNING" data-es="CONTINUAR APRENDIENDO">CONTINUE LEARNING</span>
           <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:16px;">
             <div>
-              <h3 style="margin-bottom:4px;" id="continue-lesson-title">—</h3>
+              <h3 style="margin-bottom:4px;" id="continue-lesson-title">–</h3>
               <p class="small" style="margin:0;" id="continue-lesson-meta"></p>
             </div>
             <a href="#" class="btn btn-primary" id="continue-lesson-link" data-en="Resume Lesson →" data-es="Reanudar Lección →">Resume Lesson →</a>

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Ciudadano Ready — Member area logic (dashboard.html + lesson.html)
+   Ciudadano Ready | Member area logic (dashboard.html + lesson.html)
    Reads real course content + progress from Supabase; no more hardcoded
    placeholder numbers. Loaded after app.js, which handles the auth guard.
 
@@ -13,7 +13,7 @@
 
 const TOTAL_MODULES = 7;
 
-// A module's quiz (shown only on the last lesson of that module — see
+// A module's quiz (shown only on the last lesson of that module, see
 // initLessonPage/renderLessonPage) must be passed at this ratio or better
 // before the lesson can be marked complete. Weighted dashboard progress
 // (computeWeightedProgress) uses the same "quiz counts as X characters
@@ -60,15 +60,15 @@ function localize(obj, field) {
 
 // ---- Content caching (localStorage, short TTL) -------------------------
 // lessons / quiz_questions / flashcards / country_lessons only ever change
-// when an admin edits them — every member page was re-fetching the full
+// when an admin edits them, every member page was re-fetching the full
 // lessons table fresh from Postgres on every single load (it's needed for
 // the sidebar nav on all of them), which is redundant work repeated by
 // every visitor on every navigation. A 10-minute cache cuts that down
 // substantially while staying well within an acceptable staleness window
 // for admin-edited course content (nobody needs edits to appear
-// instantly — a page refresh a few minutes later is fine). Progress data
+// instantly, a page refresh a few minutes later is fine). Progress data
 // (lesson_progress, module_quiz_results, profiles, etc.) is NEVER cached
-// this way — it's per-user and must always be current.
+// this way, it's per-user and must always be current.
 const CONTENT_CACHE_TTL_MS = 10 * 60 * 1000;
 const CONTENT_CACHE_PREFIX = 'cr-cache:';
 
@@ -89,7 +89,7 @@ function getCachedContent(key) {
 function setCachedContent(key, data) {
   try {
     localStorage.setItem(CONTENT_CACHE_PREFIX + key, JSON.stringify({ data, expires: Date.now() + CONTENT_CACHE_TTL_MS }));
-  } catch (e) { /* storage full/unavailable/private-browsing — just skip caching, not fatal */ }
+  } catch (e) { /* storage full/unavailable/private-browsing; just skip caching, not fatal */ }
 }
 
 // Replaces the ~8 identical `lessons` fetches spread across every member
@@ -142,7 +142,7 @@ function linkifyEscaped(escapedText) {
 
 // Converts **bold** and *italic* markers (Markdown-style, as used in the
 // "Know Your Country" history content) into <strong>/<em>. Runs on
-// already-escaped text, so it's safe — the * characters survive escapeHtml
+// already-escaped text, so it's safe, the * characters survive escapeHtml
 // untouched. Bold is matched before italic so "**word**" isn't mistaken
 // for two separate italic spans.
 function boldItalicEscaped(escapedText) {
@@ -154,7 +154,7 @@ function boldItalicEscaped(escapedText) {
 // Renders lesson body text into paragraphs, turning consecutive lines that
 // start with "•" into a proper bulleted list instead of running them all
 // together on one line. A block that's a single line starting with "## "
-// is rendered as a subheading instead of a paragraph — this lets longer,
+// is rendered as a subheading instead of a paragraph, this lets longer,
 // multi-section lessons (like a step-by-step process overview) have real
 // visual structure instead of one long wall of text.
 function renderLessonBody(text) {
@@ -200,7 +200,7 @@ function renderStampPath(selector, lessons, completedIds, currentLesson, small) 
 // A module is "complete" once every one of its lessons has a lesson_progress
 // row. Because the module quiz already gates the final lesson of a module
 // from being marked complete until it's passed (see initLessonPage), this
-// single check also implies "that module's quiz was passed" — no separate
+// single check also implies "that module's quiz was passed", no separate
 // module_quiz_results lookup is needed just to decide lock state.
 function isModuleComplete(moduleLessons, completedIds) {
   return moduleLessons.length > 0 && moduleLessons.every((l) => completedIds.has(l.id));
@@ -228,14 +228,14 @@ function isLessonUnlocked(lesson, lessons, completedIds) {
 }
 
 // Finds the first lesson (in overall module/sort_order) the learner hasn't
-// finished yet, among lessons that are actually unlocked — used to redirect
+// finished yet, among lessons that are actually unlocked, used to redirect
 // away from a locked lesson someone reached via a stale/typed-in URL.
 function firstAvailableLesson(lessons, completedIds) {
   const sorted = lessons.slice().sort((a, b) => (a.module_number - b.module_number) || (a.sort_order - b.sort_order));
   return sorted.find((l) => !completedIds.has(l.id) && isLessonUnlocked(l, lessons, completedIds)) || null;
 }
 
-// Small line-art padlock (Feather-style) used for locked modules/lessons —
+// Small line-art padlock (Feather-style) used for locked modules/lessons,
 // swapped in for the 🔒 emoji, which read as tacky/out of place against the
 // site's flat, minimal iconography. currentColor lets it inherit whatever
 // muted color the surrounding locked badge/check already uses.
@@ -251,7 +251,7 @@ function renderModuleNav(selector, lessons, completedIds, expandLesson) {
   for (let m = 1; m <= TOTAL_MODULES; m++) {
     const moduleLessons = lessons.filter((l) => l.module_number === m);
     if (!moduleLessons.length) {
-      html += `<li style="padding:10px 24px; font-size:0.92rem; color:var(--slate);">${m}. ${escapeHtml(moduleName(m))} <span class="small muted">— ${comingSoon}</span></li>`;
+      html += `<li style="padding:10px 24px; font-size:0.92rem; color:var(--slate);">${m}. ${escapeHtml(moduleName(m))} <span class="small muted">${comingSoon}</span></li>`;
       continue;
     }
     const allDone = moduleLessons.every((l) => completedIds.has(l.id));
@@ -313,7 +313,7 @@ function buildQuizBoxHtml(q) {
   const optionsHtml = choices.map(([key, text]) => `<button class="quiz-option" data-correct="${key === q.correct_choice ? 'true' : 'false'}">${escapeHtml(text)}</button>`).join('');
   const label = lang === 'es' ? 'PREGUNTA DE PRÁCTICA' : 'PRACTICE QUESTION';
   const correctMsg = lang === 'es' ? '¡Correcto!' : 'Correct!';
-  const incorrectMsg = lang === 'es' ? 'No es correcto — revisa la respuesta resaltada.' : 'Not quite — review the highlighted answer.';
+  const incorrectMsg = lang === 'es' ? 'No es correcto. Revisa la respuesta resaltada.' : 'Not quite. Review the highlighted answer.';
   return `<div class="quiz-box" data-question-id="${q.id}">
     <span class="badge" style="margin-bottom:12px; display:inline-block;">${label}</span>
     <h3 style="font-family:var(--font-sans); font-size:1.05rem;">${escapeHtml(localize(q, 'question'))}</h3>
@@ -337,11 +337,11 @@ const BILLING_BANNER_LABELS = {
     },
     default: {
       eyebrow: 'FINISH SIGNING UP',
-      title: 'One step left — choose a plan',
+      title: 'One step left: choose a plan',
       message: "Your account is set up, but you haven't completed payment yet. Choose a plan to unlock the full course.",
     },
-    yearly: '2-Year Plan — $199.99',
-    monthly: 'Monthly — $19.99/mo',
+    yearly: '2-Year Plan – $199.99',
+    monthly: 'Monthly – $19.99/mo',
     manage: 'Manage Billing',
   },
   es: {
@@ -357,11 +357,11 @@ const BILLING_BANNER_LABELS = {
     },
     default: {
       eyebrow: 'FALTA UN PASO',
-      title: 'Un paso más — elige un plan',
+      title: 'Un paso más: elige un plan',
       message: 'Tu cuenta ya está creada, pero aún no completaste el pago. Elige un plan para desbloquear el curso completo.',
     },
-    yearly: 'Plan de 2 Años — $199.99',
-    monthly: 'Mensual — $19.99/mes',
+    yearly: 'Plan de 2 Años – $199.99',
+    monthly: 'Mensual – $19.99/mes',
     manage: 'Administrar Facturación',
   },
 };
@@ -420,7 +420,7 @@ const CHECKOUT_NOTICE_LABELS = {
     success: {
       eyebrow: 'PAYMENT RECEIVED',
       title: 'Welcome in! 🎉',
-      body: "Your payment went through — it can take a few seconds to unlock. Refresh if the course doesn't appear right away.",
+      body: "Your payment went through. It can take a few seconds to unlock. Refresh if the course doesn't appear right away.",
     },
     cancelled: {
       eyebrow: 'CHECKOUT CANCELLED',
@@ -432,7 +432,7 @@ const CHECKOUT_NOTICE_LABELS = {
     success: {
       eyebrow: 'PAGO RECIBIDO',
       title: '¡Bienvenido! 🎉',
-      body: 'Tu pago se procesó correctamente — puede tardar unos segundos en desbloquearse. Actualiza la página si el curso no aparece de inmediato.',
+      body: 'Tu pago se procesó correctamente. Puede tardar unos segundos en desbloquearse. Actualiza la página si el curso no aparece de inmediato.',
     },
     cancelled: {
       eyebrow: 'PAGO CANCELADO',
@@ -471,14 +471,14 @@ function renderCheckoutNotice() {
 // a flat "completed lessons / total lessons" ratio. A lesson's "weight" is
 // its content length in characters (a genuine proxy for how much reading/
 // study it represents), plus a fixed chunk of weight for that lesson's
-// video (once it has one) and for its module's quiz (once published) —
+// video (once it has one) and for its module's quiz (once published),
 // both only counted as "earned" when the video's lesson is completed /
 // the quiz is passed, not just because they exist.
 async function computeWeightedProgress(userId, lessons, completedIds) {
   const [{ data: quizRows }, { data: passedRows }] = await Promise.all([
     supabaseClient.from('quiz_questions').select('module_number').eq('published', true),
     // module_quiz_attempts holds one row per attempt now (not one per
-    // module) — the Set below still collapses that fine, since we only
+    // module), the Set below still collapses that fine, since we only
     // care whether a module has ANY passing attempt, ever.
     supabaseClient.from('module_quiz_attempts').select('module_number, passed').eq('user_id', userId),
   ]);
@@ -515,7 +515,7 @@ async function computeWeightedProgress(userId, lessons, completedIds) {
 // ---- Dashboard --------------------------------------------------------
 // Cached so a language toggle can re-render instantly without refetching.
 let dashboardCache = null;
-// 'success' | 'cancelled' | null — set once from the ?checkout= URL param,
+// 'success' | 'cancelled' | null, set once from the ?checkout= URL param,
 // kept around so the notice can be re-rendered in the new language if the
 // visitor toggles EN/ES (the URL param itself gets stripped immediately).
 let checkoutNoticeState = null;
@@ -641,7 +641,7 @@ async function initDashboard() {
 const MODULE_QUIZ_LABELS = {
   en: {
     instructions: (n) => `Answer all ${n} question${n === 1 ? '' : 's'}, then submit. You need ${Math.round(MODULE_QUIZ_PASS_RATIO * 100)}% correct to pass and complete this module.`,
-    submit: 'Submit Quiz', passTitle: (s, t) => `Passed! ${s}/${t} correct.`, failTitle: (s, t) => `Not quite — ${s}/${t} correct.`,
+    submit: 'Submit Quiz', passTitle: (s, t) => `Passed! ${s}/${t} correct.`, failTitle: (s, t) => `Not quite: ${s}/${t} correct.`,
     failBody: 'Review the highlighted answers below, then try again.', retry: 'Retry Quiz', unanswered: 'Please answer every question before submitting.',
     completed: 'Completed', notPassing: 'Not yet passing', bestScore: 'Best Score', attempts: 'Attempts', lastPracticed: 'Last Practiced',
     reviewAnswers: 'Review Answers', retakeQuiz: 'Retake Quiz', yourAnswer: 'Your answer:', correctAnswer: 'Correct answer:',
@@ -649,7 +649,7 @@ const MODULE_QUIZ_LABELS = {
   },
   es: {
     instructions: (n) => `Responde las ${n} preguntas y envía tus respuestas. Necesitas ${Math.round(MODULE_QUIZ_PASS_RATIO * 100)}% correctas para aprobar y completar este módulo.`,
-    submit: 'Enviar Cuestionario', passTitle: (s, t) => `¡Aprobado! ${s}/${t} correctas.`, failTitle: (s, t) => `Aún no — ${s}/${t} correctas.`,
+    submit: 'Enviar Cuestionario', passTitle: (s, t) => `¡Aprobado! ${s}/${t} correctas.`, failTitle: (s, t) => `Aún no: ${s}/${t} correctas.`,
     failBody: 'Revisa las respuestas resaltadas abajo e inténtalo de nuevo.', retry: 'Reintentar Cuestionario', unanswered: 'Por favor responde todas las preguntas antes de enviar.',
     completed: 'Completado', notPassing: 'Aún no aprobado', bestScore: 'Mejor Puntaje', attempts: 'Intentos', lastPracticed: 'Última Práctica',
     reviewAnswers: 'Revisar Respuestas', retakeQuiz: 'Reintentar Cuestionario', yourAnswer: 'Tu respuesta:', correctAnswer: 'Respuesta correcta:',
@@ -661,7 +661,7 @@ function buildModuleQuizHtml(quizQs) {
   const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
   const ml = MODULE_QUIZ_LABELS[lang] || MODULE_QUIZ_LABELS.en;
   const questionsHtml = quizQs.map((q, i) => {
-    // True/False questions only have 2 real answers — choice_c/choice_d are
+    // True/False questions only have 2 real answers, choice_c/choice_d are
     // left blank (null) for those rather than padded with a placeholder
     // like "N/A", so filter out any choice with no text before rendering.
     const choices = shuffleArray([
@@ -690,7 +690,7 @@ function buildModuleQuizHtml(quizQs) {
 
 // Wires the submit handler for a rendered module quiz, grades it client-side
 // against each question's data-correct attribute, and inserts a new row into
-// module_quiz_attempts (never upserts/overwrites — every submission is kept
+// module_quiz_attempts (never upserts/overwrites, every submission is kept
 // as its own historical attempt, with the actual choice picked for each
 // question, so Review can show real answers later and a bad retake never
 // erases a prior pass). Calls onGraded(passed) so the caller can unlock
@@ -753,7 +753,7 @@ function bindModuleQuiz(wrapEl, moduleNumber, userId, onGraded) {
       lessonCache.moduleQuizAttempts = [...(lessonCache.moduleQuizAttempts || []), newAttempt];
       // onGraded() below triggers a re-render of the whole lesson page (to
       // unlock the "Mark Complete" button etc.), which would otherwise
-      // immediately rebuild this quiz form from scratch — wiping out the
+      // immediately rebuild this quiz form from scratch, wiping out the
       // per-question right/wrong highlighting and pass/fail banner we just
       // set above the instant the member submits. This flag tells
       // renderLessonPage to leave the just-graded quiz DOM alone for that
@@ -873,7 +873,7 @@ function renderLessonPage() {
 
   document.querySelector('#lesson-stage-eyebrow').textContent = `${stageWord} ${lesson.module_number} ${ofWord} ${TOTAL_MODULES}`;
   document.querySelector('#lesson-stage-title').textContent = moduleName(lesson.module_number);
-  document.title = `Stage ${lesson.module_number}: ${moduleName(lesson.module_number)} — Ciudadano Ready`;
+  document.title = `Stage ${lesson.module_number}: ${moduleName(lesson.module_number)} | Ciudadano Ready`;
 
   renderStampPath('#lesson-stamp-path', lessons, completedIds, lesson, true);
 
@@ -885,12 +885,12 @@ function renderLessonPage() {
   document.querySelector('#lesson-content').innerHTML = renderLessonBody(localize(lesson, 'content'));
 
   const requiresQuizPass = isLastLessonOfModule && moduleQuizQs && moduleQuizQs.length > 0;
-  // Once passed, always passed — a later low-scoring practice retake never
+  // Once passed, always passed, a later low-scoring practice retake never
   // un-completes the module (matches "never reset completion" below).
   const alreadyPassedQuiz = quizAttempts.some((a) => a.passed);
 
   // Reading view (video + Study Guide) and the quiz are two separate
-  // "screens" of this page — never shown together — so a lesson with a
+  // "screens" of this page, never shown together, so a lesson with a
   // module quiz doesn't turn into one long scroll of content stacked on
   // top of a quiz. quizViewActive flips between them; see the "Take Module
   // Quiz" / "← Back to Lesson" wiring below.
@@ -922,7 +922,7 @@ function renderLessonPage() {
       quizBackLink.onclick = (e) => { e.preventDefault(); lessonCache.quizViewActive = false; renderLessonPage(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
     }
     if (lessonCache.quizJustGraded) {
-      // The quiz was just submitted — bindModuleQuiz already painted the
+      // The quiz was just submitted, bindModuleQuiz already painted the
       // graded state (per-question correct/incorrect highlighting, the
       // pass/fail banner, disabled inputs) directly into quizWrap. Leave it
       // exactly as-is here instead of rebuilding, or that feedback vanishes
@@ -930,7 +930,7 @@ function renderLessonPage() {
       // (retry, back-to-lesson, revisit) rebuilds normally again.
       lessonCache.quizJustGraded = false;
     } else if (quizAttempts.length > 0) {
-      // Prior attempt(s) exist — show the stats summary (best score,
+      // Prior attempt(s) exist, show the stats summary (best score,
       // attempt count, last practiced) with Review Answers / Retake Quiz,
       // instead of either a bare pass note or silently dropping them into
       // a blank quiz.
@@ -962,13 +962,13 @@ function renderLessonPage() {
   const alreadyDone = completedIds.has(lesson.id);
   // Three states for the bottom button when this lesson gates on a quiz:
   // not started yet (button becomes the entry point into quiz view),
-  // actively taking it (button hides — the quiz form has its own submit),
+  // actively taking it (button hides, the quiz form has its own submit),
   // or passed (button behaves exactly like a normal lesson's).
   const needsToTakeQuiz = requiresQuizPass && !alreadyPassedQuiz;
   const hideNextLink = needsToTakeQuiz && quizViewActive;
   const labels = {
-    en: { next: 'Next Lesson →', markContinue: 'Mark Complete & Continue →', back: 'Back to Dashboard', markFinish: 'Mark Complete & Finish ✓', takeQuiz: 'Take Module Quiz →', intro: (n, pct) => `This module ends with a short quiz — ${n} questions, ${pct}% to pass.`, review: 'Review' },
-    es: { next: 'Siguiente lección →', markContinue: 'Marcar completado y continuar →', back: 'Volver al panel', markFinish: 'Marcar completado y finalizar ✓', takeQuiz: 'Tomar Cuestionario del Módulo →', intro: (n, pct) => `Este módulo termina con un cuestionario corto — ${n} preguntas, ${pct}% para aprobar.`, review: 'Revisar' },
+    en: { next: 'Next Lesson →', markContinue: 'Mark Complete & Continue →', back: 'Back to Dashboard', markFinish: 'Mark Complete & Finish ✓', takeQuiz: 'Take Module Quiz →', intro: (n, pct) => `This module ends with a short quiz: ${n} questions, ${pct}% to pass.`, review: 'Review' },
+    es: { next: 'Siguiente lección →', markContinue: 'Marcar completado y continuar →', back: 'Volver al panel', markFinish: 'Marcar completado y finalizar ✓', takeQuiz: 'Tomar Cuestionario del Módulo →', intro: (n, pct) => `Este módulo termina con un cuestionario corto: ${n} preguntas, ${pct}% para aprobar.`, review: 'Revisar' },
   };
   const l = labels[lang] || labels.en;
 
@@ -1055,7 +1055,7 @@ async function initLessonPage() {
     history.replaceState(null, '', 'lesson.html?id=' + lesson.id);
   } else if (!isLessonUnlocked(lesson, lessons, completedIds)) {
     // Reached a locked lesson directly via URL (stale link, typed-in id,
-    // browser back/forward) — bounce to the first lesson they're actually
+    // browser back/forward), bounce to the first lesson they're actually
     // allowed to work on instead of loading gated content.
     const fallback = firstAvailableLesson(lessons, completedIds);
     if (fallback) {
@@ -1069,7 +1069,7 @@ async function initLessonPage() {
   mainContent.style.display = 'block';
   emptyState.style.display = 'none';
 
-  // The module quiz is shown only on the last lesson of its module — it
+  // The module quiz is shown only on the last lesson of its module, it
   // covers every quiz question published for that module_number, not just
   // ones "assigned" to this specific lesson. Passing it (>= 80%) is what
   // gates marking that final lesson complete, which is how a whole module
@@ -1098,7 +1098,7 @@ async function initLessonPage() {
 // ---- Flashcards page ----------------------------------------------------
 // Study UI for the 3 official USCIS civics-test question banks
 // (100-question 2008 version, 128-question 2025 version, 20-question
-// 65/20 special-consideration subset). Purely client-side study tool —
+// 65/20 special-consideration subset). Purely client-side study tool;
 // no progress is written to the database, just an in-memory deck with
 // flip / next / prev / shuffle. Cached so a language toggle re-renders
 // the current card in place instead of losing your spot in the deck.
@@ -1242,7 +1242,7 @@ async function initFlashcardsPage() {
 // whichever bank the member is studying, using the real official counts
 // and passing thresholds (100-set: 10 asked / 6 to pass; 128-set: 20
 // asked / 12 to pass; 20-set: 10 asked / 6 to pass). Since flashcards
-// are oral Q&A (no multiple-choice options), grading is self-reported —
+// are oral Q&A (no multiple-choice options), grading is self-reported,
 // same as the real interview, where the officer listens to a spoken
 // answer and marks it right or wrong. Every attempt is saved to
 // practice_quiz_attempts (score, pass/fail, and each question with the
@@ -1312,12 +1312,12 @@ function renderPracticeQuizResults(attempt) {
     en: {
       pass: 'PASSED', fail: 'NOT YET PASSING',
       passMsg: 'You answered enough correctly to pass this test at the real interview. Keep practicing to stay sharp!',
-      failMsg: "You're not quite at the passing threshold yet — review what you missed below and try again.",
+      failMsg: "You're not quite at the passing threshold yet. Review what you missed below and try again.",
     },
     es: {
       pass: 'APROBADO', fail: 'AÚN NO APRUEBA',
       passMsg: 'Respondiste correctamente lo suficiente para aprobar esta prueba en la entrevista real. ¡Sigue practicando para mantenerte al día!',
-      failMsg: 'Todavía no alcanzas el umbral de aprobación — revisa lo que fallaste abajo e inténtalo de nuevo.',
+      failMsg: 'Todavía no alcanzas el umbral de aprobación. Revisa lo que fallaste abajo e inténtalo de nuevo.',
     },
   };
   const l = labels[lang] || labels.en;
@@ -1491,7 +1491,7 @@ async function initPracticeQuizPage() {
 }
 
 // ---- Settings page --------------------------------------------------------
-// Profile (name/email), password change, appearance (dark mode — the
+// Profile (name/email), password change, appearance (dark mode, the
 // toggle buttons themselves are wired generically in app.js since they're
 // shared with every member page's topbar), and a link out to the existing
 // Stripe billing portal (window.openBillingPortal, already used by the
@@ -1522,8 +1522,8 @@ async function initSettingsPage() {
   if (emailInput) emailInput.value = currentEmail;
   const viewNameEl = document.querySelector('#profile-view-name');
   const viewEmailEl = document.querySelector('#profile-view-email');
-  if (viewNameEl) viewNameEl.textContent = currentName || '—';
-  if (viewEmailEl) viewEmailEl.textContent = currentEmail || '—';
+  if (viewNameEl) viewNameEl.textContent = currentName || '–';
+  if (viewEmailEl) viewEmailEl.textContent = currentEmail || '–';
 
   // Profile starts read-only; "Edit" reveals the form (pre-filled with
   // current values), "Cancel" discards any unsaved typing and reverts.
@@ -1599,11 +1599,11 @@ async function initSettingsPage() {
         return;
       }
 
-      if (viewNameEl) viewNameEl.textContent = newName || '—';
+      if (viewNameEl) viewNameEl.textContent = newName || '–';
       // Don't flip the displayed email until the confirmation link is
-      // clicked — Supabase doesn't apply it until then, so showing the new
+      // clicked, Supabase doesn't apply it until then, so showing the new
       // address now would be misleading.
-      if (!emailChanged && viewEmailEl) viewEmailEl.textContent = newEmail || '—';
+      if (!emailChanged && viewEmailEl) viewEmailEl.textContent = newEmail || '–';
 
       if (emailChanged) {
         showSettingsMsg(msg, lang === 'es' ? 'Guardado. Revisa tu nuevo correo para confirmar el cambio de dirección.' : 'Saved. Check your new inbox to confirm the email change.', false);
@@ -1637,7 +1637,7 @@ async function initSettingsPage() {
       btn.textContent = lang === 'es' ? 'Verificando…' : 'Verifying…';
 
       // Confirm they actually know the current password before allowing a
-      // change — signInWithPassword re-authenticates against it without
+      // change, signInWithPassword re-authenticates against it without
       // disturbing the existing session if it succeeds.
       const { error: verifyError } = await supabaseClient.auth.signInWithPassword({
         email: session.user.email,
@@ -1675,7 +1675,7 @@ async function initSettingsPage() {
 let progressCache = null;
 
 // Tier labels intentionally avoid any language implying this predicts a
-// real USCIS interview outcome (e.g. no "Interview Ready") — see the
+// real USCIS interview outcome (e.g. no "Interview Ready"), see the
 // disclaimer in progress.html's info popover for why.
 const READINESS_TIERS = [
   { max: 39, tier: 1, en: 'Getting Started', es: 'Comenzando' },
@@ -1705,7 +1705,7 @@ function renderProgressPage() {
       ? (lang === 'es' ? '1 cuestionario de módulo tomado' : '1 module quiz taken')
       : (lang === 'es' ? `${moduleQuizCount} cuestionarios de módulo tomados` : `${moduleQuizCount} module quizzes taken`);
   } else {
-    quizAvgEl.textContent = '—';
+    quizAvgEl.textContent = '–';
     quizSubEl.textContent = lang === 'es' ? 'Aún no has tomado un cuestionario de módulo' : "You haven't taken a module quiz yet";
   }
 
@@ -1815,7 +1815,7 @@ async function initProgressPage() {
   const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
   const courseCompletionPct = await computeWeightedProgress(userId, lessons || [], completedIds);
 
-  // module_quiz_attempts holds one row per attempt (retakes included) —
+  // module_quiz_attempts holds one row per attempt (retakes included);
   // reduce to each module's BEST attempt so a practice retake that scored
   // lower never drags this average down, and "modules attempted" counts
   // distinct modules rather than every individual attempt.
@@ -1889,7 +1889,7 @@ async function initProgressPage() {
 }
 
 // ==========================================================================
-// "Know Your Country" — 40-lesson narrative U.S. history section.
+// "Know Your Country", 40-lesson narrative U.S. history section.
 // Separate from the 7-stage naturalization process modules: this is
 // supplementary background reading (the "why" behind the civics
 // questions), not a required sequential step, so it lives on its own page
@@ -2133,7 +2133,7 @@ function renderKycReading() {
 }
 
 // Stops any in-progress narration and defaults the audio player's language
-// to whatever the site is currently displayed in — called every time a
+// to whatever the site is currently displayed in, called every time a
 // different lesson is opened so audio never carries over between lessons.
 function resetKycAudioForNewLesson() {
   stopKycAudio();
@@ -2258,7 +2258,7 @@ async function initKycPage() {
     btn.addEventListener('click', () => setKycAudioLang(btn.getAttribute('data-audio-lang')));
   });
 
-  // Stop narration if the visitor navigates away or closes the tab —
+  // Stop narration if the visitor navigates away or closes the tab;
   // speechSynthesis otherwise keeps talking after the page unloads on some browsers.
   window.addEventListener('beforeunload', stopKycAudio);
   window.addEventListener('pagehide', stopKycAudio);
@@ -2274,7 +2274,7 @@ async function initKycPage() {
 // ---- Support (member-area contact form) --------------------------------
 // support.html reuses the exact #contact-form markup/IDs from the public
 // contact.html, so the shared submit handler in app.js (honeypot + timing
-// spam checks, insert into contact_submissions) works here unmodified —
+// spam checks, insert into contact_submissions) works here unmodified;
 // this just pre-fills name/email from the signed-in member's profile and
 // renders the sidebar module nav, same as every other member page.
 async function initSupportPage() {
@@ -2311,7 +2311,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.body.hasAttribute('data-support-page')) initSupportPage();
 });
 
-// Re-render dynamic content in place when the visitor toggles EN/ES —
+// Re-render dynamic content in place when the visitor toggles EN/ES;
 // no refetch needed since app.js's setLang() only changed which language
 // is "current"; the underlying data we already loaded hasn't changed.
 window.addEventListener('ciudadanoready:langchange', () => {
