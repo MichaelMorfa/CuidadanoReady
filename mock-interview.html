@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem("ciudadanoready-theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mock Interview | Ciudadano Ready</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ===== Member Area theme (matches dashboard.html / lesson.html / practice-quiz.html) ===== */
+  body { background: var(--paper-dim); }
+  .app-sidebar { background: var(--paper-dim); border-right: 1px solid var(--line); }
+  .app-nav a.active { color: var(--forest); background: var(--white); border-left-color: var(--forest); }
+  .app-nav a:hover { color: var(--forest); }
+  .app-topbar { background: var(--paper-dim); border-bottom: 1px solid var(--line); }
+  .app-content .card { box-shadow: none; }
+  .app-content .card:hover { box-shadow: none; }
+  .btn-primary { background: var(--forest); }
+  .btn-primary:hover { background: #244F3B; }
+  .badge-ocean { border-color: var(--forest); color: var(--forest); }
+  .progress-bar-fill { background: var(--forest); }
+
+  .mi-stage { max-width: 720px; margin: 0 auto; }
+
+  /* ---- Intro ---- */
+  .mi-intro-card { padding: 36px; }
+  .mi-intro-list { margin: 18px 0 0; padding: 0; list-style: none; }
+  .mi-intro-list li { padding: 8px 0 8px 26px; position: relative; font-size: 0.92rem; }
+  .mi-intro-list li::before { content: "•"; position: absolute; left: 6px; color: var(--forest); font-weight: 700; }
+  .mi-disclaimer {
+    margin-top: 22px; padding: 14px 16px; border-radius: var(--radius-sm);
+    background: rgba(179,73,47,0.06); border: 1px solid rgba(179,73,47,0.25);
+    font-size: 0.84rem; color: var(--ink); line-height: 1.5;
+  }
+  [data-theme="dark"] .mi-disclaimer { background: rgba(179,73,47,0.12); }
+
+  /* ---- Progress ---- */
+  .mi-progress-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .mi-progress-text { font-family: var(--font-mono); font-size: 0.8rem; color: var(--slate); }
+
+  /* ---- Video ---- */
+  .mi-video-wrap { margin-bottom: 20px; border-radius: var(--radius); overflow: hidden; }
+  .mi-video-wrap video { width: 100%; display: block; background: #000; aspect-ratio: 16/9; }
+  .mi-video-placeholder {
+    width: 100%; aspect-ratio: 16/9; border-radius: var(--radius);
+    background: linear-gradient(135deg, #1E2B25, #0F1712);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.85); gap: 8px; text-align: center; padding: 20px;
+  }
+  .mi-video-placeholder .mi-video-icon {
+    width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.12);
+    display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 6px;
+  }
+  .mi-video-placeholder .mi-video-label { font-family: var(--font-sans); font-weight: 600; font-size: 0.95rem; }
+  .mi-video-placeholder .mi-video-sublabel { font-size: 0.78rem; color: rgba(255,255,255,0.55); max-width: 380px; }
+
+  /* ---- Question ---- */
+  .mi-question-card { padding: 30px 32px; margin-bottom: 20px; }
+  .mi-question-card h3 { font-size: 1.25rem; margin: 6px 0 0; line-height: 1.35; }
+
+  /* Answer controls */
+  .mi-answer-area { margin-top: 22px; }
+  .mi-textarea {
+    width: 100%; min-height: 120px; padding: 14px 16px; border: 1px solid var(--line);
+    border-radius: var(--radius-sm); font-family: var(--font-sans); font-size: 0.95rem;
+    background: var(--surface); color: var(--ink); resize: vertical;
+  }
+  .mi-options { display: flex; flex-direction: column; gap: 10px; }
+  .mi-option-btn {
+    display: flex; align-items: center; gap: 12px; text-align: left; width: 100%;
+    padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+    background: var(--surface); color: var(--ink); font-family: var(--font-sans); font-size: 0.92rem; cursor: pointer;
+  }
+  .mi-option-btn:hover { border-color: var(--forest); background: var(--paper-dim); }
+  .mi-option-btn.selected { border-color: var(--forest); background: rgba(47,107,79,0.08); font-weight: 600; }
+  .mi-option-letter {
+    width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: var(--slate);
+  }
+  .mi-option-btn.selected .mi-option-letter { border-color: var(--forest); background: var(--forest); color: var(--white); }
+
+  .mi-yesno-row { display: flex; gap: 14px; }
+  .mi-yesno-btn {
+    flex: 1; padding: 20px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+    background: var(--surface); color: var(--ink); font-family: var(--font-sans); font-weight: 700; font-size: 1.05rem; cursor: pointer;
+  }
+  .mi-yesno-btn:hover { border-color: var(--forest); }
+  .mi-yesno-btn.selected { border-color: var(--forest); background: rgba(47,107,79,0.08); color: var(--forest); }
+
+  .mi-submit-row { margin-top: 24px; text-align: center; }
+
+  /* ---- Review ---- */
+  .mi-review-area { margin-top: 22px; padding-top: 20px; border-top: 1px dashed var(--line); }
+  .mi-review-your-answer { font-size: 0.88rem; color: var(--slate); margin: 0 0 4px; }
+  .mi-review-answer-text { font-weight: 600; margin: 0 0 16px; white-space: pre-wrap; }
+  .mi-auto-grade-badge {
+    display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono);
+    font-size: 0.78rem; letter-spacing: 0.04em; text-transform: uppercase; padding: 5px 12px; border-radius: 20px; margin-bottom: 14px;
+  }
+  .mi-auto-grade-badge.correct { background: rgba(47,107,79,0.1); color: var(--forest); }
+  .mi-auto-grade-badge.incorrect { background: rgba(179,73,47,0.1); color: var(--danger); }
+  .mi-explanation { font-size: 0.88rem; color: var(--slate); margin: 0 0 18px; line-height: 1.5; }
+
+  .mi-selfgrade-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .mi-selfgrade-btn {
+    flex: 1; min-width: 120px; padding: 12px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+    background: var(--surface); color: var(--ink); font-family: var(--font-sans); font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  }
+  .mi-selfgrade-btn[data-grade="correct"]:hover, .mi-selfgrade-btn[data-grade="correct"].selected { border-color: var(--forest); background: rgba(47,107,79,0.08); color: var(--forest); }
+  .mi-selfgrade-btn[data-grade="not_sure"]:hover, .mi-selfgrade-btn[data-grade="not_sure"].selected { border-color: #B08A2E; background: rgba(176,138,46,0.1); color: #8A6A1F; }
+  .mi-selfgrade-btn[data-grade="incorrect"]:hover, .mi-selfgrade-btn[data-grade="incorrect"].selected { border-color: var(--danger); background: rgba(179,73,47,0.08); color: var(--danger); }
+
+  .mi-continue-row { margin-top: 20px; text-align: center; }
+
+  /* ---- Summary ---- */
+  .mi-summary-header { text-align: center; padding: 40px 24px; margin-bottom: 24px; }
+  .mi-summary-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 520px; margin: 20px auto 0; }
+  .mi-summary-stat { text-align: center; }
+  .mi-summary-stat-value { font-family: var(--font-serif); font-size: 1.6rem; font-weight: 700; }
+  .mi-summary-stat-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--slate); margin-top: 2px; }
+  .mi-summary-stat.correct .mi-summary-stat-value { color: var(--forest); }
+  .mi-summary-stat.not-sure .mi-summary-stat-value { color: #B08A2E; }
+  .mi-summary-stat.incorrect .mi-summary-stat-value { color: var(--danger); }
+
+  .mi-summary-disclaimer {
+    margin: 24px auto 0; max-width: 560px; padding: 16px 18px; border-radius: var(--radius-sm);
+    background: rgba(179,73,47,0.06); border: 1px solid rgba(179,73,47,0.25);
+    font-size: 0.84rem; line-height: 1.5; text-align: left;
+  }
+  [data-theme="dark"] .mi-summary-disclaimer { background: rgba(179,73,47,0.12); }
+
+  .mi-review-item { display: flex; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .mi-review-item:last-child { border-bottom: none; }
+  .mi-review-icon { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--white); }
+  .mi-review-icon.correct { background: var(--forest); }
+  .mi-review-icon.not_sure { background: #B08A2E; }
+  .mi-review-icon.incorrect { background: var(--danger); }
+  .mi-review-list-question { font-weight: 600; margin: 0 0 4px; }
+  .mi-review-list-answer { margin: 0; color: var(--slate); font-size: 0.88rem; }
+</style>
+<meta name="description" content="Practice a simulated citizenship interview, one question at a time.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Ciudadano Ready">
+<meta property="og:title" content="Mock Interview | Ciudadano Ready">
+<meta property="og:description" content="Practice a simulated citizenship interview, one question at a time.">
+<meta property="og:image" content="https://ciudadanoready.com/og-image.png">
+<meta property="og:url" content="https://ciudadanoready.com/mock-interview.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Mock Interview | Ciudadano Ready">
+<meta name="twitter:description" content="Practice a simulated citizenship interview, one question at a time.">
+<meta name="twitter:image" content="https://ciudadanoready.com/og-image.png">
+</head>
+<body data-auth-required="true" data-mock-interview-page="true">
+
+<div class="app-shell">
+  <div class="sidebar-backdrop"></div>
+  <aside class="app-sidebar">
+    <a href="dashboard.html" class="logo">Ciudadano<span class="dot">Ready</span></a>
+    <ul class="app-nav">
+      <li class="app-nav-group">
+        <h4 data-en="Overview" data-es="Resumen">Overview</h4>
+        <a href="dashboard.html" data-en="Continue Learning" data-es="Continuar Aprendiendo">Continue Learning</a>
+        <a href="progress.html" data-en="My Progress" data-es="Mi Progreso">My Progress</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="Course" data-es="Curso">Course</h4>
+        <ul class="app-nav" id="mi-page-module-nav" style="padding:0;">
+          <li class="small muted" style="padding:10px 24px;">Loading…</li>
+        </ul>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="Practice" data-es="Práctica">Practice</h4>
+        <a href="flashcards.html" data-en="Flashcards" data-es="Tarjetas de Estudio">Flashcards</a>
+        <a href="mock-interview.html" class="active" data-en="Mock Interview" data-es="Entrevista Simulada">Mock Interview</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="Background" data-es="Contexto">Background</h4>
+        <a href="know-your-country.html" data-en="Know Your Country" data-es="Conoce Tu País">Know Your Country</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="More" data-es="Más">More</h4>
+        <a href="support.html" data-en="Support" data-es="Soporte">Support</a>
+        <a href="settings.html" data-en="Settings" data-es="Configuración">Settings</a>
+      </li>
+    </ul>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-topbar">
+      <div class="flex gap-16 items-center">
+        <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
+        <div>
+          <span class="eyebrow" style="margin-bottom:0;" data-en="PRACTICE" data-es="PRÁCTICA">PRACTICE</span>
+          <h3 style="margin:0;" data-en="Mock Interview" data-es="Entrevista Simulada">Mock Interview</h3>
+        </div>
+      </div>
+      <div class="flex gap-16 items-center">
+        <div class="lang-toggle">
+          <button data-lang-btn="en" class="active">EN</button>
+          <button data-lang-btn="es">ES</button>
+        </div>        <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link" data-en="Log Out" data-es="Cerrar Sesión">Log Out</a>
+      </div>
+    </div>
+
+    <div class="app-content">
+
+      <!-- Intro -->
+      <div id="mi-intro-view">
+        <span class="eyebrow" data-en="A SIMULATED CITIZENSHIP INTERVIEW" data-es="UNA ENTREVISTA DE CIUDADANÍA SIMULADA">A SIMULATED CITIZENSHIP INTERVIEW</span>
+        <h2 style="margin-top:4px;" data-en="Practice the real thing." data-es="Practica lo real.">Practice the real thing.</h2>
+        <div class="card mi-intro-card mi-stage" style="margin:0;">
+          <p data-en="You'll be presented with one question at a time, each with a short video setting up the moment, just like an officer would ask it in person." data-es="Se te presentará una pregunta a la vez, cada una con un video corto que plantea el momento, tal como lo preguntaría un oficial en persona.">You'll be presented with one question at a time, each with a short video setting up the moment, just like an officer would ask it in person.</p>
+          <ul class="mi-intro-list">
+            <li data-en="Watch the video, then answer in your own words, choose an answer, or respond yes/no, depending on the question." data-es="Mira el video, luego responde con tus propias palabras, elige una respuesta, o responde sí/no, según la pregunta.">Watch the video, then answer in your own words, choose an answer, or respond yes/no, depending on the question.</li>
+            <li data-en="After each answer, you'll see a short review before moving to the next question." data-es="Después de cada respuesta, verás una breve revisión antes de pasar a la siguiente pregunta.">After each answer, you'll see a short review before moving to the next question.</li>
+            <li data-en="At the end, you'll get a summary of how the session went." data-es="Al final, obtendrás un resumen de cómo te fue en la sesión.">At the end, you'll get a summary of how the session went.</li>
+          </ul>
+          <div class="mi-disclaimer" data-en="This is a practice exercise only. It is not a legal assessment of your eligibility for U.S. citizenship, and it does not predict the outcome of an actual USCIS interview." data-es="Este es solo un ejercicio de práctica. No es una evaluación legal de tu elegibilidad para la ciudadanía estadounidense y no predice el resultado de una entrevista real de USCIS.">This is a practice exercise only. It is not a legal assessment of your eligibility for U.S. citizenship, and it does not predict the outcome of an actual USCIS interview.</div>
+          <div style="text-align:center; margin-top:26px;">
+            <button class="btn btn-primary" id="mi-begin-btn" data-en="Begin Mock Interview" data-es="Comenzar Entrevista Simulada">Begin Mock Interview</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- In-progress interview -->
+      <div id="mi-interview-view" class="mi-stage" style="display:none;">
+        <div class="mi-progress-row">
+          <span class="mi-progress-text" id="mi-progress-text">Question 1 of 10</span>
+        </div>
+        <div class="progress-bar" style="margin-bottom:20px;"><div class="progress-bar-fill" id="mi-progress-bar" style="width:0%;"></div></div>
+
+        <div class="mi-video-wrap" id="mi-video-wrap"></div>
+
+        <div class="card mi-question-card">
+          <span class="eyebrow" data-en="THE OFFICER ASKS" data-es="EL OFICIAL PREGUNTA">THE OFFICER ASKS</span>
+          <h3 id="mi-question-text">–</h3>
+
+          <div class="mi-answer-area" id="mi-answer-area"></div>
+
+          <div class="mi-review-area" id="mi-review-area" style="display:none;">
+            <p class="mi-review-your-answer" data-en="Your answer" data-es="Tu respuesta">Your answer</p>
+            <p class="mi-review-answer-text" id="mi-review-answer-text"></p>
+            <div id="mi-auto-grade-wrap"></div>
+            <p class="mi-explanation" id="mi-explanation"></p>
+            <div id="mi-selfgrade-wrap" style="display:none;">
+              <p class="small" style="margin:0 0 8px; font-weight:600;" data-en="How did you do?" data-es="¿Cómo te fue?">How did you do?</p>
+              <div class="mi-selfgrade-row">
+                <button class="mi-selfgrade-btn" data-grade="correct" data-en="✓ Correct" data-es="✓ Correcta">✓ Correct</button>
+                <button class="mi-selfgrade-btn" data-grade="not_sure" data-en="? Not Sure" data-es="? No Estoy Seguro">? Not Sure</button>
+                <button class="mi-selfgrade-btn" data-grade="incorrect" data-en="✗ Incorrect" data-es="✗ Incorrecta">✗ Incorrect</button>
+              </div>
+            </div>
+            <div class="mi-continue-row">
+              <button class="btn btn-primary" id="mi-continue-btn" disabled data-en="Continue →" data-es="Continuar →">Continue →</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mi-submit-row" id="mi-submit-row">
+          <button class="btn btn-primary" id="mi-submit-btn" disabled data-en="Submit Answer" data-es="Enviar Respuesta">Submit Answer</button>
+        </div>
+
+        <div style="text-align:center; margin-top:20px;">
+          <button class="btn btn-ghost btn-sm" id="mi-quit-btn" data-en="Quit mock interview" data-es="Salir de la entrevista simulada">Quit mock interview</button>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div id="mi-summary-view" class="mi-stage" style="display:none;">
+        <div class="card mi-summary-header">
+          <span class="eyebrow" data-en="SESSION COMPLETE" data-es="SESIÓN COMPLETADA">SESSION COMPLETE</span>
+          <h2 style="margin:6px 0 0;" id="mi-summary-result">–</h2>
+          <div class="mi-summary-stats">
+            <div class="mi-summary-stat">
+              <div class="mi-summary-stat-value" id="mi-stat-completed">0</div>
+              <div class="mi-summary-stat-label" data-en="Completed" data-es="Completadas">Completed</div>
+            </div>
+            <div class="mi-summary-stat correct">
+              <div class="mi-summary-stat-value" id="mi-stat-correct">0</div>
+              <div class="mi-summary-stat-label" data-en="Correct" data-es="Correctas">Correct</div>
+            </div>
+            <div class="mi-summary-stat not-sure">
+              <div class="mi-summary-stat-value" id="mi-stat-notsure">0</div>
+              <div class="mi-summary-stat-label" data-en="Not Sure" data-es="No Seguro">Not Sure</div>
+            </div>
+            <div class="mi-summary-stat incorrect">
+              <div class="mi-summary-stat-value" id="mi-stat-incorrect">0</div>
+              <div class="mi-summary-stat-label" data-en="Incorrect" data-es="Incorrectas">Incorrect</div>
+            </div>
+          </div>
+          <div class="mi-summary-disclaimer" data-en="This result is a practice metric only. It does not assess your eligibility for U.S. citizenship or predict how you'll do at an actual USCIS interview." data-es="Este resultado es solo una métrica de práctica. No evalúa tu elegibilidad para la ciudadanía estadounidense ni predice cómo te irá en una entrevista real de USCIS.">This result is a practice metric only. It does not assess your eligibility for U.S. citizenship or predict how you'll do at an actual USCIS interview.</div>
+        </div>
+
+        <div class="flex gap-16 justify-center" style="margin-bottom:32px; flex-wrap:wrap;">
+          <button class="btn btn-primary" id="mi-retake-btn" data-en="Retake Mock Interview" data-es="Repetir Entrevista Simulada">Retake Mock Interview</button>
+          <a href="dashboard.html" class="btn btn-ghost" data-en="← Back to Dashboard" data-es="← Volver al Panel">← Back to Dashboard</a>
+        </div>
+
+        <h3 data-en="Review Your Session" data-es="Revisa Tu Sesión">Review Your Session</h3>
+        <div class="card card-pad" id="mi-review-list"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="app.js"></script>
+<script src="member.js"></script>
+</body>
+</html>

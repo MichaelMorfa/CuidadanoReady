@@ -1490,6 +1490,437 @@ async function initPracticeQuizPage() {
   });
 }
 
+// ---- Mock Interview (video-based interview simulation, placeholder content) --
+// Each question is designed to eventually pair with a short video clip the
+// founder records personally (video_url). Until real clips exist, video_url
+// stays pointed at a placeholder path and the UI shows a clean placeholder
+// panel instead of a broken <video> tag; drop in a real file path/URL later
+// and the player switches over automatically, no other code changes needed
+// (see renderMockVideo below). Multiple-choice and yes/no questions grade
+// themselves against correct_answer; open-ended ones can't be graded by a
+// script (same as a real interview, where a person, not a program, judges a
+// spoken answer), so the member self-assesses after reading the explanation.
+// This pass is front-end only, in-memory session state, no Supabase writes;
+// see the TODO inside finishMockInterview() for where an attempts-table
+// insert would go once real content ships.
+const MOCK_INTERVIEW_QUESTIONS = [
+  {
+    id: 1, type: 'open_ended',
+    question: 'Placeholder interview question 1: Tell me about yourself and why you want to become a U.S. citizen.',
+    question_es: 'Pregunta de entrevista de ejemplo 1: Cuénteme sobre usted y por qué quiere convertirse en ciudadano estadounidense.',
+    video_url: '/placeholder-video.mp4',
+    options: [],
+    correct_answer: null,
+    explanation: "Placeholder explanation: there's no single \"correct\" answer here. The officer is listening for a clear, honest, personal response.",
+    explanation_es: 'Explicación de ejemplo: no hay una única respuesta "correcta" aquí. El oficial busca una respuesta clara, honesta y personal.',
+  },
+  {
+    id: 2, type: 'yes_no',
+    question: 'Placeholder interview question 2: Have you ever been arrested or convicted of a crime?',
+    question_es: '¿Alguna vez ha sido arrestado o condenado por un delito? (pregunta de entrevista de ejemplo 2)',
+    video_url: '/placeholder-video.mp4',
+    options: [],
+    correct_answer: 'no',
+    explanation: 'Placeholder explanation: this is a real N-400 background question. Answer truthfully; a "yes" doesn\'t automatically disqualify you, but it must be disclosed.',
+    explanation_es: 'Explicación de ejemplo: esta es una pregunta real de antecedentes del N-400. Responda con la verdad; un "sí" no lo descalifica automáticamente, pero debe declararse.',
+  },
+  {
+    id: 3, type: 'multiple_choice',
+    question: 'Placeholder interview question 3: What is the supreme law of the land?',
+    question_es: 'Pregunta de entrevista de ejemplo 3: ¿Cuál es la ley suprema del país?',
+    video_url: '/placeholder-video.mp4',
+    options: [
+      { value: 'a', en: 'The Declaration of Independence', es: 'La Declaración de Independencia' },
+      { value: 'b', en: 'The Constitution', es: 'La Constitución' },
+      { value: 'c', en: 'The Bill of Rights', es: 'La Carta de Derechos' },
+      { value: 'd', en: 'The Federalist Papers', es: 'Los Documentos Federalistas' },
+    ],
+    correct_answer: 'b',
+    explanation: 'Placeholder explanation: a real 2025/2008 civics test question, taken from the official USCIS question bank.',
+    explanation_es: 'Explicación de ejemplo: una pregunta real del examen cívico 2025/2008, tomada del banco oficial de preguntas de USCIS.',
+  },
+  {
+    id: 4, type: 'open_ended',
+    question: 'Placeholder interview question 4: Describe your current job or how you support yourself financially.',
+    question_es: 'Pregunta de entrevista de ejemplo 4: Describa su trabajo actual o cómo se mantiene económicamente.',
+    video_url: '/placeholder-video.mp4',
+    options: [],
+    correct_answer: null,
+    explanation: "Placeholder explanation: keep this factual and consistent with what's on your N-400. Officers often cross-check this against your application.",
+    explanation_es: 'Explicación de ejemplo: mantenga esto factual y consistente con lo que aparece en su N-400. Los oficiales suelen verificar esto con su solicitud.',
+  },
+  {
+    id: 5, type: 'yes_no',
+    question: 'Placeholder interview question 5: Are you willing to take the full Oath of Allegiance to the United States?',
+    question_es: 'Pregunta de entrevista de ejemplo 5: ¿Está dispuesto a prestar el Juramento de Lealtad completo a los Estados Unidos?',
+    video_url: '/placeholder-video.mp4',
+    options: [],
+    correct_answer: 'yes',
+    explanation: 'Placeholder explanation: asked directly at the real interview, and again at the oath ceremony itself.',
+    explanation_es: 'Explicación de ejemplo: se pregunta directamente en la entrevista real, y de nuevo en la ceremonia de juramentación.',
+  },
+  {
+    id: 6, type: 'multiple_choice',
+    question: 'Placeholder interview question 6: How many amendments does the Constitution have?',
+    question_es: 'Pregunta de entrevista de ejemplo 6: ¿Cuántas enmiendas tiene la Constitución?',
+    video_url: '/placeholder-video.mp4',
+    options: [
+      { value: 'a', en: '17', es: '17' },
+      { value: 'b', en: '21', es: '21' },
+      { value: 'c', en: '27', es: '27' },
+      { value: 'd', en: '30', es: '30' },
+    ],
+    correct_answer: 'c',
+    explanation: "Placeholder explanation: another real civics test question, worth memorizing exactly since it's a specific number.",
+    explanation_es: 'Explicación de ejemplo: otra pregunta real del examen cívico, vale la pena memorizarla con exactitud porque es un número específico.',
+  },
+  {
+    id: 7, type: 'open_ended',
+    question: 'Placeholder interview question 7: Have you traveled outside the United States since becoming a permanent resident? Tell me about your trips.',
+    question_es: 'Pregunta de entrevista de ejemplo 7: ¿Ha viajado fuera de los Estados Unidos desde que se convirtió en residente permanente? Cuénteme sobre sus viajes.',
+    video_url: '/placeholder-video.mp4',
+    options: [],
+    correct_answer: null,
+    explanation: 'Placeholder explanation: have your dates ready. This ties directly to your continuous residence and physical presence eligibility.',
+    explanation_es: 'Explicación de ejemplo: tenga sus fechas listas. Esto se relaciona directamente con su elegibilidad de residencia continua y presencia física.',
+  },
+  {
+    id: 8, type: 'yes_no',
+    question: 'Placeholder interview question 8: Have you registered with the Selective Service, if required?',
+    question_es: 'Pregunta de entrevista de ejemplo 8: ¿Se ha registrado en el Servicio Selectivo, si se le requiere?',
+    video_url: '/placeholder-video.mp4',
+    options: [],
+    correct_answer: 'yes',
+    explanation: 'Placeholder explanation: applies to most men who lived in the U.S. as permanent residents between ages 18 and 26.',
+    explanation_es: 'Explicación de ejemplo: aplica a la mayoría de los hombres que vivieron en EE. UU. como residentes permanentes entre los 18 y los 26 años.',
+  },
+  {
+    id: 9, type: 'multiple_choice',
+    question: 'Placeholder interview question 9: What do we call the first ten amendments to the Constitution?',
+    question_es: 'Pregunta de entrevista de ejemplo 9: ¿Cómo llamamos a las primeras diez enmiendas de la Constitución?',
+    video_url: '/placeholder-video.mp4',
+    options: [
+      { value: 'a', en: 'The Preamble', es: 'El Preámbulo' },
+      { value: 'b', en: 'The Bill of Rights', es: 'La Carta de Derechos' },
+      { value: 'c', en: 'The Articles of Confederation', es: 'Los Artículos de la Confederación' },
+      { value: 'd', en: 'The Emancipation Proclamation', es: 'La Proclamación de Emancipación' },
+    ],
+    correct_answer: 'b',
+    explanation: 'Placeholder explanation: a frequently asked civics test question.',
+    explanation_es: 'Explicación de ejemplo: una pregunta frecuente del examen cívico.',
+  },
+  {
+    id: 10, type: 'open_ended',
+    question: "Placeholder interview question 10: Is there anything else you'd like to add before we conclude?",
+    question_es: 'Pregunta de entrevista de ejemplo 10: ¿Hay algo más que le gustaría agregar antes de concluir?',
+    video_url: '/placeholder-video.mp4',
+    options: [],
+    correct_answer: null,
+    explanation: 'Placeholder explanation: a closing question. Real officers often end this way to give you a final chance to speak.',
+    explanation_es: 'Explicación de ejemplo: una pregunta de cierre. Los oficiales reales a menudo terminan así para darle una última oportunidad de hablar.',
+  },
+];
+
+// Swap this for a real fetch (e.g. supabaseClient.from('mock_interview_questions')...)
+// once real videos/content exist. Every caller already awaits this, so the
+// swap needs no changes anywhere else in the file.
+async function getMockInterviewQuestions() {
+  return MOCK_INTERVIEW_QUESTIONS;
+}
+
+const MOCK_INTERVIEW_LABELS = {
+  en: {
+    questionOf: (n, total) => `Question ${n} of ${total}`,
+    videoLabel: 'Video Placeholder',
+    videoSublabel: "The interview video for this question will appear here once it's recorded.",
+    yourAnswer: 'Your answer',
+    yes: 'YES', no: 'NO',
+    correct: '✓ Correct', incorrect: '✗ Incorrect',
+    continueNext: 'Continue →', viewSummary: 'View Summary →',
+    resultLine: (correct, graded) => (graded > 0 ? `${correct} of ${graded} answers marked correct` : 'Session complete'),
+    quitConfirm: "Quit this mock interview? Your progress won't be saved.",
+  },
+  es: {
+    questionOf: (n, total) => `Pregunta ${n} de ${total}`,
+    videoLabel: 'Marcador de Video',
+    videoSublabel: 'El video de la entrevista para esta pregunta aparecerá aquí una vez grabado.',
+    yourAnswer: 'Tu respuesta',
+    yes: 'SÍ', no: 'NO',
+    correct: '✓ Correcta', incorrect: '✗ Incorrecta',
+    continueNext: 'Continuar →', viewSummary: 'Ver Resumen →',
+    resultLine: (correct, graded) => (graded > 0 ? `${correct} de ${graded} respuestas marcadas como correctas` : 'Sesión completada'),
+    quitConfirm: '¿Salir de esta entrevista simulada? Tu progreso no se guardará.',
+  },
+};
+
+// { questions, idx, answers: [{question_id, type, given, correct, self_grade}], pendingAnswer }
+let mockInterviewCache = null;
+
+function renderMockVideo(videoUrl) {
+  const wrap = document.querySelector('#mi-video-wrap');
+  if (!wrap) return;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const l = MOCK_INTERVIEW_LABELS[lang] || MOCK_INTERVIEW_LABELS.en;
+  const isPlaceholder = !videoUrl || videoUrl.indexOf('/placeholder') === 0;
+  if (isPlaceholder) {
+    wrap.innerHTML = `<div class="mi-video-placeholder">
+      <div class="mi-video-icon">🎥</div>
+      <div class="mi-video-label">${escapeHtml(l.videoLabel)}</div>
+      <div class="mi-video-sublabel">${escapeHtml(l.videoSublabel)}</div>
+    </div>`;
+  } else {
+    wrap.innerHTML = `<video controls playsinline src="${escapeHtml(videoUrl)}"></video>`;
+  }
+}
+
+function buildMockAnswerArea(q) {
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const l = MOCK_INTERVIEW_LABELS[lang] || MOCK_INTERVIEW_LABELS.en;
+  const area = document.querySelector('#mi-answer-area');
+  const submitBtn = document.querySelector('#mi-submit-btn');
+  submitBtn.disabled = true;
+
+  if (q.type === 'open_ended') {
+    area.innerHTML = `<textarea class="mi-textarea" id="mi-open-input" placeholder="${lang === 'es' ? 'Escribe tu respuesta…' : 'Type your answer…'}"></textarea>`;
+    const input = document.querySelector('#mi-open-input');
+    input.addEventListener('input', () => {
+      mockInterviewCache.pendingAnswer = input.value;
+      submitBtn.disabled = !input.value.trim();
+    });
+  } else if (q.type === 'multiple_choice') {
+    const letters = ['A', 'B', 'C', 'D'];
+    area.innerHTML = `<div class="mi-options">${q.options.map((opt, i) => `
+      <button type="button" class="mi-option-btn" data-value="${escapeHtml(opt.value)}">
+        <span class="mi-option-letter">${letters[i] || i + 1}</span>
+        <span>${escapeHtml(lang === 'es' ? (opt.es || opt.en) : opt.en)}</span>
+      </button>`).join('')}</div>`;
+    area.querySelectorAll('.mi-option-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        area.querySelectorAll('.mi-option-btn').forEach((b) => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        mockInterviewCache.pendingAnswer = btn.getAttribute('data-value');
+        submitBtn.disabled = false;
+      });
+    });
+  } else if (q.type === 'yes_no') {
+    area.innerHTML = `<div class="mi-yesno-row">
+      <button type="button" class="mi-yesno-btn" data-value="yes">${escapeHtml(l.yes)}</button>
+      <button type="button" class="mi-yesno-btn" data-value="no">${escapeHtml(l.no)}</button>
+    </div>`;
+    area.querySelectorAll('.mi-yesno-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        area.querySelectorAll('.mi-yesno-btn').forEach((b) => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        mockInterviewCache.pendingAnswer = btn.getAttribute('data-value');
+        submitBtn.disabled = false;
+      });
+    });
+  }
+}
+
+function mockOptionLabel(q, value) {
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const opt = (q.options || []).find((o) => o.value === value);
+  if (!opt) return value;
+  return lang === 'es' ? (opt.es || opt.en) : opt.en;
+}
+
+function renderMockInterviewQuestion() {
+  if (!mockInterviewCache) return;
+  const { questions, idx } = mockInterviewCache;
+  const q = questions[idx];
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const l = MOCK_INTERVIEW_LABELS[lang] || MOCK_INTERVIEW_LABELS.en;
+
+  mockInterviewCache.pendingAnswer = null;
+
+  document.querySelector('#mi-progress-text').textContent = l.questionOf(idx + 1, questions.length);
+  document.querySelector('#mi-progress-bar').style.width = Math.round((idx / questions.length) * 100) + '%';
+
+  renderMockVideo(q.video_url);
+  document.querySelector('#mi-question-text').textContent = localize(q, 'question');
+
+  document.querySelector('#mi-answer-area').style.display = 'block';
+  document.querySelector('#mi-submit-row').style.display = 'block';
+  document.querySelector('#mi-review-area').style.display = 'none';
+  buildMockAnswerArea(q);
+}
+
+function renderMockReview() {
+  const { questions, idx, answers } = mockInterviewCache;
+  const q = questions[idx];
+  const a = answers[answers.length - 1];
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const l = MOCK_INTERVIEW_LABELS[lang] || MOCK_INTERVIEW_LABELS.en;
+
+  document.querySelector('#mi-answer-area').style.display = 'none';
+  document.querySelector('#mi-submit-row').style.display = 'none';
+  document.querySelector('#mi-review-area').style.display = 'block';
+
+  let answerText = a.given;
+  if (q.type === 'multiple_choice') answerText = mockOptionLabel(q, a.given);
+  if (q.type === 'yes_no') answerText = a.given === 'yes' ? l.yes : l.no;
+  document.querySelector('#mi-review-answer-text').textContent = answerText;
+
+  const autoGradeWrap = document.querySelector('#mi-auto-grade-wrap');
+  const selfGradeWrap = document.querySelector('#mi-selfgrade-wrap');
+  const continueBtn = document.querySelector('#mi-continue-btn');
+
+  if (q.type === 'open_ended') {
+    autoGradeWrap.innerHTML = '';
+    selfGradeWrap.style.display = 'block';
+    selfGradeWrap.querySelectorAll('.mi-selfgrade-btn').forEach((btn) => btn.classList.remove('selected'));
+    continueBtn.disabled = true;
+  } else {
+    autoGradeWrap.innerHTML = `<span class="mi-auto-grade-badge ${a.correct ? 'correct' : 'incorrect'}">${a.correct ? l.correct : l.incorrect}</span>`;
+    selfGradeWrap.style.display = 'none';
+    continueBtn.disabled = false;
+  }
+
+  document.querySelector('#mi-explanation').textContent = localize(q, 'explanation');
+  continueBtn.textContent = (idx + 1 >= questions.length) ? l.viewSummary : l.continueNext;
+}
+
+function submitMockAnswer() {
+  if (!mockInterviewCache) return;
+  const { questions, idx } = mockInterviewCache;
+  const q = questions[idx];
+  const given = mockInterviewCache.pendingAnswer;
+  if (given === null || given === undefined || (typeof given === 'string' && !given.trim())) return;
+
+  let correct = null;
+  if (q.type === 'multiple_choice' || q.type === 'yes_no') {
+    correct = given === q.correct_answer;
+  }
+  mockInterviewCache.answers.push({
+    question_id: q.id, type: q.type, given, correct, self_grade: null,
+  });
+  renderMockReview();
+}
+
+function selectMockSelfGrade(grade) {
+  if (!mockInterviewCache) return;
+  const { answers } = mockInterviewCache;
+  const a = answers[answers.length - 1];
+  a.self_grade = grade;
+  document.querySelectorAll('.mi-selfgrade-btn').forEach((b) => b.classList.toggle('selected', b.getAttribute('data-grade') === grade));
+  document.querySelector('#mi-continue-btn').disabled = false;
+}
+
+function mockAnswerBucket(a) {
+  if (a.type === 'open_ended') return a.self_grade || 'not_sure';
+  return a.correct ? 'correct' : 'incorrect';
+}
+
+function continueMockInterview() {
+  if (!mockInterviewCache) return;
+  if (mockInterviewCache.idx + 1 >= mockInterviewCache.questions.length) {
+    finishMockInterview();
+  } else {
+    mockInterviewCache.idx += 1;
+    renderMockInterviewQuestion();
+  }
+}
+
+function finishMockInterview() {
+  const { answers } = mockInterviewCache;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const l = MOCK_INTERVIEW_LABELS[lang] || MOCK_INTERVIEW_LABELS.en;
+
+  const counts = { correct: 0, not_sure: 0, incorrect: 0 };
+  answers.forEach((a) => { counts[mockAnswerBucket(a)] += 1; });
+
+  // TODO: once real content ships, persist this session, e.g.:
+  //   supabaseClient.from('mock_interview_attempts').insert({ user_id, questions: answers, ... })
+  // Front-end-only for this pass, so nothing is written to Supabase yet.
+
+  document.querySelector('#mi-interview-view').style.display = 'none';
+  document.querySelector('#mi-summary-view').style.display = 'block';
+
+  document.querySelector('#mi-stat-completed').textContent = answers.length;
+  document.querySelector('#mi-stat-correct').textContent = counts.correct;
+  document.querySelector('#mi-stat-notsure').textContent = counts.not_sure;
+  document.querySelector('#mi-stat-incorrect').textContent = counts.incorrect;
+  document.querySelector('#mi-summary-result').textContent = l.resultLine(counts.correct, counts.correct + counts.incorrect);
+
+  const reviewList = document.querySelector('#mi-review-list');
+  reviewList.innerHTML = mockInterviewCache.questions.map((q, i) => {
+    const a = answers[i];
+    const bucket = mockAnswerBucket(a);
+    const icon = bucket === 'correct' ? '✓' : (bucket === 'incorrect' ? '✗' : '?');
+    let answerText = a.given;
+    if (q.type === 'multiple_choice') answerText = mockOptionLabel(q, a.given);
+    if (q.type === 'yes_no') answerText = a.given === 'yes' ? l.yes : l.no;
+    return `<div class="mi-review-item">
+      <div class="mi-review-icon ${bucket}">${icon}</div>
+      <div>
+        <p class="mi-review-list-question">${escapeHtml(localize(q, 'question'))}</p>
+        <p class="mi-review-list-answer">${escapeHtml(answerText)}</p>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function startMockInterview() {
+  const questions = await getMockInterviewQuestions();
+  mockInterviewCache = { questions, idx: 0, answers: [], pendingAnswer: null };
+  document.querySelector('#mi-intro-view').style.display = 'none';
+  document.querySelector('#mi-summary-view').style.display = 'none';
+  document.querySelector('#mi-interview-view').style.display = 'block';
+  renderMockInterviewQuestion();
+}
+
+function renderMockInterviewStatic() {
+  // Static intro/summary copy is handled by data-en/data-es via setLang();
+  // this only needs to re-render JS-built content still on screen.
+  if (!mockInterviewCache) return;
+  const interviewVisible = document.querySelector('#mi-interview-view').style.display !== 'none';
+  const reviewShowing = document.querySelector('#mi-review-area') && document.querySelector('#mi-review-area').style.display !== 'none';
+  const summaryVisible = document.querySelector('#mi-summary-view').style.display !== 'none';
+  if (interviewVisible && !reviewShowing) renderMockInterviewQuestion();
+  if (summaryVisible) finishMockInterview();
+}
+window.addEventListener('ciudadanoready:langchange', renderMockInterviewStatic);
+
+async function initMockInterviewPage() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  const userId = session.user.id;
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('subscription_status')
+    .eq('id', userId)
+    .single();
+  const hasAccess = profile && ['active', 'trial', 'comp'].includes(profile.subscription_status);
+  if (!hasAccess) {
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  const lessons = await fetchPublishedLessons();
+  const { data: progressRows } = await supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId);
+  const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
+  renderModuleNav('#mi-page-module-nav', lessons || [], completedIds, null);
+
+  document.querySelector('#mi-begin-btn').addEventListener('click', () => startMockInterview());
+  document.querySelector('#mi-submit-btn').addEventListener('click', () => submitMockAnswer());
+  document.querySelector('#mi-continue-btn').addEventListener('click', () => continueMockInterview());
+  document.querySelectorAll('.mi-selfgrade-btn').forEach((btn) => {
+    btn.addEventListener('click', () => selectMockSelfGrade(btn.getAttribute('data-grade')));
+  });
+  document.querySelector('#mi-retake-btn').addEventListener('click', () => startMockInterview());
+  document.querySelector('#mi-quit-btn').addEventListener('click', () => {
+    const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+    const l = MOCK_INTERVIEW_LABELS[lang] || MOCK_INTERVIEW_LABELS.en;
+    if (!confirm(l.quitConfirm)) return;
+    mockInterviewCache = null;
+    document.querySelector('#mi-interview-view').style.display = 'none';
+    document.querySelector('#mi-summary-view').style.display = 'none';
+    document.querySelector('#mi-intro-view').style.display = 'block';
+  });
+}
+
 // ---- Settings page --------------------------------------------------------
 // Profile (name/email), password change, appearance (dark mode, the
 // toggle buttons themselves are wired generically in app.js since they're
@@ -2309,6 +2740,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.body.hasAttribute('data-settings-page')) initSettingsPage();
   if (document.body.hasAttribute('data-progress-page')) initProgressPage();
   if (document.body.hasAttribute('data-support-page')) initSupportPage();
+  if (document.body.hasAttribute('data-mock-interview-page')) initMockInterviewPage();
 });
 
 // Re-render dynamic content in place when the visitor toggles EN/ES;
