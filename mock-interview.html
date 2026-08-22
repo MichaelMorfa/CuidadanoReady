@@ -78,7 +78,7 @@
     width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); flex-shrink: 0;
     display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: var(--slate);
   }
-  .mi-option-btn.selected .mi-option-letter { border-color: var(--forest); background: var(--forest); color: var(--white); }
+  .mi-option-btn.selected .mi-option-letter { border-color: var(--forest); background: var(--forest); color: var(--paper); }
 
   .mi-yesno-row { display: flex; gap: 14px; }
   .mi-yesno-btn {
@@ -132,9 +132,12 @@
 
   .mi-review-item { display: flex; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--line); }
   .mi-review-item:last-child { border-bottom: none; }
-  .mi-review-icon { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--white); }
+  .mi-review-icon { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--paper); }
   .mi-review-icon.correct { background: var(--forest); }
-  .mi-review-icon.not_sure { background: #B08A2E; }
+  /* Fixed hex, not a theme variable (this amber has no dark-mode variant),
+     so its text color is hardcoded too: white on #B08A2E is only 3.22:1,
+     under the 4.5:1 AA text threshold. Near-black clears 5.58:1. */
+  .mi-review-icon.not_sure { background: #B08A2E; color: #14171B; }
   .mi-review-icon.incorrect { background: var(--danger); }
   .mi-review-list-question { font-weight: 600; margin: 0 0 4px; }
   .mi-review-list-answer { margin: 0; color: var(--slate); font-size: 0.88rem; }
@@ -197,7 +200,7 @@
         <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
         <div>
           <span class="eyebrow" style="margin-bottom:0;" data-en="PRACTICE" data-es="PRÁCTICA">PRACTICE</span>
-          <h3 style="margin:0;" data-en="Mock Interview" data-es="Entrevista Simulada">Mock Interview</h3>
+          <h1 style="margin:0;" data-en="Mock Interview" data-es="Entrevista Simulada">Mock Interview</h1>
         </div>
       </div>
       <div class="flex gap-16 items-center">
@@ -225,6 +228,12 @@
           <div style="text-align:center; margin-top:26px;">
             <button class="btn btn-primary" id="mi-begin-btn" data-en="Begin Mock Interview" data-es="Comenzar Entrevista Simulada">Begin Mock Interview</button>
           </div>
+        </div>
+
+        <h3 style="margin-top:32px;" data-en="Your Past Sessions" data-es="Tus Sesiones Anteriores">Your Past Sessions</h3>
+        <div class="card card-pad" id="mi-history-card">
+          <p class="small muted" style="margin:0;" id="mi-history-empty" data-en="No mock interviews taken yet. Try one above." data-es="Aún no has tomado ninguna entrevista simulada. Intenta una arriba.">No mock interviews taken yet. Try one above.</p>
+          <div id="mi-history-list"></div>
         </div>
       </div>
 
@@ -299,6 +308,7 @@
 
         <div class="flex gap-16 justify-center" style="margin-bottom:32px; flex-wrap:wrap;">
           <button class="btn btn-primary" id="mi-retake-btn" data-en="Retake Mock Interview" data-es="Repetir Entrevista Simulada">Retake Mock Interview</button>
+          <button class="btn btn-ghost" id="mi-summary-back-btn" data-en="← Back to Mock Interview" data-es="← Volver a Entrevista Simulada">← Back to Mock Interview</button>
           <a href="dashboard.html" class="btn btn-ghost" data-en="← Back to Dashboard" data-es="← Volver al Panel">← Back to Dashboard</a>
         </div>
 

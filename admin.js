@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     quizzes: 'Quiz Editor',
     flashcards: 'Flashcards Editor',
     'country-lessons': 'Know Your Country Editor',
+    'mock-interview': 'Mock Interview Editor',
     revenue: 'Payments',
     support: 'Support',
   };
@@ -63,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (name === 'quizzes') loadQuizzes();
     if (name === 'flashcards') loadFlashcards();
     if (name === 'country-lessons') loadCountryLessons();
+    if (name === 'mock-interview') loadMockInterview();
     if (name === 'revenue') loadRevenue();
     if (name === 'support') loadSupport();
   }
@@ -403,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelector('#lesson-published').checked = !!data.published;
       document.querySelector('#lesson-submit').textContent = 'Save Changes';
       lessonCancelBtn.style.display = 'inline-flex';
-      lessonForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      smoothScrollIntoView(lessonForm, { block: 'start' });
     }
 
     if (delBtn) {
@@ -530,7 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelector('#quiz-published').checked = !!data.published;
       document.querySelector('#quiz-submit').textContent = 'Save Changes';
       quizCancelBtn.style.display = 'inline-flex';
-      quizForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      smoothScrollIntoView(quizForm, { block: 'start' });
     }
 
     if (delBtn) {
@@ -654,7 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelector('#flashcard-published').checked = !!data.published;
       document.querySelector('#flashcard-submit').textContent = 'Save Changes';
       flashcardCancelBtn.style.display = 'inline-flex';
-      flashcardForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      smoothScrollIntoView(flashcardForm, { block: 'start' });
     }
 
     if (delBtn) {
@@ -777,7 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelector('#cl-published').checked = !!data.published;
       document.querySelector('#cl-submit').textContent = 'Save Changes';
       countryLessonCancelBtn.style.display = 'inline-flex';
-      countryLessonForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      smoothScrollIntoView(countryLessonForm, { block: 'start' });
     }
 
     if (delBtn) {
@@ -786,6 +788,173 @@ document.addEventListener('DOMContentLoaded', () => {
       const { error } = await supabaseClient.from('country_lessons').delete().eq('id', id);
       if (error) { alert('Could not delete: ' + error.message); return; }
       loadCountryLessons();
+    }
+  });
+
+  // ---- Mock Interview questions editor -----------------------------------
+  let editingMockInterviewId = null;
+
+  const miTypeSelect = document.querySelector('#mi-type');
+  const miOptionsWrap = document.querySelector('#mi-options-wrap');
+  const miCorrectMcWrap = document.querySelector('#mi-correct-mc-wrap');
+  const miCorrectYnWrap = document.querySelector('#mi-correct-yn-wrap');
+
+  function syncMockInterviewFormToType() {
+    const type = miTypeSelect ? miTypeSelect.value : 'open_ended';
+    if (miOptionsWrap) miOptionsWrap.style.display = type === 'multiple_choice' ? 'block' : 'none';
+    if (miCorrectMcWrap) miCorrectMcWrap.style.display = type === 'multiple_choice' ? 'block' : 'none';
+    if (miCorrectYnWrap) miCorrectYnWrap.style.display = type === 'yes_no' ? 'block' : 'none';
+  }
+  miTypeSelect?.addEventListener('change', syncMockInterviewFormToType);
+  syncMockInterviewFormToType();
+
+  async function loadMockInterview() {
+    const list = document.querySelector('#mi-questions-list');
+    const { data, error } = await supabaseClient.from('mock_interview_questions').select('*').order('sort_order');
+    if (error) {
+      list.innerHTML = `<p class="empty-state">Could not load mock interview questions: ${escapeHtml(error.message)}</p>`;
+      return;
+    }
+    renderMockInterviewList(data || []);
+  }
+
+  const MI_TYPE_LABELS = { open_ended: 'Open-ended', multiple_choice: 'Multiple choice', yes_no: 'Yes / No' };
+
+  function renderMockInterviewList(rows) {
+    const list = document.querySelector('#mi-questions-list');
+    const countEl = document.querySelector('#mi-count');
+    if (countEl) countEl.textContent = `${rows.length} question${rows.length === 1 ? '' : 's'}`;
+    if (!rows.length) {
+      list.innerHTML = '<p class="empty-state">No mock interview questions yet. Add one above.</p>';
+      return;
+    }
+    list.innerHTML = rows.map((q) => {
+      const hasRealVideo = q.video_url && q.video_url !== '/placeholder-video.mp4';
+      return `
+        <div class="card card-pad" style="margin-bottom:12px;" data-mi-card="${q.id}">
+          <div class="flex justify-between items-center">
+            <div>
+              <span class="small muted" style="font-family:var(--font-mono);">#${q.sort_order}</span>
+              <span class="accuracy-pill" style="margin-left:6px;">${escapeHtml(MI_TYPE_LABELS[q.type] || q.type)}</span>
+              <strong style="margin-left:6px;">${escapeHtml(q.question)}</strong>
+              ${q.published ? '<span class="badge badge-forest" style="margin-left:8px;">Published</span>' : '<span class="badge" style="margin-left:8px;">Draft</span>'}
+              ${hasRealVideo ? '<span class="badge badge-ocean" style="margin-left:8px;">Video attached</span>' : '<span class="badge" style="margin-left:8px;">Placeholder video</span>'}
+            </div>
+            <div class="flex gap-8">
+              <button class="btn btn-ghost btn-sm" data-mi-edit="${q.id}">Edit</button>
+              <button class="btn btn-ghost btn-sm" data-mi-delete="${q.id}">Delete</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  const mockInterviewForm = document.querySelector('#mi-form');
+  const mockInterviewCancelBtn = document.querySelector('#mi-cancel-edit');
+
+  function resetMockInterviewForm() {
+    editingMockInterviewId = null;
+    mockInterviewForm.reset();
+    document.querySelector('#mi-published').checked = true;
+    document.querySelector('#mi-submit').textContent = 'Add Question';
+    mockInterviewCancelBtn.style.display = 'none';
+    syncMockInterviewFormToType();
+  }
+
+  mockInterviewCancelBtn?.addEventListener('click', resetMockInterviewForm);
+
+  function buildMockInterviewOptions() {
+    const pairs = [
+      ['a', '#mi-opt-a-en', '#mi-opt-a-es'],
+      ['b', '#mi-opt-b-en', '#mi-opt-b-es'],
+      ['c', '#mi-opt-c-en', '#mi-opt-c-es'],
+      ['d', '#mi-opt-d-en', '#mi-opt-d-es'],
+    ];
+    return pairs
+      .map(([value, enSel, esSel]) => ({
+        value,
+        en: (document.querySelector(enSel)?.value || '').trim(),
+        es: (document.querySelector(esSel)?.value || '').trim(),
+      }))
+      .filter((o) => o.en);
+  }
+
+  mockInterviewForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const type = document.querySelector('#mi-type').value;
+    let correctAnswer = null;
+    if (type === 'multiple_choice') correctAnswer = document.querySelector('#mi-correct-mc').value;
+    if (type === 'yes_no') correctAnswer = document.querySelector('#mi-correct-yn').value;
+
+    const payload = {
+      sort_order: Number(document.querySelector('#mi-sort').value) || 1,
+      type,
+      question: document.querySelector('#mi-question').value,
+      question_es: document.querySelector('#mi-question-es').value || null,
+      video_url: document.querySelector('#mi-video-url').value || '/placeholder-video.mp4',
+      options: type === 'multiple_choice' ? buildMockInterviewOptions() : [],
+      correct_answer: correctAnswer,
+      explanation: document.querySelector('#mi-explanation').value || null,
+      explanation_es: document.querySelector('#mi-explanation-es').value || null,
+      published: document.querySelector('#mi-published').checked,
+    };
+    const submitBtn = document.querySelector('#mi-submit');
+    submitBtn.disabled = true;
+    let error;
+    if (editingMockInterviewId) {
+      ({ error } = await supabaseClient.from('mock_interview_questions').update(payload).eq('id', editingMockInterviewId));
+    } else {
+      ({ error } = await supabaseClient.from('mock_interview_questions').insert(payload));
+    }
+    submitBtn.disabled = false;
+    if (error) { alert('Could not save question: ' + error.message); return; }
+    resetMockInterviewForm();
+    loadMockInterview();
+  });
+
+  document.querySelector('#mi-questions-list')?.addEventListener('click', async (e) => {
+    const editBtn = e.target.closest('[data-mi-edit]');
+    const delBtn = e.target.closest('[data-mi-delete]');
+
+    if (editBtn) {
+      const id = editBtn.getAttribute('data-mi-edit');
+      const { data } = await supabaseClient.from('mock_interview_questions').select('*').eq('id', id).single();
+      if (!data) return;
+      editingMockInterviewId = id;
+      document.querySelector('#mi-sort').value = data.sort_order;
+      document.querySelector('#mi-type').value = data.type;
+      document.querySelector('#mi-question').value = data.question;
+      document.querySelector('#mi-question-es').value = data.question_es || '';
+      document.querySelector('#mi-video-url').value = (data.video_url && data.video_url !== '/placeholder-video.mp4') ? data.video_url : '';
+      document.querySelector('#mi-explanation').value = data.explanation || '';
+      document.querySelector('#mi-explanation-es').value = data.explanation_es || '';
+      document.querySelector('#mi-published').checked = !!data.published;
+
+      const opts = Array.isArray(data.options) ? data.options : [];
+      ['a', 'b', 'c', 'd'].forEach((value) => {
+        const opt = opts.find((o) => o.value === value) || { en: '', es: '' };
+        const enEl = document.querySelector(`#mi-opt-${value}-en`);
+        const esEl = document.querySelector(`#mi-opt-${value}-es`);
+        if (enEl) enEl.value = opt.en || '';
+        if (esEl) esEl.value = opt.es || '';
+      });
+
+      if (data.type === 'multiple_choice') document.querySelector('#mi-correct-mc').value = data.correct_answer || 'a';
+      if (data.type === 'yes_no') document.querySelector('#mi-correct-yn').value = data.correct_answer || 'yes';
+      syncMockInterviewFormToType();
+
+      document.querySelector('#mi-submit').textContent = 'Save Changes';
+      mockInterviewCancelBtn.style.display = 'inline-flex';
+      smoothScrollIntoView(mockInterviewForm, { block: 'start' });
+    }
+
+    if (delBtn) {
+      const id = delBtn.getAttribute('data-mi-delete');
+      if (!confirm('Delete this mock interview question? This cannot be undone.')) return;
+      const { error } = await supabaseClient.from('mock_interview_questions').delete().eq('id', id);
+      if (error) { alert('Could not delete: ' + error.message); return; }
+      loadMockInterview();
     }
   });
 
@@ -849,7 +1018,7 @@ document.addEventListener('DOMContentLoaded', () => {
     panel.style.display = 'block';
     if (labelEl && userLabel) labelEl.textContent = userLabel;
     listEl.innerHTML = '<p class="empty-state">Loading charges…</p>';
-    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    smoothScrollIntoView(panel, { block: 'nearest' });
 
     const { data, error } = await supabaseClient.functions.invoke('admin-list-charges', { body: { user_id: userId } });
     if (error || !data || !data.ok) {

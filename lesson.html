@@ -54,6 +54,10 @@
   .module-quiz-option span { text-align:left; }
   .module-quiz-option.correct { background:#F0F6F2; color: var(--forest); font-weight:600; }
   .module-quiz-option.incorrect { background:#FBF0EF; color: var(--danger); }
+  /* Correctness is never color-only: each highlighted option also shows
+     a ✓/✗ glyph (set via JS in bindModuleQuiz) so it still reads for
+     colorblind users, not just screen readers via the paired sr-only text. */
+  .module-quiz-option-mark { margin-left:auto; font-weight:700; flex-shrink:0; }
   .module-quiz-result-banner { border-radius: var(--radius-sm); padding:10px 14px; margin:16px 0; font-size:0.88rem; }
   .module-quiz-result-banner.pass { background:#F0F6F2; color: var(--forest); }
   .module-quiz-result-banner.fail { background:#FBF0EF; color: var(--danger); }
@@ -71,7 +75,7 @@
      attempt, mirroring the Practice Interview review list styling. */
   .module-quiz-review-item { display:flex; gap:14px; padding:14px 0; border-top:1px solid var(--line); }
   .module-quiz-review-item:first-of-type { border-top:none; padding-top:0; }
-  .module-quiz-review-icon { width:24px; height:24px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:0.75rem; color:#fff; margin-top:2px; }
+  .module-quiz-review-icon { width:24px; height:24px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:0.75rem; color:var(--paper); margin-top:2px; }
   .module-quiz-review-icon.correct { background: var(--forest); }
   .module-quiz-review-icon.incorrect { background: var(--danger); }
   .module-quiz-review-question { font-weight:600; margin:0 0 4px; font-size:0.92rem; }

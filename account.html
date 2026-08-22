@@ -13,7 +13,7 @@
   .plan-option input { display:none; }
   .card-field-icons { display:flex; gap:6px; font-family: var(--font-mono); font-size:0.7rem; color: var(--slate); }
   .success-check {
-    width:64px; height:64px; border-radius:50%; background: var(--forest); color:var(--white);
+    width:64px; height:64px; border-radius:50%; background: var(--forest); color:var(--paper);
     display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin: 0 auto 20px;
   }
   .sim-note { font-family: var(--font-mono); font-size:0.72rem; color: var(--slate); background: var(--paper-dim); padding:10px 14px; border-radius: var(--radius-sm); margin-bottom:20px; }
@@ -99,13 +99,13 @@
     <h2 class="text-center" data-en="Create your account" data-es="Crea tu cuenta">Create your account</h2>
     <p class="text-center small muted" data-en="Next you'll be sent to Stripe's secure checkout to complete payment." data-es="A continuación irás al pago seguro de Stripe para completar tu compra.">Next you'll be sent to Stripe's secure checkout to complete payment.</p>
     <form id="signup-form">
-      <label data-en="Full Name" data-es="Nombre completo">Full Name</label>
+      <label for="signup-name" data-en="Full Name" data-es="Nombre completo">Full Name</label>
       <input type="text" id="signup-name" placeholder="Jane Doe" required>
 
-      <label>Email</label>
+      <label for="signup-email">Email</label>
       <input type="email" id="signup-email" placeholder="jane@example.com" required>
 
-      <label data-en="Password" data-es="Contraseña">Password</label>
+      <label for="signup-password" data-en="Password" data-es="Contraseña">Password</label>
       <input type="password" id="signup-password" placeholder="At least 6 characters" minlength="6" required>
 
       <label class="flex gap-8 items-center" style="font-weight:400; margin-top:6px;">
@@ -127,7 +127,7 @@
     <div class="success-check">✓</div>
     <h2 data-en="Almost there!" data-es="¡Ya casi!">Almost there!</h2>
     <p id="signup-success-message" data-en="Your account is set up. Check your email to confirm your address, then log in to complete payment and start Stage 1: Eligibility." data-es="Tu cuenta está lista. Revisa tu correo para confirmar tu dirección, luego inicia sesión para completar el pago y comenzar la Etapa 1: Elegibilidad.">Your account is set up. Check your email to confirm your address, then log in to complete payment and start Stage 1: Eligibility.</p>
-    <a href="login.html" class="btn" style="background:var(--forest); color:var(--white);" data-en="Go to Login →" data-es="Ir a iniciar sesión →">Go to Login →</a>
+    <a href="login.html" class="btn" style="background:var(--forest); color:var(--paper);" data-en="Go to Login →" data-es="Ir a iniciar sesión →">Go to Login →</a>
   </div>
 </div>
 

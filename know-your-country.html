@@ -39,7 +39,7 @@
     flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
     font-size: 0.75rem; color: transparent;
   }
-  .kyc-lesson-row.done .kyc-lesson-check { background: var(--forest); border-color: var(--forest); color: var(--white); }
+  .kyc-lesson-row.done .kyc-lesson-check { background: var(--forest); border-color: var(--forest); color: var(--paper); }
   .kyc-lesson-row.done .kyc-lesson-title { color: var(--slate); }
   .kyc-lesson-num { font-family: var(--font-mono); font-size: 0.72rem; color: var(--slate); min-width: 20px; }
   .kyc-lesson-title { flex: 1; font-weight: 600; }
@@ -69,7 +69,7 @@
     padding: 5px 10px; border-radius: 6px; border: 1px solid var(--line);
     background: var(--white); color: var(--slate); cursor: pointer;
   }
-  .kyc-audio-lang-btn.active { background: var(--forest); border-color: var(--forest); color: var(--white); }
+  .kyc-audio-lang-btn.active { background: var(--forest); border-color: var(--forest); color: var(--paper); }
   .kyc-audio-status { font-size: 0.82rem; color: var(--slate); margin-left: auto; }
   .kyc-audio-status.speaking { color: var(--forest); font-weight: 600; }
   .kyc-audio-seek-row { display: flex; align-items: center; gap: 10px; }
@@ -78,6 +78,11 @@
     flex: 1; margin: 0; height: 5px; border-radius: 3px; background: var(--line);
     outline: none; cursor: pointer; -webkit-appearance: none; appearance: none;
   }
+  /* outline:none above removes the default (which browsers render oddly
+     on range inputs anyway); this restores a visible keyboard-focus
+     indicator via box-shadow on the track instead, only for keyboard/
+     assistive-tech focus, not mouse clicks. */
+  .kyc-audio-seek:focus-visible { box-shadow: 0 0 0 3px rgba(28,127,184,0.35); }
   .kyc-audio-seek::-webkit-slider-thumb {
     -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%;
     background: var(--forest); cursor: pointer; border: 2px solid var(--white); box-shadow: 0 0 0 1px var(--line);

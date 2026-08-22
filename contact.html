@@ -81,18 +81,18 @@
 
     <div class="grid grid-2" style="margin-top:24px; align-items:flex-start;">
       <form class="card card-pad" id="contact-form">
-        <label data-en="Name" data-es="Nombre">Name</label>
+        <label for="contact-name" data-en="Name" data-es="Nombre">Name</label>
         <input type="text" id="contact-name" placeholder="Jane Doe" required>
-        <label>Email</label>
+        <label for="contact-email">Email</label>
         <input type="email" id="contact-email" placeholder="jane@example.com" required>
-        <label data-en="Subject" data-es="Asunto">Subject</label>
+        <label for="contact-subject" data-en="Subject" data-es="Asunto">Subject</label>
         <select id="contact-subject">
           <option data-en="Course Question" data-es="Pregunta sobre el curso">Course Question</option>
           <option data-en="Billing" data-es="Facturación">Billing</option>
           <option data-en="Technical Issue" data-es="Problema técnico">Technical Issue</option>
           <option data-en="Other" data-es="Otro">Other</option>
         </select>
-        <label data-en="Message" data-es="Mensaje">Message</label>
+        <label for="contact-message" data-en="Message" data-es="Mensaje">Message</label>
         <textarea id="contact-message" placeholder="How can we help?" required></textarea>
         <!-- Honeypot: invisible to real visitors (off-screen, not display:none
              so it still passes basic bot form-fillers that skip hidden fields),

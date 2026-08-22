@@ -5,7 +5,11 @@
 
 :root {
   --ink: #1C222B;
-  --ocean: #1C7FB8;
+  /* #186F9D, not the original #1C7FB8: the lighter value only cleared
+     4.40:1 against white, just under the 4.5:1 AA text threshold (used both
+     as link-text color and, via --white text on top of it, as solid button
+     fills). This shade keeps the same hue at 5.53:1. */
+  --ocean: #186F9D;
   --ocean-deep: #145F8C;
   --paper: #FFFFFF;
   --paper-dim: #E9EBEE;
@@ -29,11 +33,15 @@
 /* ---- Dark mode (member area only — toggled via #settings.html / topbar
    button, persisted in localStorage as "ciudadanoready-theme", applied by
    setting data-theme="dark" on <html>) --------------------------------
-   --white is deliberately left alone: it's used as *text* color on top of
-   accent buttons (ocean/forest/danger backgrounds), which stay saturated
-   in dark mode too, so white text on them is still correct. Only --surface
-   (card/sidebar/topbar backgrounds) and the base ink/paper/line trio need
-   to flip. */
+   --white is deliberately left alone as a literal white value for cases
+   that should always render white regardless of theme (e.g. decorative
+   rings). It is NOT used as the text color on solid ocean/forest/danger
+   buttons/badges below, those switched to --paper instead: ocean/forest/
+   danger all get *lighter* in dark mode (so they still read against the
+   near-black page as links/text), which means solid-fill text sitting on
+   top of them needs to flip from white to near-black to stay readable,
+   the same flip --paper already does between themes. Verified against
+   WCAG AA 4.5:1 for every accent color in both themes. */
 :root[data-theme="dark"] {
   --ink: #E7E9EC;
   --paper: #14171B;
@@ -52,6 +60,76 @@
 * { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }
+
+/* --------------------------------------------------------------------
+   Accessibility: visually-hidden text, skip link, focus visibility
+   -------------------------------------------------------------------- */
+/* Standard "visually hidden but still announced by screen readers"
+   pattern. Used for text alternatives on icon-only elements (locked/
+   completed course-nav badges, etc.) instead of relying on aria-label
+   on non-interactive elements, which some screen readers ignore. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* Injected as the first element in <body> by app.js on every page (see
+   insertSkipLink()). Off-screen until it receives keyboard focus, then
+   jumps to the top-left so keyboard/screen-reader users can bypass the
+   header/sidebar nav without tabbing through every link first. */
+.skip-link {
+  position: fixed; top: -100px; left: 12px; z-index: 10000;
+  background: var(--ocean); color: var(--paper);
+  padding: 12px 20px; border-radius: var(--radius-sm);
+  font-family: var(--font-sans); font-weight: 600; font-size: 0.9rem;
+  transition: top 0.15s ease;
+}
+.skip-link:focus { top: 12px; }
+
+/* A single consistent, high-contrast focus ring for every interactive
+   element site-wide (buttons, links, custom option/answer controls),
+   so keyboard focus is always visible regardless of what the browser's
+   own default would otherwise look like against a given background.
+   Form fields keep their own box-shadow ring defined below; this covers
+   everything else. :focus-visible (not :focus) so mouse/touch clicks
+   don't show a ring, only keyboard/assistive-tech focus does. */
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--ocean);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+[data-theme="dark"] a:focus-visible,
+[data-theme="dark"] button:focus-visible,
+[data-theme="dark"] .btn:focus-visible,
+[data-theme="dark"] input:focus-visible,
+[data-theme="dark"] select:focus-visible,
+[data-theme="dark"] textarea:focus-visible,
+[data-theme="dark"] [tabindex]:focus-visible {
+  outline-color: var(--ocean);
+}
+
+/* WCAG 2.3.3 (AAA) / general good practice: honor the OS-level "reduce
+   motion" setting. The site has no @keyframes animations, only CSS
+   transitions (hover states, theme toggle, flashcard flip, progress bars,
+   the skip-link's slide-in, and html's scroll-behavior:smooth), so a single
+   blanket override here covers everything site-wide without having to
+   touch each individual rule. Focus outlines above are unaffected since
+   they're not animated. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 body {
   margin: 0;
@@ -73,6 +151,12 @@ h1, h2, h3 {
 h1 { font-size: 2.75rem; font-weight: 700; }
 h2 { font-size: 2rem; }
 h3 { font-size: 1.3rem; }
+
+/* Member/admin topbar page titles use an <h1> for correct heading
+   hierarchy (each of these pages has no other h1), but need to keep
+   their original compact h3-style appearance rather than inheriting
+   the much larger default h1 size above. */
+.app-topbar h1 { font-size: 1.3rem; font-weight: 600; margin: 0; }
 
 /* h4 isn't covered by the reset above, so it was falling back to the
    browser's default ~1.33em top+bottom margin wherever it's used
@@ -150,8 +234,8 @@ img { max-width: 100%; display: block; }
   text-decoration: none;
 }
 
-.btn-primary { background: var(--ocean); color: var(--white); }
-.btn-primary:hover { background: var(--ocean-deep); color: var(--white); }
+.btn-primary { background: var(--ocean); color: var(--paper); }
+.btn-primary:hover { background: var(--ocean-deep); color: var(--paper); }
 
 .btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
 .btn-ghost:hover { border-color: var(--ocean); color: var(--ocean); }
@@ -224,7 +308,7 @@ img { max-width: 100%; display: block; }
   color: var(--slate);
   font-family: var(--font-mono);
 }
-.lang-toggle button.active { background: var(--ocean); color: var(--white); }
+.lang-toggle button.active { background: var(--ocean); color: var(--paper); }
 
 .theme-toggle-btn {
   border: 1px solid var(--line);
@@ -310,7 +394,7 @@ img { max-width: 100%; display: block; }
   flex-shrink: 0;
 }
 .stamp-circle.current { border-color: var(--ink); color: var(--ink); }
-.stamp-circle.done { background: var(--ocean); border-color: var(--ocean); color: var(--white); }
+.stamp-circle.done { background: var(--ocean); border-color: var(--ocean); color: var(--paper); }
 .stamp-label { font-family: var(--font-mono); font-size: 0.72rem; color: var(--slate); margin-top: 6px; text-align: center; }
 .stamp-connector { width: 40px; height: 2px; background: var(--line); flex-shrink: 0; }
 .stamp-connector.done { background: var(--ocean); }
@@ -609,7 +693,7 @@ textarea { resize: vertical; min-height: 120px; }
   font-family: var(--font-mono); font-size: 0.68rem; font-weight: 700;
   border: 1.5px solid var(--line); color: var(--slate); background: var(--surface);
 }
-.module-nav-badge.done { background: var(--forest); border-color: var(--forest); color: var(--white); }
+.module-nav-badge.done { background: var(--forest); border-color: var(--forest); color: var(--paper); }
 
 .lesson-sub-list {
   list-style: none; margin: 2px 0 10px 34px; padding: 0 0 0 14px;
@@ -632,7 +716,7 @@ textarea { resize: vertical; min-height: 120px; }
   width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--line);
   flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 0.6rem;
 }
-.check.done { background: var(--forest); border-color: var(--forest); color: var(--white); }
+.check.done { background: var(--forest); border-color: var(--forest); color: var(--paper); }
 
 /* Locked modules/lessons — sequential progression. Rendered as a plain
    <span> (not an <a>) so they're genuinely non-clickable, not just styled
@@ -773,7 +857,7 @@ tr:last-child td { border-bottom: none; }
 #faq-bot-bubble {
   position: fixed; right: 20px; bottom: 20px; z-index: 999;
   width: 56px; height: 56px; border-radius: 50%; border: none;
-  background: var(--ocean); color: var(--white); font-size: 1.4rem;
+  background: var(--ocean); color: var(--paper); font-size: 1.4rem;
   box-shadow: 0 6px 20px rgba(28,127,184,0.35); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: transform 0.15s ease;
@@ -812,7 +896,7 @@ tr:last-child td { border-bottom: none; }
   max-width: 85%; padding: 9px 12px; border-radius: 14px; font-size: 0.87rem; line-height: 1.4;
 }
 .faq-bot-msg-bot { align-self: flex-start; background: var(--paper-dim); color: var(--ink); border-bottom-left-radius: 4px; }
-.faq-bot-msg-user { align-self: flex-end; background: var(--ocean); color: var(--white); border-bottom-right-radius: 4px; }
+.faq-bot-msg-user { align-self: flex-end; background: var(--ocean); color: var(--paper); border-bottom-right-radius: 4px; }
 
 #faq-bot-suggestions {
   display: flex; flex-direction: column; gap: 2px; padding: 8px 8px; flex-shrink: 0;
@@ -839,7 +923,7 @@ tr:last-child td { border-bottom: none; }
   font-family: var(--font-sans); font-size: 0.87rem; background: var(--surface); color: var(--ink);
 }
 #faq-bot-send {
-  background: var(--ocean); color: var(--white); border: none; border-radius: var(--radius-sm);
+  background: var(--ocean); color: var(--paper); border: none; border-radius: var(--radius-sm);
   padding: 9px 16px; font-family: var(--font-sans); font-weight: 600; font-size: 0.85rem; cursor: pointer;
 }
 #faq-bot-send:hover { background: var(--ocean-deep); }

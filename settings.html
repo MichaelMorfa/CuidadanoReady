@@ -98,7 +98,7 @@
         <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
         <div>
           <span class="eyebrow" style="margin-bottom:0;" data-en="ACCOUNT" data-es="CUENTA">ACCOUNT</span>
-          <h3 style="margin:0;" data-en="Settings" data-es="Configuración">Settings</h3>
+          <h1 style="margin:0;" data-en="Settings" data-es="Configuración">Settings</h1>
         </div>
       </div>
       <div class="flex gap-16 items-center">
@@ -142,11 +142,11 @@
 
         <form id="profile-form" style="display:none;">
           <div class="settings-field">
-            <label data-en="Full Name" data-es="Nombre Completo">Full Name</label>
+            <label for="settings-full-name" data-en="Full Name" data-es="Nombre Completo">Full Name</label>
             <input type="text" id="settings-full-name" placeholder="Jane Doe">
           </div>
           <div class="settings-field">
-            <label data-en="Email Address" data-es="Correo Electrónico">Email Address</label>
+            <label for="settings-email" data-en="Email Address" data-es="Correo Electrónico">Email Address</label>
             <input type="email" id="settings-email" placeholder="jane@example.com">
             <p class="small muted" data-en="Changing your email sends a confirmation link to the new address before it takes effect." data-es="Cambiar tu correo envía un enlace de confirmación a la nueva dirección antes de que surta efecto.">Changing your email sends a confirmation link to the new address before it takes effect.</p>
           </div>
@@ -165,15 +165,15 @@
 
         <form id="password-form">
           <div class="settings-field">
-            <label data-en="Current Password" data-es="Contraseña Actual">Current Password</label>
+            <label for="settings-current-password" data-en="Current Password" data-es="Contraseña Actual">Current Password</label>
             <input type="password" id="settings-current-password" placeholder="Your current password" required>
           </div>
           <div class="settings-field">
-            <label data-en="New Password" data-es="Nueva Contraseña">New Password</label>
+            <label for="settings-new-password" data-en="New Password" data-es="Nueva Contraseña">New Password</label>
             <input type="password" id="settings-new-password" placeholder="At least 6 characters" minlength="6" required>
           </div>
           <div class="settings-field">
-            <label data-en="Confirm New Password" data-es="Confirmar Nueva Contraseña">Confirm New Password</label>
+            <label for="settings-confirm-password" data-en="Confirm New Password" data-es="Confirmar Nueva Contraseña">Confirm New Password</label>
             <input type="password" id="settings-confirm-password" placeholder="At least 6 characters" minlength="6" required>
           </div>
           <button type="submit" class="btn btn-primary btn-sm" id="password-save-btn" data-en="Update Password" data-es="Actualizar Contraseña">Update Password</button>

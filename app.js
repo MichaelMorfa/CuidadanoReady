@@ -3,6 +3,27 @@
    Language toggle, mobile nav, accordion, quiz interactions.
    ========================================================================== */
 
+// ---- Reduced-motion-aware scrolling -------------------------------------
+// CSS transitions already respect prefers-reduced-motion via the media
+// query in styles.css, but the handful of places that trigger a JS-driven
+// smooth scroll (window.scrollTo / el.scrollIntoView) pass behavior:'smooth'
+// directly, which bypasses that CSS rule. These two helpers are drop-in
+// replacements used across app.js/member.js/admin.js so every scroll site
+// honors the same OS-level setting.
+function prefersReducedMotion() {
+  return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+function smoothScrollTo(opts) {
+  window.scrollTo(Object.assign({ behavior: prefersReducedMotion() ? 'auto' : 'smooth' }, opts));
+}
+function smoothScrollIntoView(el, opts) {
+  if (!el) return;
+  el.scrollIntoView(Object.assign({ behavior: prefersReducedMotion() ? 'auto' : 'smooth' }, opts));
+}
+window.prefersReducedMotion = prefersReducedMotion;
+window.smoothScrollTo = smoothScrollTo;
+window.smoothScrollIntoView = smoothScrollIntoView;
+
 // ---- Client-side error logging (in-house, no 3rd-party service) --------
 // Catches uncaught errors and unhandled promise rejections on every page
 // and logs them to client_error_log so problems surface in the admin
@@ -155,7 +176,41 @@ window.openBillingPortal = async function openBillingPortal(buttonEl) {
   }
 };
 
+// ---- Skip-to-content link (accessibility) ------------------------------
+// Every page gets this injected as the very first element in <body>,
+// rather than hand-added to 30+ HTML files: it's off-screen until it
+// receives keyboard focus (see .skip-link in styles.css), then jumps
+// into view so keyboard/screen-reader users can bypass the header or
+// sidebar nav instead of tabbing through every link first. Also doubles
+// as the one place that guarantees every page has a "main" landmark:
+// member/admin pages already have a real <main>, but the public
+// marketing pages don't wrap their content in one, so this adds
+// role="main" to whichever content container it finds, only when there
+// isn't a real <main> already on the page (never nest two main landmarks).
+function insertSkipLink() {
+  if (document.querySelector('.skip-link')) return;
+  let target = document.querySelector('.app-content') || document.querySelector('main');
+  if (!target) {
+    const header = document.querySelector('header');
+    target = (header && header.nextElementSibling) || document.querySelector('section') || document.body.firstElementChild;
+  }
+  if (!target) return;
+  if (!target.id) target.id = 'main-content';
+  if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+  if (!target.closest('main') && !target.hasAttribute('role')) target.setAttribute('role', 'main');
+
+  const link = document.createElement('a');
+  link.href = '#' + target.id;
+  link.className = 'skip-link';
+  link.setAttribute('data-en', 'Skip to main content');
+  link.setAttribute('data-es', 'Saltar al contenido principal');
+  link.textContent = 'Skip to main content';
+  document.body.insertBefore(link, document.body.firstChild);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  insertSkipLink();
+
   // Restore whichever language the visitor picked last time, so it
   // persists across pages instead of resetting to English on every load.
   setLang(getCurrentLang());
@@ -422,14 +477,25 @@ window.bindQuizBox = function bindQuizBox(box) {
   const options = box.querySelectorAll('.quiz-option');
   const feedback = box.querySelector('.quiz-feedback');
   const questionId = box.getAttribute('data-question-id');
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const correctMark = lang === 'es' ? 'Respuesta correcta' : 'Correct answer';
+  const incorrectMark = lang === 'es' ? 'Tu respuesta, incorrecta' : 'Your answer, incorrect';
+  // Correctness is never color-only here: whichever option(s) get
+  // highlighted also get a ✓/✗ glyph plus an sr-only label appended,
+  // so it still reads for colorblind users and screen readers, not
+  // just the color change.
+  const markOption = (el, isRight) => {
+    el.insertAdjacentHTML('beforeend', `<span aria-hidden="true"> ${isRight ? '✓' : '✗'}</span><span class="sr-only"> (${isRight ? correctMark : incorrectMark})</span>`);
+  };
   options.forEach((opt) => {
     opt.addEventListener('click', () => {
       options.forEach((o) => (o.disabled = true));
       const isCorrect = opt.getAttribute('data-correct') === 'true';
       opt.classList.add(isCorrect ? 'correct' : 'incorrect');
+      markOption(opt, isCorrect);
       if (!isCorrect) {
         const correctOpt = box.querySelector('.quiz-option[data-correct="true"]');
-        if (correctOpt) correctOpt.classList.add('correct');
+        if (correctOpt) { correctOpt.classList.add('correct'); markOption(correctOpt, true); }
       }
       if (feedback) {
         feedback.textContent = isCorrect
@@ -459,7 +525,7 @@ function goToStep(stepNumber) {
     const n = Number(c.getAttribute('data-connector'));
     c.classList.toggle('done', n < stepNumber);
   });
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  smoothScrollTo({ top: 0 });
 }
 
 // ---- Signup (real Supabase auth account, then real Stripe Checkout) ----

@@ -239,7 +239,10 @@ function firstAvailableLesson(lessons, completedIds) {
 // swapped in for the 🔒 emoji, which read as tacky/out of place against the
 // site's flat, minimal iconography. currentColor lets it inherit whatever
 // muted color the surrounding locked badge/check already uses.
-const LOCK_ICON_SVG = '<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>';
+// aria-hidden since its meaning (locked) is always paired with a
+// .sr-only text label wherever it's used below, real text a screen
+// reader can announce rather than relying on the icon itself.
+const LOCK_ICON_SVG = '<svg aria-hidden="true" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>';
 
 function renderModuleNav(selector, lessons, completedIds, expandLesson) {
   const nav = document.querySelector(selector);
@@ -260,12 +263,14 @@ function renderModuleNav(selector, lessons, completedIds, expandLesson) {
     const firstLesson = moduleLessons[0];
     const lessonWord = lang === 'es' ? 'Lección' : 'Lesson';
 
+    const doneWord = lang === 'es' ? 'Completado' : 'Completed';
+
     if (!unlocked) {
-      html += `<li><span class="module-nav-link module-nav-locked" title="${lockedWord}"><span class="module-nav-badge locked">${LOCK_ICON_SVG}</span>${escapeHtml(moduleName(m))}</span></li>`;
+      html += `<li><span class="module-nav-link module-nav-locked" title="${lockedWord}"><span class="module-nav-badge locked">${LOCK_ICON_SVG}</span><span class="sr-only">${lockedWord}: </span>${escapeHtml(moduleName(m))}</span></li>`;
       continue;
     }
 
-    html += `<li><a href="lesson.html?id=${firstLesson.id}" class="module-nav-link ${isExpanded ? 'active' : ''}"><span class="module-nav-badge${allDone ? ' done' : ''}">${allDone ? '✓' : m}</span>${escapeHtml(moduleName(m))}</a>`;
+    html += `<li><a href="lesson.html?id=${firstLesson.id}" class="module-nav-link ${isExpanded ? 'active' : ''}"><span class="module-nav-badge${allDone ? ' done' : ''}" aria-hidden="true">${allDone ? '✓' : m}</span><span class="sr-only">${lang === 'es' ? 'Módulo' : 'Module'} ${m}${allDone ? ', ' + doneWord.toLowerCase() : ''}: </span>${escapeHtml(moduleName(m))}</a>`;
     if (isExpanded) {
       html += '<ul class="lesson-sub-list">';
       moduleLessons.forEach((l, i) => {
@@ -273,10 +278,10 @@ function renderModuleNav(selector, lessons, completedIds, expandLesson) {
         const isCurrent = expandLesson.id === l.id;
         const lUnlocked = isLessonUnlocked(l, lessons, completedIds);
         if (!lUnlocked) {
-          html += `<li><span class="lesson-sub-locked" title="${lockedWord}"><span class="check locked">${LOCK_ICON_SVG}</span><span class="lesson-sub-text"><span class="lesson-sub-label">${lessonWord} ${i + 1}</span><span class="lesson-sub-title">${escapeHtml(localize(l, 'title'))}</span></span></span></li>`;
+          html += `<li><span class="lesson-sub-locked" title="${lockedWord}"><span class="check locked">${LOCK_ICON_SVG}</span><span class="lesson-sub-text"><span class="sr-only">${lockedWord}: </span><span class="lesson-sub-label">${lessonWord} ${i + 1}</span><span class="lesson-sub-title">${escapeHtml(localize(l, 'title'))}</span></span></span></li>`;
           return;
         }
-        html += `<li><a href="lesson.html?id=${l.id}" class="${isCurrent ? 'current' : ''}"><span class="check${done ? ' done' : ''}">${done ? '✓' : ''}</span><span class="lesson-sub-text"><span class="lesson-sub-label">${lessonWord} ${i + 1}</span><span class="lesson-sub-title">${escapeHtml(localize(l, 'title'))}</span></span></a></li>`;
+        html += `<li><a href="lesson.html?id=${l.id}" class="${isCurrent ? 'current' : ''}"><span class="check${done ? ' done' : ''}" aria-hidden="true">${done ? '✓' : ''}</span><span class="lesson-sub-text"><span class="sr-only">${done ? doneWord + ': ' : ''}</span><span class="lesson-sub-label">${lessonWord} ${i + 1}</span><span class="lesson-sub-title">${escapeHtml(localize(l, 'title'))}</span></span></a></li>`;
       });
       html += '</ul>';
     }
@@ -646,6 +651,8 @@ const MODULE_QUIZ_LABELS = {
     completed: 'Completed', notPassing: 'Not yet passing', bestScore: 'Best Score', attempts: 'Attempts', lastPracticed: 'Last Practiced',
     reviewAnswers: 'Review Answers', retakeQuiz: 'Retake Quiz', yourAnswer: 'Your answer:', correctAnswer: 'Correct answer:',
     noAnswerDetail: "Answer detail wasn't recorded for this attempt.", back: '← Back',
+    yourAnswerCorrect: 'Correct', yourAnswerIncorrect: 'Incorrect',
+    optionCorrectMark: 'Correct answer', optionIncorrectMark: 'Your answer, incorrect',
   },
   es: {
     instructions: (n) => `Responde las ${n} preguntas y envía tus respuestas. Necesitas ${Math.round(MODULE_QUIZ_PASS_RATIO * 100)}% correctas para aprobar y completar este módulo.`,
@@ -654,6 +661,8 @@ const MODULE_QUIZ_LABELS = {
     completed: 'Completado', notPassing: 'Aún no aprobado', bestScore: 'Mejor Puntaje', attempts: 'Intentos', lastPracticed: 'Última Práctica',
     reviewAnswers: 'Revisar Respuestas', retakeQuiz: 'Reintentar Cuestionario', yourAnswer: 'Tu respuesta:', correctAnswer: 'Respuesta correcta:',
     noAnswerDetail: 'No se registró el detalle de respuestas para este intento.', back: '← Volver',
+    yourAnswerCorrect: 'Correcta', yourAnswerIncorrect: 'Incorrecta',
+    optionCorrectMark: 'Respuesta correcta', optionIncorrectMark: 'Tu respuesta, incorrecta',
   },
 };
 
@@ -674,6 +683,8 @@ function buildModuleQuizHtml(quizQs) {
       <label class="module-quiz-option" data-key="${key}">
         <input type="radio" name="mq-${q.id}" value="${key}">
         <span>${escapeHtml(text)}</span>
+        <span class="module-quiz-option-mark" aria-hidden="true"></span>
+        <span class="sr-only module-quiz-option-mark-sr"></span>
       </label>`).join('');
     return `<div class="module-quiz-q" data-question-id="${q.id}" data-correct="${q.correct_choice}">
       <h4>${i + 1}. ${escapeHtml(localize(q, 'question'))}</h4>
@@ -710,7 +721,7 @@ function bindModuleQuiz(wrapEl, moduleNumber, userId, onGraded) {
     const unanswered = qBlocks.some((block) => !form.querySelector(`input[name="mq-${block.getAttribute('data-question-id')}"]:checked`));
     if (unanswered) {
       resultEl.innerHTML = `<div class="module-quiz-result-banner fail">${escapeHtml(ml.unanswered)}</div>`;
-      resultEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      smoothScrollIntoView(resultEl, { block: 'center' });
       return;
     }
 
@@ -725,8 +736,20 @@ function bindModuleQuiz(wrapEl, moduleNumber, userId, onGraded) {
       answersPayload.push({ question_id: qid, selected_choice: checked ? checked.value : null, correct: !!isCorrect });
       block.querySelectorAll('.module-quiz-option').forEach((opt) => {
         opt.classList.remove('correct', 'incorrect');
-        if (opt.getAttribute('data-key') === correctKey) opt.classList.add('correct');
-        else if (checked && opt.getAttribute('data-key') === checked.value) opt.classList.add('incorrect');
+        const mark = opt.querySelector('.module-quiz-option-mark');
+        const markSr = opt.querySelector('.module-quiz-option-mark-sr');
+        // Correctness here is never color-only: each highlighted option
+        // also gets a ✓/✗ glyph and a screen-reader-only label, so it
+        // still reads correctly for colorblind users and screen readers.
+        if (opt.getAttribute('data-key') === correctKey) {
+          opt.classList.add('correct');
+          if (mark) mark.textContent = '✓';
+          if (markSr) markSr.textContent = ml.optionCorrectMark;
+        } else if (checked && opt.getAttribute('data-key') === checked.value) {
+          opt.classList.add('incorrect');
+          if (mark) mark.textContent = '✗';
+          if (markSr) markSr.textContent = ml.optionIncorrectMark;
+        }
       });
       form.querySelectorAll(`input[name="mq-${qid}"]`).forEach((r) => { r.disabled = true; });
     });
@@ -812,9 +835,9 @@ function buildModuleQuizReviewHtml(attempt, quizQs, lang) {
     const choiceText = (key) => (key ? localize(q, 'choice_' + key) : '');
     const isCorrect = a.selected_choice === q.correct_choice;
     return `<div class="module-quiz-review-item">
-      <div class="module-quiz-review-icon ${isCorrect ? 'correct' : 'incorrect'}">${isCorrect ? '✓' : '✗'}</div>
+      <div class="module-quiz-review-icon ${isCorrect ? 'correct' : 'incorrect'}" aria-hidden="true">${isCorrect ? '✓' : '✗'}</div>
       <div>
-        <p class="module-quiz-review-question">${i + 1}. ${escapeHtml(localize(q, 'question'))}</p>
+        <p class="module-quiz-review-question"><span class="sr-only">${isCorrect ? ml.yourAnswerCorrect : ml.yourAnswerIncorrect}: </span>${i + 1}. ${escapeHtml(localize(q, 'question'))}</p>
         <p class="module-quiz-review-answer">${escapeHtml(ml.yourAnswer)} <strong>${escapeHtml(choiceText(a.selected_choice))}</strong></p>
         ${!isCorrect ? `<p class="module-quiz-review-answer correct-answer">${escapeHtml(ml.correctAnswer)} <strong>${escapeHtml(choiceText(q.correct_choice))}</strong></p>` : ''}
       </div>
@@ -919,7 +942,7 @@ function renderLessonPage() {
   if (requiresQuizPass && quizViewActive) {
     quizSection.style.display = 'block';
     if (quizBackLink) {
-      quizBackLink.onclick = (e) => { e.preventDefault(); lessonCache.quizViewActive = false; renderLessonPage(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+      quizBackLink.onclick = (e) => { e.preventDefault(); lessonCache.quizViewActive = false; renderLessonPage(); smoothScrollTo({ top: 0 }); };
     }
     if (lessonCache.quizJustGraded) {
       // The quiz was just submitted, bindModuleQuiz already painted the
@@ -982,7 +1005,7 @@ function renderLessonPage() {
       if (needsToTakeQuiz) {
         lessonCache.quizViewActive = true;
         renderLessonPage();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        smoothScrollTo({ top: 0 });
         return;
       }
       nextLink.setAttribute('aria-busy', 'true');
@@ -1004,7 +1027,7 @@ function renderLessonPage() {
         const best = bestModuleQuizAttempt(quizAttempts);
         statusLine.innerHTML = `✓ ${escapeHtml(ml.passTitle(best.score, best.total))} · <a id="lesson-quiz-review-link">${escapeHtml(l.review)}</a>`;
         const reviewLink = statusLine.querySelector('#lesson-quiz-review-link');
-        if (reviewLink) reviewLink.onclick = () => { lessonCache.quizViewActive = true; renderLessonPage(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+        if (reviewLink) reviewLink.onclick = () => { lessonCache.quizViewActive = true; renderLessonPage(); smoothScrollTo({ top: 0 }); };
       } else {
         statusLine.textContent = l.intro(moduleQuizQs.length, Math.round(MODULE_QUIZ_PASS_RATIO * 100));
       }
@@ -1203,6 +1226,17 @@ async function initFlashcardsPage() {
     flashcardsCache.flipped = !flashcardsCache.flipped;
     renderFlashcardsStudy();
   });
+  // role="button" + tabindex on the card itself (flashcards.html) needs its
+  // own keydown handler for Enter/Space, in addition to the dedicated
+  // "Flip Card" button below, so keyboard users can flip via the card too.
+  document.querySelector('#fc-flip-card').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+      e.preventDefault();
+      if (!flashcardsCache) return;
+      flashcardsCache.flipped = !flashcardsCache.flipped;
+      renderFlashcardsStudy();
+    }
+  });
   document.querySelector('#fc-flip-btn').addEventListener('click', (e) => {
     e.stopPropagation();
     if (!flashcardsCache) return;
@@ -1329,9 +1363,10 @@ function renderPracticeQuizResults(attempt) {
     const qText = (lang === 'es' && a.question_es) ? a.question_es : a.question;
     const aText = (lang === 'es' && a.answer_es) ? a.answer_es : a.answer;
     const firstLine = (aText || '').split('\n')[0];
+    const srCorrect = lang === 'es' ? (a.correct ? 'Correcta' : 'Incorrecta') : (a.correct ? 'Correct' : 'Incorrect');
     return `<div class="pq-review-item">
-      <div class="pq-review-icon ${a.correct ? 'correct' : 'incorrect'}">${a.correct ? '✓' : '✗'}</div>
-      <div>
+      <div class="pq-review-icon ${a.correct ? 'correct' : 'incorrect'}" aria-hidden="true">${a.correct ? '✓' : '✗'}</div>
+      <div><span class="sr-only">${escapeHtml(srCorrect)}: </span>
         <p class="pq-review-question">${escapeHtml(qText)}</p>
         <p class="pq-review-answer">${escapeHtml(firstLine)}</p>
       </div>
@@ -1367,7 +1402,7 @@ function renderPracticeQuizHistory(attempts) {
   listEl.innerHTML = attempts.map((a) => {
     const labelEntry = FLASHCARD_TEST_LABELS[a.test_type] || FLASHCARD_TEST_LABELS.test_100;
     const passText = a.passed ? (lang === 'es' ? 'Aprobado' : 'Passed') : (lang === 'es' ? 'No aprobado' : 'Not passing');
-    return `<div class="pq-history-row" data-attempt-id="${a.id}">
+    return `<div class="pq-history-row" data-attempt-id="${a.id}" role="button" tabindex="0">
       <div>
         <div class="pq-history-test">${escapeHtml(labelEntry[lang] || labelEntry.en)}</div>
         <div class="pq-history-meta">${dateFmt(a.created_at)}</div>
@@ -1376,10 +1411,20 @@ function renderPracticeQuizHistory(attempts) {
     </div>`;
   }).join('');
 
+  // These history rows are clickable divs (role="button" + tabindex above),
+  // so they need both a click handler and a keydown handler for Enter/Space
+  // to be operable via keyboard, matching native <button> behavior.
   listEl.querySelectorAll('[data-attempt-id]').forEach((row) => {
-    row.addEventListener('click', () => {
+    const openAttempt = () => {
       const attempt = attempts.find((a) => a.id === row.getAttribute('data-attempt-id'));
       if (attempt) renderPracticeQuizResults(attempt);
+    };
+    row.addEventListener('click', openAttempt);
+    row.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        openAttempt();
+      }
     });
   });
 }
@@ -1621,11 +1666,21 @@ const MOCK_INTERVIEW_QUESTIONS = [
   },
 ];
 
-// Swap this for a real fetch (e.g. supabaseClient.from('mock_interview_questions')...)
-// once real videos/content exist. Every caller already awaits this, so the
-// swap needs no changes anywhere else in the file.
+// Questions live in the mock_interview_questions table (editable from the
+// admin panel), with the hardcoded array above as a fallback so the page
+// still works if the fetch fails for some reason. Add real videos/content by
+// editing rows in the admin panel, not by editing this file.
 async function getMockInterviewQuestions() {
-  return MOCK_INTERVIEW_QUESTIONS;
+  const cached = getCachedContent('mock_interview_questions');
+  if (cached) return cached;
+  const { data, error } = await supabaseClient
+    .from('mock_interview_questions')
+    .select('*')
+    .eq('published', true)
+    .order('sort_order');
+  if (error || !data || !data.length) return MOCK_INTERVIEW_QUESTIONS;
+  setCachedContent('mock_interview_questions', data);
+  return data;
 }
 
 const MOCK_INTERVIEW_LABELS = {
@@ -1636,6 +1691,7 @@ const MOCK_INTERVIEW_LABELS = {
     yourAnswer: 'Your answer',
     yes: 'YES', no: 'NO',
     correct: '✓ Correct', incorrect: '✗ Incorrect',
+    bucketCorrect: 'Correct', bucketNotSure: 'Not sure', bucketIncorrect: 'Incorrect',
     continueNext: 'Continue →', viewSummary: 'View Summary →',
     resultLine: (correct, graded) => (graded > 0 ? `${correct} of ${graded} answers marked correct` : 'Session complete'),
     quitConfirm: "Quit this mock interview? Your progress won't be saved.",
@@ -1647,6 +1703,7 @@ const MOCK_INTERVIEW_LABELS = {
     yourAnswer: 'Tu respuesta',
     yes: 'SÍ', no: 'NO',
     correct: '✓ Correcta', incorrect: '✗ Incorrecta',
+    bucketCorrect: 'Correcta', bucketNotSure: 'No segura', bucketIncorrect: 'Incorrecta',
     continueNext: 'Continuar →', viewSummary: 'Ver Resumen →',
     resultLine: (correct, graded) => (graded > 0 ? `${correct} de ${graded} respuestas marcadas como correctas` : 'Sesión completada'),
     quitConfirm: '¿Salir de esta entrevista simulada? Tu progreso no se guardará.',
@@ -1664,7 +1721,7 @@ function renderMockVideo(videoUrl) {
   const isPlaceholder = !videoUrl || videoUrl.indexOf('/placeholder') === 0;
   if (isPlaceholder) {
     wrap.innerHTML = `<div class="mi-video-placeholder">
-      <div class="mi-video-icon">🎥</div>
+      <div class="mi-video-icon" aria-hidden="true">🎥</div>
       <div class="mi-video-label">${escapeHtml(l.videoLabel)}</div>
       <div class="mi-video-sublabel">${escapeHtml(l.videoSublabel)}</div>
     </div>`;
@@ -1792,8 +1849,12 @@ function submitMockAnswer() {
   if (q.type === 'multiple_choice' || q.type === 'yes_no') {
     correct = given === q.correct_answer;
   }
+  // question/question_es/options are copied onto the answer (not just
+  // question_id) so a persisted attempt's history can render on its own
+  // later even if that question is edited or removed from the admin panel.
   mockInterviewCache.answers.push({
     question_id: q.id, type: q.type, given, correct, self_grade: null,
+    question: q.question, question_es: q.question_es || null, options: q.options || [],
   });
   renderMockReview();
 }
@@ -1822,19 +1883,63 @@ function continueMockInterview() {
   }
 }
 
+// Best-effort save to mock_interview_attempts so the member can review past
+// sessions later (see renderMockInterviewHistory). Session lookup happens
+// here rather than being threaded through startMockInterview/
+// continueMockInterview/finishMockInterview, since those functions are bound
+// directly to button clicks with no user_id in scope.
+async function persistMockInterviewAttempt(answers, counts) {
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) return;
+    await supabaseClient.from('mock_interview_attempts').insert({
+      user_id: session.user.id,
+      completed_count: answers.length,
+      correct_count: counts.correct,
+      not_sure_count: counts.not_sure,
+      incorrect_count: counts.incorrect,
+      answers,
+    });
+    loadMockInterviewHistory(); // refresh the "Past Sessions" list on the intro view
+  } catch (e) {
+    // Not fatal; the summary screen already rendered from local state.
+  }
+}
+
+// Holds whatever is currently on the summary view (a just-finished live
+// session or a reopened history row) purely so a langchange re-render can
+// redraw it without re-persisting or re-fetching anything. Shape:
+// { answers, counts }.
+let mockInterviewSummaryState = null;
+
 function finishMockInterview() {
   const { answers } = mockInterviewCache;
-  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
-  const l = MOCK_INTERVIEW_LABELS[lang] || MOCK_INTERVIEW_LABELS.en;
-
   const counts = { correct: 0, not_sure: 0, incorrect: 0 };
   answers.forEach((a) => { counts[mockAnswerBucket(a)] += 1; });
 
-  // TODO: once real content ships, persist this session, e.g.:
-  //   supabaseClient.from('mock_interview_attempts').insert({ user_id, questions: answers, ... })
-  // Front-end-only for this pass, so nothing is written to Supabase yet.
+  // Fire-and-forget: the summary below renders from local state either way,
+  // so a failed save shouldn't block the member from seeing their results.
+  persistMockInterviewAttempt(answers, counts);
 
   document.querySelector('#mi-interview-view').style.display = 'none';
+  renderMockInterviewSummary(answers, counts);
+}
+
+// Reopens a previously saved mock_interview_attempts row in the same
+// summary view used right after finishing a live session.
+function renderMockInterviewAttempt(attempt) {
+  const answers = attempt.answers || [];
+  const counts = { correct: attempt.correct_count || 0, not_sure: attempt.not_sure_count || 0, incorrect: attempt.incorrect_count || 0 };
+  document.querySelector('#mi-intro-view').style.display = 'none';
+  document.querySelector('#mi-interview-view').style.display = 'none';
+  renderMockInterviewSummary(answers, counts);
+}
+
+function renderMockInterviewSummary(answers, counts) {
+  mockInterviewSummaryState = { answers, counts };
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const l = MOCK_INTERVIEW_LABELS[lang] || MOCK_INTERVIEW_LABELS.en;
+
   document.querySelector('#mi-summary-view').style.display = 'block';
 
   document.querySelector('#mi-stat-completed').textContent = answers.length;
@@ -1843,18 +1948,27 @@ function finishMockInterview() {
   document.querySelector('#mi-stat-incorrect').textContent = counts.incorrect;
   document.querySelector('#mi-summary-result').textContent = l.resultLine(counts.correct, counts.correct + counts.incorrect);
 
-  const reviewList = document.querySelector('#mi-review-list');
-  reviewList.innerHTML = mockInterviewCache.questions.map((q, i) => {
-    const a = answers[i];
+  document.querySelector('#mi-review-list').innerHTML = buildMockReviewListHtml(answers);
+}
+
+// Renders the "Review Your Session" list from answers alone (each answer
+// already carries its own question/question_es/options, copied in at
+// submit time), so this works both right after finishing a session and
+// later when reopening a saved mock_interview_attempts row.
+function buildMockReviewListHtml(answers) {
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const l = MOCK_INTERVIEW_LABELS[lang] || MOCK_INTERVIEW_LABELS.en;
+  return answers.map((a) => {
     const bucket = mockAnswerBucket(a);
     const icon = bucket === 'correct' ? '✓' : (bucket === 'incorrect' ? '✗' : '?');
     let answerText = a.given;
-    if (q.type === 'multiple_choice') answerText = mockOptionLabel(q, a.given);
-    if (q.type === 'yes_no') answerText = a.given === 'yes' ? l.yes : l.no;
+    if (a.type === 'multiple_choice') answerText = mockOptionLabel(a, a.given);
+    if (a.type === 'yes_no') answerText = a.given === 'yes' ? l.yes : l.no;
+    const bucketLabel = bucket === 'correct' ? l.bucketCorrect : (bucket === 'incorrect' ? l.bucketIncorrect : l.bucketNotSure);
     return `<div class="mi-review-item">
-      <div class="mi-review-icon ${bucket}">${icon}</div>
+      <div class="mi-review-icon ${bucket}" aria-hidden="true">${icon}</div>
       <div>
-        <p class="mi-review-list-question">${escapeHtml(localize(q, 'question'))}</p>
+        <p class="mi-review-list-question"><span class="sr-only">${escapeHtml(bucketLabel)}: </span>${escapeHtml(localize(a, 'question'))}</p>
         <p class="mi-review-list-answer">${escapeHtml(answerText)}</p>
       </div>
     </div>`;
@@ -1864,6 +1978,7 @@ function finishMockInterview() {
 async function startMockInterview() {
   const questions = await getMockInterviewQuestions();
   mockInterviewCache = { questions, idx: 0, answers: [], pendingAnswer: null };
+  mockInterviewSummaryState = null;
   document.querySelector('#mi-intro-view').style.display = 'none';
   document.querySelector('#mi-summary-view').style.display = 'none';
   document.querySelector('#mi-interview-view').style.display = 'block';
@@ -1872,13 +1987,19 @@ async function startMockInterview() {
 
 function renderMockInterviewStatic() {
   // Static intro/summary copy is handled by data-en/data-es via setLang();
-  // this only needs to re-render JS-built content still on screen.
+  // this only needs to re-render JS-built content still on screen. Uses
+  // renderMockInterviewSummary (not finishMockInterview) for the summary
+  // case so toggling language never re-persists the attempt.
+  renderMockInterviewHistoryList(mockInterviewHistoryCache);
+  const summaryVisible = document.querySelector('#mi-summary-view').style.display !== 'none';
+  if (summaryVisible && mockInterviewSummaryState) {
+    renderMockInterviewSummary(mockInterviewSummaryState.answers, mockInterviewSummaryState.counts);
+    return;
+  }
   if (!mockInterviewCache) return;
   const interviewVisible = document.querySelector('#mi-interview-view').style.display !== 'none';
   const reviewShowing = document.querySelector('#mi-review-area') && document.querySelector('#mi-review-area').style.display !== 'none';
-  const summaryVisible = document.querySelector('#mi-summary-view').style.display !== 'none';
   if (interviewVisible && !reviewShowing) renderMockInterviewQuestion();
-  if (summaryVisible) finishMockInterview();
 }
 window.addEventListener('ciudadanoready:langchange', renderMockInterviewStatic);
 
@@ -1910,14 +2031,83 @@ async function initMockInterviewPage() {
     btn.addEventListener('click', () => selectMockSelfGrade(btn.getAttribute('data-grade')));
   });
   document.querySelector('#mi-retake-btn').addEventListener('click', () => startMockInterview());
+  document.querySelector('#mi-summary-back-btn').addEventListener('click', () => {
+    mockInterviewSummaryState = null;
+    document.querySelector('#mi-summary-view').style.display = 'none';
+    document.querySelector('#mi-intro-view').style.display = 'block';
+    loadMockInterviewHistory();
+  });
   document.querySelector('#mi-quit-btn').addEventListener('click', () => {
     const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
     const l = MOCK_INTERVIEW_LABELS[lang] || MOCK_INTERVIEW_LABELS.en;
     if (!confirm(l.quitConfirm)) return;
     mockInterviewCache = null;
+    mockInterviewSummaryState = null;
     document.querySelector('#mi-interview-view').style.display = 'none';
     document.querySelector('#mi-summary-view').style.display = 'none';
     document.querySelector('#mi-intro-view').style.display = 'block';
+  });
+
+  loadMockInterviewHistory();
+}
+
+// ---- Mock Interview history (past mock_interview_attempts rows) -----------
+let mockInterviewHistoryCache = [];
+
+async function loadMockInterviewHistory() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  const { data } = await supabaseClient
+    .from('mock_interview_attempts')
+    .select('*')
+    .eq('user_id', session.user.id)
+    .order('created_at', { ascending: false })
+    .limit(25);
+  mockInterviewHistoryCache = data || [];
+  renderMockInterviewHistoryList(mockInterviewHistoryCache);
+}
+
+function renderMockInterviewHistoryList(attempts) {
+  const emptyEl = document.querySelector('#mi-history-empty');
+  const listEl = document.querySelector('#mi-history-list');
+  if (!listEl) return;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const l = MOCK_INTERVIEW_LABELS[lang] || MOCK_INTERVIEW_LABELS.en;
+
+  if (!attempts.length) {
+    if (emptyEl) emptyEl.style.display = 'block';
+    listEl.innerHTML = '';
+    return;
+  }
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  const dateFmt = (iso) => new Date(iso).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  const questionsWord = lang === 'es' ? 'preguntas' : 'questions';
+  listEl.innerHTML = attempts.map((a) => `
+    <div class="pq-history-row" data-mi-attempt-id="${a.id}" role="button" tabindex="0">
+      <div>
+        <div class="pq-history-test">${l.resultLine(a.correct_count, a.correct_count + a.incorrect_count)}</div>
+        <div class="pq-history-meta">${dateFmt(a.created_at)}</div>
+      </div>
+      <span class="badge">${a.completed_count} ${questionsWord}</span>
+    </div>
+  `).join('');
+
+  // Clickable divs need both click and keydown (Enter/Space) handlers to be
+  // keyboard-operable, same pattern used for the practice quiz and Know
+  // Your Country history/lesson rows.
+  listEl.querySelectorAll('[data-mi-attempt-id]').forEach((row) => {
+    const openAttempt = () => {
+      const attempt = attempts.find((a) => a.id === row.getAttribute('data-mi-attempt-id'));
+      if (attempt) renderMockInterviewAttempt(attempt);
+    };
+    row.addEventListener('click', openAttempt);
+    row.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        openAttempt();
+      }
+    });
   });
 }
 
@@ -2519,7 +2709,7 @@ function renderKycPicker() {
     const rows = u.lessons.map((l) => {
       const isDone = completedNums.has(l.lesson_number);
       const title = localize(l, 'title');
-      return `<div class="kyc-lesson-row${isDone ? ' done' : ''}" data-lesson-number="${l.lesson_number}">
+      return `<div class="kyc-lesson-row${isDone ? ' done' : ''}" data-lesson-number="${l.lesson_number}" role="button" tabindex="0">
         <span class="kyc-lesson-check">${isDone ? '✓' : ''}</span>
         <span class="kyc-lesson-num">${l.lesson_number}</span>
         <span class="kyc-lesson-title">${escapeHtml(title)}</span>
@@ -2534,9 +2724,16 @@ function renderKycPicker() {
     </div>`;
   }).join('');
 
+  // Clickable divs (role="button" + tabindex above) need a keydown handler
+  // for Enter/Space alongside the click handler to be keyboard-operable.
   listEl.querySelectorAll('[data-lesson-number]').forEach((row) => {
-    row.addEventListener('click', () => {
-      openKycLesson(parseInt(row.getAttribute('data-lesson-number'), 10));
+    const openRow = () => openKycLesson(parseInt(row.getAttribute('data-lesson-number'), 10));
+    row.addEventListener('click', openRow);
+    row.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        openRow();
+      }
     });
   });
 }

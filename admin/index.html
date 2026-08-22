@@ -52,6 +52,7 @@
         <a href="#" data-panel-link="quizzes">Quiz Editor</a>
         <a href="#" data-panel-link="flashcards">Flashcards Editor</a>
         <a href="#" data-panel-link="country-lessons">Know Your Country Editor</a>
+        <a href="#" data-panel-link="mock-interview">Mock Interview Editor</a>
       </li>
       <li class="app-nav-group">
         <h4>Revenue</h4>
@@ -70,7 +71,7 @@
         <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
         <div>
           <span class="eyebrow" style="margin-bottom:0;" id="admin-panel-eyebrow">ADMIN PANEL</span>
-          <h3 style="margin:0;" id="admin-panel-title">Analytics</h3>
+          <h1 style="margin:0;" id="admin-panel-title">Analytics</h1>
         </div>
       </div>
       <a href="/index.html" class="btn btn-ghost btn-sm">Exit Admin</a>
@@ -107,14 +108,14 @@
         </div>
         <div class="card card-pad">
           <span class="eyebrow">NOTE</span>
-          <p class="small" style="margin:0;">Revenue and billing metrics (MRR, failed payments, refunds) will appear here once a payment processor is connected. Those numbers should come straight from Stripe/Square rather than being tracked separately.</p>
+          <p class="small" style="margin:0;">Stripe is connected for checkout, billing, and refunds (see the Payments tab). Detailed revenue reporting (MRR, failed payments, churn) lives in the Stripe Dashboard rather than being duplicated here.</p>
         </div>
       </section>
 
       <!-- ================= USERS ================= -->
       <section class="admin-panel" data-panel="users">
         <div class="search-row">
-          <input type="text" id="user-search" placeholder="Search by name or email…">
+          <input type="text" id="user-search" aria-label="Search users by name or email" placeholder="Search by name or email…">
           <span class="small muted" id="user-count"></span>
         </div>
         <div class="card">
@@ -133,7 +134,7 @@
           <span class="eyebrow">ADD LESSON</span>
           <form class="admin-add-form" id="lesson-form">
             <div>
-              <label>Module</label>
+              <label for="lesson-module">Module</label>
               <select id="lesson-module" required>
                 <option value="1">1. Welcome</option>
                 <option value="2">2. Eligibility</option>
@@ -145,27 +146,27 @@
               </select>
             </div>
             <div>
-              <label>Sort Order</label>
+              <label for="lesson-sort">Sort Order</label>
               <input type="number" id="lesson-sort" value="1" min="1">
             </div>
             <div class="span-2">
-              <label>Lesson Title (English)</label>
+              <label for="lesson-title">Lesson Title (English)</label>
               <input type="text" id="lesson-title" placeholder="e.g. What counts as continuous residency" required>
             </div>
             <div class="span-2">
-              <label>Content (English)</label>
+              <label for="lesson-content">Content (English)</label>
               <textarea id="lesson-content" placeholder="Lesson text/notes… (separate bullet lines with • and blank lines between paragraphs)"></textarea>
             </div>
             <div class="span-2">
-              <label>Título de la lección (Spanish, optional)</label>
+              <label for="lesson-title-es">Título de la lección (Spanish, optional)</label>
               <input type="text" id="lesson-title-es" placeholder="Se usará el inglés si se deja en blanco">
             </div>
             <div class="span-2">
-              <label>Contenido (Spanish, optional)</label>
+              <label for="lesson-content-es">Contenido (Spanish, optional)</label>
               <textarea id="lesson-content-es" placeholder="Se usará el inglés si se deja en blanco"></textarea>
             </div>
             <div>
-              <label>Video URL (optional)</label>
+              <label for="lesson-video">Video URL (optional)</label>
               <input type="text" id="lesson-video" placeholder="https://…">
             </div>
             <div style="display:flex; align-items:flex-end; gap:8px; padding-bottom:11px;">
@@ -187,7 +188,7 @@
           <span class="eyebrow">ADD QUESTION</span>
           <form class="admin-add-form" id="quiz-form">
             <div>
-              <label>Module</label>
+              <label for="quiz-module">Module</label>
               <select id="quiz-module" required>
                 <option value="1">1. Welcome</option>
                 <option value="2">2. Eligibility</option>
@@ -199,51 +200,51 @@
               </select>
             </div>
             <div>
-              <label>Sort Order</label>
+              <label for="quiz-sort">Sort Order</label>
               <input type="number" id="quiz-sort" value="1" min="1">
             </div>
             <div class="span-2">
-              <label>Question (English)</label>
+              <label for="quiz-question">Question (English)</label>
               <input type="text" id="quiz-question" placeholder="e.g. What is the supreme law of the land?" required>
             </div>
             <div>
-              <label>Choice A (English)</label>
+              <label for="quiz-choice-a">Choice A (English)</label>
               <input type="text" id="quiz-choice-a" required>
             </div>
             <div>
-              <label>Choice B (English)</label>
+              <label for="quiz-choice-b">Choice B (English)</label>
               <input type="text" id="quiz-choice-b" required>
             </div>
             <div>
-              <label>Choice C (English, leave blank for True/False)</label>
+              <label for="quiz-choice-c">Choice C (English, leave blank for True/False)</label>
               <input type="text" id="quiz-choice-c">
             </div>
             <div>
-              <label>Choice D (English, leave blank for True/False)</label>
+              <label for="quiz-choice-d">Choice D (English, leave blank for True/False)</label>
               <input type="text" id="quiz-choice-d">
             </div>
             <div class="span-2">
-              <label>Pregunta (Spanish, optional)</label>
+              <label for="quiz-question-es">Pregunta (Spanish, optional)</label>
               <input type="text" id="quiz-question-es" placeholder="Se usará el inglés si se deja en blanco">
             </div>
             <div>
-              <label>Opción A (Spanish)</label>
+              <label for="quiz-choice-a-es">Opción A (Spanish)</label>
               <input type="text" id="quiz-choice-a-es">
             </div>
             <div>
-              <label>Opción B (Spanish)</label>
+              <label for="quiz-choice-b-es">Opción B (Spanish)</label>
               <input type="text" id="quiz-choice-b-es">
             </div>
             <div>
-              <label>Opción C (Spanish)</label>
+              <label for="quiz-choice-c-es">Opción C (Spanish)</label>
               <input type="text" id="quiz-choice-c-es">
             </div>
             <div>
-              <label>Opción D (Spanish)</label>
+              <label for="quiz-choice-d-es">Opción D (Spanish)</label>
               <input type="text" id="quiz-choice-d-es">
             </div>
             <div>
-              <label>Correct Choice</label>
+              <label for="quiz-correct">Correct Choice</label>
               <select id="quiz-correct">
                 <option value="a">A</option>
                 <option value="b">B</option>
@@ -270,7 +271,7 @@
           <span class="eyebrow">ADD FLASHCARD</span>
           <form class="admin-add-form" id="flashcard-form">
             <div>
-              <label>Test</label>
+              <label for="flashcard-test-type">Test</label>
               <select id="flashcard-test-type" required>
                 <option value="test_128">128-Question Test (2025 version)</option>
                 <option value="test_100">100-Question Test (2008 version)</option>
@@ -278,23 +279,23 @@
               </select>
             </div>
             <div>
-              <label>Sort Order (question #)</label>
+              <label for="flashcard-sort">Sort Order (question #)</label>
               <input type="number" id="flashcard-sort" value="1" min="1">
             </div>
             <div class="span-2">
-              <label>Question (English)</label>
+              <label for="flashcard-question">Question (English)</label>
               <input type="text" id="flashcard-question" placeholder="e.g. What is the supreme law of the land?" required>
             </div>
             <div class="span-2">
-              <label>Answer (English)</label>
+              <label for="flashcard-answer">Answer (English)</label>
               <textarea id="flashcard-answer" placeholder="One answer per line if there are multiple acceptable answers" required></textarea>
             </div>
             <div class="span-2">
-              <label>Pregunta (Spanish, optional)</label>
+              <label for="flashcard-question-es">Pregunta (Spanish, optional)</label>
               <input type="text" id="flashcard-question-es" placeholder="Se usará el inglés si se deja en blanco">
             </div>
             <div class="span-2">
-              <label>Respuesta (Spanish, optional)</label>
+              <label for="flashcard-answer-es">Respuesta (Spanish, optional)</label>
               <textarea id="flashcard-answer-es" placeholder="Se usará el inglés si se deja en blanco"></textarea>
             </div>
             <div style="display:flex; align-items:flex-end; gap:8px; padding-bottom:11px;">
@@ -325,35 +326,35 @@
           <span class="eyebrow">EDIT LESSON</span>
           <form class="admin-add-form" id="country-lesson-form">
             <div>
-              <label>Unit Number</label>
+              <label for="cl-unit-number">Unit Number</label>
               <input type="number" id="cl-unit-number" value="1" min="1" max="10" required>
             </div>
             <div>
-              <label>Lesson Number (1–40, unique)</label>
+              <label for="cl-lesson-number">Lesson Number (1–40, unique)</label>
               <input type="number" id="cl-lesson-number" value="1" min="1" max="40" required>
             </div>
             <div class="span-2">
-              <label>Unit Title (English)</label>
+              <label for="cl-unit-title">Unit Title (English)</label>
               <input type="text" id="cl-unit-title" placeholder="e.g. The World Before the United States" required>
             </div>
             <div class="span-2">
-              <label>Lesson Title (English)</label>
+              <label for="cl-title">Lesson Title (English)</label>
               <input type="text" id="cl-title" placeholder="e.g. The First Peoples of North America" required>
             </div>
             <div class="span-2">
-              <label>Lesson Content (English)</label>
+              <label for="cl-content">Lesson Content (English)</label>
               <textarea id="cl-content" style="min-height:220px;" placeholder="Blank line between paragraphs. Lines starting with • become a bulleted list. **bold** and *italic* are supported." required></textarea>
             </div>
             <div class="span-2">
-              <label>Título de la Unidad (Spanish, optional)</label>
+              <label for="cl-unit-title-es">Título de la Unidad (Spanish, optional)</label>
               <input type="text" id="cl-unit-title-es" placeholder="Se usará el inglés si se deja en blanco">
             </div>
             <div class="span-2">
-              <label>Título de la Lección (Spanish, optional)</label>
+              <label for="cl-title-es">Título de la Lección (Spanish, optional)</label>
               <input type="text" id="cl-title-es" placeholder="Se usará el inglés si se deja en blanco">
             </div>
             <div class="span-2">
-              <label>Contenido (Spanish, optional)</label>
+              <label for="cl-content-es">Contenido (Spanish, optional)</label>
               <textarea id="cl-content-es" style="min-height:220px;" placeholder="Se usará el inglés si se deja en blanco"></textarea>
             </div>
             <div style="display:flex; align-items:flex-end; gap:8px; padding-bottom:11px;">
@@ -372,6 +373,93 @@
         <div id="country-lessons-list"><p class="empty-state">Loading…</p></div>
       </section>
 
+      <!-- ================= MOCK INTERVIEW EDITOR ================= -->
+      <section class="admin-panel" data-panel="mock-interview">
+        <div class="card card-pad" style="margin-bottom:24px;">
+          <span class="eyebrow">ADD / EDIT QUESTION</span>
+          <p class="small muted" style="margin:4px 0 14px;">These questions power the Mock Interview page. Once real interview videos are recorded and uploaded, paste each one's URL into the Video URL field below and the member-facing video player switches over automatically, no other changes needed.</p>
+          <form class="admin-add-form" id="mi-form">
+            <div>
+              <label for="mi-sort">Sort Order</label>
+              <input type="number" id="mi-sort" value="1" min="1">
+            </div>
+            <div>
+              <label for="mi-type">Question Type</label>
+              <select id="mi-type" required>
+                <option value="open_ended">Open-ended (self-graded)</option>
+                <option value="multiple_choice">Multiple choice</option>
+                <option value="yes_no">Yes / No</option>
+              </select>
+            </div>
+            <div class="span-2">
+              <label for="mi-question">Question (English)</label>
+              <textarea id="mi-question" placeholder="e.g. Tell me about yourself and why you want to become a U.S. citizen." required></textarea>
+            </div>
+            <div class="span-2">
+              <label for="mi-question-es">Pregunta (Spanish, optional)</label>
+              <textarea id="mi-question-es" placeholder="Se usará el inglés si se deja en blanco"></textarea>
+            </div>
+            <div class="span-2">
+              <label for="mi-video-url">Video URL (optional — leave blank to show the placeholder)</label>
+              <input type="text" id="mi-video-url" placeholder="https://…">
+            </div>
+
+            <div class="span-2" id="mi-options-wrap" style="display:none;">
+              <div class="module-heading" style="margin-top:0;">Answer choices (multiple choice only)</div>
+              <div class="admin-add-form" style="margin-bottom:0;">
+                <div><label for="mi-opt-a-en">Choice A (English)</label><input type="text" id="mi-opt-a-en"></div>
+                <div><label for="mi-opt-a-es">Choice A (Spanish)</label><input type="text" id="mi-opt-a-es"></div>
+                <div><label for="mi-opt-b-en">Choice B (English)</label><input type="text" id="mi-opt-b-en"></div>
+                <div><label for="mi-opt-b-es">Choice B (Spanish)</label><input type="text" id="mi-opt-b-es"></div>
+                <div><label for="mi-opt-c-en">Choice C (English, optional)</label><input type="text" id="mi-opt-c-en"></div>
+                <div><label for="mi-opt-c-es">Choice C (Spanish)</label><input type="text" id="mi-opt-c-es"></div>
+                <div><label for="mi-opt-d-en">Choice D (English, optional)</label><input type="text" id="mi-opt-d-en"></div>
+                <div><label for="mi-opt-d-es">Choice D (Spanish)</label><input type="text" id="mi-opt-d-es"></div>
+              </div>
+            </div>
+
+            <div id="mi-correct-mc-wrap" style="display:none;">
+              <label for="mi-correct-mc">Correct Choice</label>
+              <select id="mi-correct-mc">
+                <option value="a">A</option>
+                <option value="b">B</option>
+                <option value="c">C</option>
+                <option value="d">D</option>
+              </select>
+            </div>
+            <div id="mi-correct-yn-wrap" style="display:none;">
+              <label for="mi-correct-yn">Correct Answer</label>
+              <select id="mi-correct-yn">
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+
+            <div class="span-2">
+              <label for="mi-explanation">Explanation (English)</label>
+              <textarea id="mi-explanation" placeholder="Shown after the member answers, explains why this matters or what a real officer is listening for."></textarea>
+            </div>
+            <div class="span-2">
+              <label for="mi-explanation-es">Explicación (Spanish, optional)</label>
+              <textarea id="mi-explanation-es" placeholder="Se usará el inglés si se deja en blanco"></textarea>
+            </div>
+
+            <div style="display:flex; align-items:flex-end; gap:8px; padding-bottom:11px;">
+              <input type="checkbox" id="mi-published" style="width:auto; margin:0;" checked>
+              <label style="margin:0;" for="mi-published">Published</label>
+            </div>
+            <div class="span-2">
+              <button type="submit" class="btn btn-primary" id="mi-submit">Add Question</button>
+              <button type="button" class="btn btn-ghost" id="mi-cancel-edit" style="display:none;">Cancel Edit</button>
+            </div>
+          </form>
+        </div>
+        <div class="search-row">
+          <span class="small muted" id="mi-count"></span>
+        </div>
+        <div id="mi-questions-list"><p class="empty-state">Loading…</p></div>
+      </section>
+
       <!-- ================= REVENUE / REFUNDS ================= -->
       <section class="admin-panel" data-panel="revenue">
         <div class="card card-pad" style="margin-bottom:20px;">
@@ -379,7 +467,7 @@
           <p class="small muted" style="margin:4px 0 0;">Search for a paying customer, pull up their Stripe charges, and issue a full or partial refund. For anything beyond refunds (coupons, dunning, detailed revenue reporting), use the Stripe Dashboard directly; this is a convenience tool, not a replacement for it.</p>
         </div>
         <div class="search-row">
-          <input type="text" id="revenue-user-search" placeholder="Search by name or email…">
+          <input type="text" id="revenue-user-search" aria-label="Search customers by name or email" placeholder="Search by name or email…">
         </div>
         <div id="revenue-user-results"><p class="empty-state">Loading…</p></div>
         <div id="revenue-charges-panel" style="display:none; margin-top:24px;">
