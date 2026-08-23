@@ -3002,21 +3002,19 @@ function buildRwAudioControl(audioUrl) {
   return `<span class="rw-audio-pending">🔇 <span data-en="Audio coming soon" data-es="Audio próximamente">Audio coming soon</span></span>`;
 }
 
-let rwActiveTab = 'reading';
 let readingPracticeCache = null; // { items, order, pos }
 let writingPracticeCache = null; // { items, order, pos }
 let alphabetLettersCache = [];
 let rwSpellBuffer = '';
 let rwActivePromptBtn = null;
 
-function switchRwTab(tab) {
-  rwActiveTab = tab;
-  document.querySelectorAll('.rw-tab').forEach((btn) => {
-    btn.classList.toggle('active', btn.getAttribute('data-rw-tab') === tab);
-  });
-  document.querySelector('#rw-reading-view').style.display = tab === 'reading' ? 'block' : 'none';
-  document.querySelector('#rw-writing-view').style.display = tab === 'writing' ? 'block' : 'none';
-  document.querySelector('#rw-alphabet-view').style.display = tab === 'alphabet' ? 'block' : 'none';
+// Landing page (picker) + three exercise views, one visible at a time.
+// Reachable sections: 'picker' | 'reading' | 'writing' | 'alphabet'.
+function showRwSection(section) {
+  document.querySelector('#rw-picker-view').style.display = section === 'picker' ? 'block' : 'none';
+  document.querySelector('#rw-reading-view').style.display = section === 'reading' ? 'block' : 'none';
+  document.querySelector('#rw-writing-view').style.display = section === 'writing' ? 'block' : 'none';
+  document.querySelector('#rw-alphabet-view').style.display = section === 'alphabet' ? 'block' : 'none';
 }
 
 function renderRwReadingCard() {
@@ -3125,10 +3123,15 @@ async function initReadingWritingPage() {
   renderRwReadingCard();
   renderRwWritingCard();
   renderRwKeyboard();
+  showRwSection('picker');
 
-  // Tabs
-  document.querySelectorAll('.rw-tab').forEach((btn) => {
-    btn.addEventListener('click', () => switchRwTab(btn.getAttribute('data-rw-tab')));
+  // Landing picker cards open a section; each section's back button
+  // returns to the picker.
+  document.querySelectorAll('.rw-picker-card').forEach((btn) => {
+    btn.addEventListener('click', () => showRwSection(btn.getAttribute('data-rw-section')));
+  });
+  document.querySelectorAll('[data-rw-back]').forEach((btn) => {
+    btn.addEventListener('click', () => showRwSection('picker'));
   });
 
   // Delegated audio-button handling, covers reading cards, writing cards,
