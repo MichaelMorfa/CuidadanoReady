@@ -760,13 +760,19 @@ textarea { resize: vertical; min-height: 120px; }
    Documents) -- baked-in low opacity in the SVG itself, layered as a
    background-image so the topbar's own background-color still shows
    through everywhere else and text on top stays fully legible. Desktop
-   only; not worth the visual clutter on narrow screens. */
+   only; not worth the visual clutter on narrow screens.
+   Sized/positioned to sit flush in the top-right corner with no negative
+   offset: the topbar itself is only ~85-95px tall (20px padding + a line
+   of small eyebrow text + the h1), so a bigger image pushed upward with a
+   negative background-position was being clipped by the box entirely --
+   background never paints past an element's own box, regardless of
+   overflow. 140px wide keeps the full ~93px-tall flag inside that box. */
 body[data-dashboard-page] .app-topbar,
 body[data-documents-page] .app-topbar {
   background-image: url('flag-watermark.svg');
   background-repeat: no-repeat;
-  background-position: right -30px top -60px;
-  background-size: 320px auto;
+  background-position: top right;
+  background-size: 140px auto;
 }
 @media (max-width: 900px) {
   body[data-dashboard-page] .app-topbar,

@@ -36,7 +36,13 @@
      lines grow to fill the full card width instead of leaving a gap on
      the right, matching how it already looks in Spanish, where longer
      module-name labels happened to push the row wider. */
-  #dashboard-stamp-path { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+  /* overflow-x:auto forces the browser to compute overflow-y as auto too
+     (can't have one axis "visible" and the other scrolling), which was
+     clipping the top of each circle on hover -- the hover state grows the
+     circle slightly (transform: scale) and adds a ring (box-shadow), and
+     both were getting cut off by that auto-generated scroll box. Extra
+     top padding gives them room. */
+  #dashboard-stamp-path { flex-wrap: nowrap; overflow-x: auto; padding: 8px 0 4px; }
   #dashboard-stamp-path .stamp-connector { flex: 1 1 auto; min-width: 16px; }
 </style>
 <meta name="description" content="Your Ciudadano Ready member dashboard.">
