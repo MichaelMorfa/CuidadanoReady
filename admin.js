@@ -334,6 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <strong>${escapeHtml(lesson.title)}</strong>
               ${lesson.published ? '<span class="badge badge-forest" style="margin-left:8px;">Published</span>' : '<span class="badge" style="margin-left:8px;">Draft</span>'}
               ${lesson.video_url ? '<span class="badge" style="margin-left:6px;">Has Video</span>' : ''}
+              ${!lesson.video_url && lesson.no_video ? '<span class="badge badge-ocean" style="margin-left:6px;">No Video (Audio Instead)</span>' : ''}
             </div>
             <div class="flex gap-8">
               <button class="btn btn-ghost btn-sm" data-lesson-edit="${lesson.id}">Edit</button>
@@ -370,6 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
       title_es: document.querySelector('#lesson-title-es').value || null,
       content_es: document.querySelector('#lesson-content-es').value || null,
       video_url: document.querySelector('#lesson-video').value || null,
+      no_video: document.querySelector('#lesson-no-video').checked,
       published: document.querySelector('#lesson-published').checked,
     };
     const submitBtn = document.querySelector('#lesson-submit');
@@ -402,6 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelector('#lesson-title-es').value = data.title_es || '';
       document.querySelector('#lesson-content-es').value = data.content_es || '';
       document.querySelector('#lesson-video').value = data.video_url || '';
+      document.querySelector('#lesson-no-video').checked = !!data.no_video;
       document.querySelector('#lesson-published').checked = !!data.published;
       document.querySelector('#lesson-submit').textContent = 'Save Changes';
       lessonCancelBtn.style.display = 'inline-flex';

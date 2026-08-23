@@ -928,6 +928,13 @@ function renderLessonPage() {
       videoWrap.style.display = 'block';
       videoWrap.innerHTML = buildVideoEmbed(lesson.video_url);
       videoPlaceholder.style.display = 'none';
+    } else if (lesson.no_video) {
+      // This lesson isn't getting a video at all (audio narration planned
+      // instead), so skip the "coming soon" placeholder entirely rather
+      // than promising something that isn't coming.
+      videoWrap.style.display = 'none';
+      videoWrap.innerHTML = '';
+      videoPlaceholder.style.display = 'none';
     } else {
       videoWrap.style.display = 'none';
       videoWrap.innerHTML = '';
@@ -1986,6 +1993,12 @@ async function startMockInterview() {
 }
 
 function renderMockInterviewStatic() {
+  // Bound to the site-wide langchange event below, which fires on every
+  // page, not just mock-interview.html — #mi-summary-view only exists
+  // there, so bail out immediately anywhere else instead of crashing on
+  // a null .style read (this was firing on every language toggle across
+  // every member page; see client_error_log).
+  if (!document.body.hasAttribute('data-mock-interview-page')) return;
   // Static intro/summary copy is handled by data-en/data-es via setLang();
   // this only needs to re-render JS-built content still on screen. Uses
   // renderMockInterviewSummary (not finishMockInterview) for the summary

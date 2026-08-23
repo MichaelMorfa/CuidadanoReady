@@ -24,6 +24,42 @@ window.prefersReducedMotion = prefersReducedMotion;
 window.smoothScrollTo = smoothScrollTo;
 window.smoothScrollIntoView = smoothScrollIntoView;
 
+// ---- Session-validity watchdog (single-session-per-account enforcement) --
+// Pairs with the revoke-other-sessions edge function called at login: when
+// an account signs in somewhere else, this session's refresh token gets
+// invalidated there. auth.getUser() is a live round-trip to Supabase's
+// server (unlike auth.getSession(), which just reads the local, possibly
+// stale copy), so it's the one that actually notices a revoked session.
+// Checked on load, on an interval, and whenever the tab regains focus, so
+// a signed-out-elsewhere session gets bounced to login within a couple of
+// minutes instead of silently failing at its next token refresh (which can
+// take up to an hour).
+function startSessionWatchdog() {
+  const CHECK_INTERVAL_MS = 2 * 60 * 1000;
+  let checking = false;
+  async function check() {
+    if (checking || typeof supabaseClient === 'undefined') return;
+    checking = true;
+    try {
+      const { data, error } = await supabaseClient.auth.getUser();
+      if (error || !data || !data.user) {
+        await supabaseClient.auth.signOut();
+        const loginPath = document.body.hasAttribute('data-admin-required') ? '/login.html' : 'login.html';
+        window.location.href = loginPath + '?reason=session-revoked';
+      }
+    } catch (e) {
+      // Network hiccup while checking is not evidence the session was
+      // actually revoked, so this deliberately does nothing on error.
+    } finally {
+      checking = false;
+    }
+  }
+  setInterval(check, CHECK_INTERVAL_MS);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') check();
+  });
+}
+
 // ---- Client-side error logging (in-house, no 3rd-party service) --------
 // Catches uncaught errors and unhandled promise rejections on every page
 // and logs them to client_error_log so problems surface in the admin
@@ -265,7 +301,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Any page marked data-auth-required bounces signed-out visitors to login.
   if (document.body.hasAttribute('data-auth-required') && typeof supabaseClient !== 'undefined') {
     supabaseClient.auth.getSession().then(({ data: { session } }) => {
-      if (!session) window.location.href = 'login.html';
+      if (!session) {
+        window.location.href = 'login.html';
+        return;
+      }
+      startSessionWatchdog();
     });
   }
 
@@ -286,6 +326,8 @@ document.addEventListener('DOMContentLoaded', () => {
         .single();
       if (!profile || profile.role !== 'admin') {
         window.location.href = '/dashboard.html';
+      } else {
+        startSessionWatchdog();
       }
     });
   }
@@ -315,6 +357,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ---- "Signed out elsewhere" notice (set by the session watchdog) -----
+  const loginNoticeEl = document.querySelector('#login-notice');
+  if (loginNoticeEl && new URLSearchParams(window.location.search).get('reason') === 'session-revoked') {
+    loginNoticeEl.style.display = 'block';
+  }
+
   // ---- Login (real Supabase auth) --------------------------------------
   const loginForm = document.querySelector('#login-form');
   if (loginForm && typeof supabaseClient !== 'undefined') {
@@ -339,6 +387,18 @@ document.addEventListener('DOMContentLoaded', () => {
           errorEl.style.display = 'block';
         }
         return;
+      }
+
+      // One active session per account: signing in here silently signs the
+      // account out everywhere else. Best-effort — if this call fails
+      // (network hiccup, function briefly down) we still let this login
+      // proceed rather than blocking the person from getting in.
+      try {
+        await supabaseClient.functions.invoke('revoke-other-sessions', { body: {} });
+      } catch (revokeErr) {
+        if (typeof logClientError === 'function') {
+          logClientError({ message: 'revoke-other-sessions failed: ' + (revokeErr && revokeErr.message) });
+        }
       }
 
       // Admins land in the admin panel; everyone else goes to their dashboard.
@@ -477,18 +537,24 @@ window.bindQuizBox = function bindQuizBox(box) {
   const options = box.querySelectorAll('.quiz-option');
   const feedback = box.querySelector('.quiz-feedback');
   const questionId = box.getAttribute('data-question-id');
-  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
-  const correctMark = lang === 'es' ? 'Respuesta correcta' : 'Correct answer';
-  const incorrectMark = lang === 'es' ? 'Tu respuesta, incorrecta' : 'Your answer, incorrect';
-  // Correctness is never color-only here: whichever option(s) get
-  // highlighted also get a ✓/✗ glyph plus an sr-only label appended,
-  // so it still reads for colorblind users and screen readers, not
-  // just the color change.
+  // lang is read fresh inside each handler (not captured once here), since
+  // this box can outlive a language toggle: on index.html it's static
+  // markup that's bound once at page load and never rebuilt, so a stale
+  // closure would keep grading in whatever language was active at bind
+  // time instead of whatever the visitor has selected when they click.
   const markOption = (el, isRight) => {
+    const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+    const correctMark = lang === 'es' ? 'Respuesta correcta' : 'Correct answer';
+    const incorrectMark = lang === 'es' ? 'Tu respuesta, incorrecta' : 'Your answer, incorrect';
+    // Correctness is never color-only here: whichever option(s) get
+    // highlighted also get a ✓/✗ glyph plus an sr-only label appended,
+    // so it still reads for colorblind users and screen readers, not
+    // just the color change.
     el.insertAdjacentHTML('beforeend', `<span aria-hidden="true"> ${isRight ? '✓' : '✗'}</span><span class="sr-only"> (${isRight ? correctMark : incorrectMark})</span>`);
   };
   options.forEach((opt) => {
     opt.addEventListener('click', () => {
+      const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
       options.forEach((o) => (o.disabled = true));
       const isCorrect = opt.getAttribute('data-correct') === 'true';
       opt.classList.add(isCorrect ? 'correct' : 'incorrect');
@@ -498,9 +564,15 @@ window.bindQuizBox = function bindQuizBox(box) {
         if (correctOpt) { correctOpt.classList.add('correct'); markOption(correctOpt, true); }
       }
       if (feedback) {
+        // -es attributes are optional: dynamically-built quiz boxes (see
+        // buildQuizBoxHtml in member.js) bake the already-current-language
+        // message straight into data-correct-msg/data-incorrect-msg with
+        // no -es variant, so the fallback below covers them too.
+        const correctAttr = lang === 'es' ? 'data-correct-msg-es' : 'data-correct-msg';
+        const incorrectAttr = lang === 'es' ? 'data-incorrect-msg-es' : 'data-incorrect-msg';
         feedback.textContent = isCorrect
-          ? (feedback.getAttribute('data-correct-msg') || 'Correct!')
-          : (feedback.getAttribute('data-incorrect-msg') || 'Not quite. Review the highlighted answer.');
+          ? (feedback.getAttribute(correctAttr) || feedback.getAttribute('data-correct-msg') || 'Correct!')
+          : (feedback.getAttribute(incorrectAttr) || feedback.getAttribute('data-incorrect-msg') || 'Not quite. Review the highlighted answer.');
         feedback.classList.add(isCorrect ? 'correct' : 'incorrect');
       }
       if (questionId && typeof supabaseClient !== 'undefined') {
