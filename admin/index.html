@@ -97,9 +97,17 @@
           <div class="card stat-card"><span class="eyebrow">FAQ BOT: UNANSWERED / TOTAL (7 DAYS)</span><div class="stat-value" id="stat-faq-bot">–</div></div>
         </div>
         <div class="card card-pad" style="margin-bottom:28px;">
-          <span class="eyebrow">RECENT ERRORS</span>
-          <p class="small muted" style="margin:4px 0 14px;">Uncaught JavaScript errors and unhandled promise rejections reported from any page, most recent first. This is an in-house safety net, not a full monitoring service. It won't catch server-side/edge-function failures.</p>
-          <div id="client-errors-list"><p class="empty-state">Loading…</p></div>
+          <div class="flex justify-between items-center" style="gap:10px; flex-wrap:wrap;">
+            <div>
+              <span class="eyebrow">RECENT ERRORS</span>
+              <p class="small muted" style="margin:4px 0 0;">Uncaught JavaScript errors and unhandled promise rejections reported from any page, most recent first. This is an in-house safety net, not a full monitoring service. It won't catch server-side/edge-function failures.</p>
+            </div>
+            <label class="small flex items-center gap-8" style="white-space:nowrap; cursor:pointer; margin:0;">
+              <input type="checkbox" id="client-errors-show-resolved" style="width:auto; margin:0;">
+              Show fixed errors
+            </label>
+          </div>
+          <div id="client-errors-list" style="margin-top:14px;"><p class="empty-state">Loading…</p></div>
         </div>
         <div class="card card-pad" style="margin-bottom:28px;">
           <span class="eyebrow">FAQ BOT: UNANSWERED QUESTIONS</span>

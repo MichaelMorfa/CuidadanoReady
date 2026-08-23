@@ -117,34 +117,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // In-house error log (see app.js's window.onerror/unhandledrejection
     // handlers), surfaces real breakage here instead of only via support
-    // emails.
+    // emails. Only unresolved errors count toward the headline stat —
+    // that's the number that should actually need your attention.
     const weekAgoErrors = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const { count: errorCount } = await supabaseClient.from('client_error_log').select('*', { count: 'exact', head: true }).gte('created_at', weekAgoErrors);
+    const { count: errorCount } = await supabaseClient.from('client_error_log').select('*', { count: 'exact', head: true }).eq('resolved', false).gte('created_at', weekAgoErrors);
     setStat('#stat-client-errors', errorCount ?? 0);
 
-    const errorsListEl = document.querySelector('#client-errors-list');
-    if (errorsListEl) {
-      const { data: recentErrors, error: errorsErr } = await supabaseClient
-        .from('client_error_log')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(20);
-      if (errorsErr) {
-        errorsListEl.innerHTML = `<p class="empty-state">Could not load errors: ${escapeHtml(errorsErr.message)}</p>`;
-      } else if (!recentErrors || !recentErrors.length) {
-        errorsListEl.innerHTML = '<p class="empty-state">No errors reported. 🎉</p>';
-      } else {
-        errorsListEl.innerHTML = recentErrors.map((e) => `
-          <div style="padding:10px 0; border-top:1px solid var(--line);">
-            <div class="flex justify-between items-center" style="gap:10px;">
-              <strong class="small" style="color:var(--danger);">${escapeHtml(e.message || 'Unknown error')}</strong>
-              <span class="small muted" style="white-space:nowrap;">${formatDate(e.created_at)}</span>
-            </div>
-            <div class="small muted">${escapeHtml(e.page || '')}${e.source ? ' · ' + escapeHtml(e.source) + (e.lineno ? ':' + e.lineno : '') : ''}</div>
-          </div>
-        `).join('');
-      }
-    }
+    await loadClientErrors();
 
     // Public-site FAQ chat widget (see app.js), every question a visitor
     // types is logged, matched or not. Unmatched questions are the useful
@@ -183,6 +162,58 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   }
+
+  // ---- Recent errors list (resolve/hide so fixed bugs stop cluttering it) -
+  async function loadClientErrors() {
+    const errorsListEl = document.querySelector('#client-errors-list');
+    if (!errorsListEl) return;
+    const showResolved = document.querySelector('#client-errors-show-resolved')?.checked;
+
+    let query = supabaseClient.from('client_error_log').select('*').order('created_at', { ascending: false }).limit(20);
+    if (!showResolved) query = query.eq('resolved', false);
+    const { data: recentErrors, error: errorsErr } = await query;
+
+    if (errorsErr) {
+      errorsListEl.innerHTML = `<p class="empty-state">Could not load errors: ${escapeHtml(errorsErr.message)}</p>`;
+    } else if (!recentErrors || !recentErrors.length) {
+      errorsListEl.innerHTML = showResolved
+        ? '<p class="empty-state">No errors reported. 🎉</p>'
+        : '<p class="empty-state">No unresolved errors. 🎉</p>';
+    } else {
+      errorsListEl.innerHTML = recentErrors.map((e) => `
+        <div style="padding:10px 0; border-top:1px solid var(--line); opacity:${e.resolved ? '0.6' : '1'};">
+          <div class="flex justify-between items-center" style="gap:10px;">
+            <strong class="small" style="color:${e.resolved ? 'var(--muted)' : 'var(--danger)'};">${escapeHtml(e.message || 'Unknown error')}</strong>
+            <div class="flex items-center gap-8" style="white-space:nowrap;">
+              <span class="small muted">${formatDate(e.created_at)}</span>
+              ${e.resolved
+                ? `<button class="btn btn-ghost btn-sm" data-error-unresolve="${e.id}">Unresolve</button>`
+                : `<button class="btn btn-ghost btn-sm" data-error-resolve="${e.id}">Mark Fixed</button>`}
+            </div>
+          </div>
+          <div class="small muted">${escapeHtml(e.page || '')}${e.source ? ' · ' + escapeHtml(e.source) + (e.lineno ? ':' + e.lineno : '') : ''}</div>
+        </div>
+      `).join('');
+    }
+  }
+
+  document.querySelector('#client-errors-show-resolved')?.addEventListener('change', loadClientErrors);
+
+  document.querySelector('#client-errors-list')?.addEventListener('click', async (e) => {
+    const resolveBtn = e.target.closest('[data-error-resolve]');
+    const unresolveBtn = e.target.closest('[data-error-unresolve]');
+    if (resolveBtn) {
+      const id = resolveBtn.getAttribute('data-error-resolve');
+      resolveBtn.disabled = true;
+      await supabaseClient.from('client_error_log').update({ resolved: true, resolved_at: new Date().toISOString() }).eq('id', id);
+      await loadClientErrors();
+    } else if (unresolveBtn) {
+      const id = unresolveBtn.getAttribute('data-error-unresolve');
+      unresolveBtn.disabled = true;
+      await supabaseClient.from('client_error_log').update({ resolved: false, resolved_at: null }).eq('id', id);
+      await loadClientErrors();
+    }
+  });
 
   // ---- Users -------------------------------------------------------------
   let allUsers = [];
