@@ -3263,20 +3263,34 @@ async function fetchOfficialDocuments() {
   return docs;
 }
 
+// Line-art file icon (Feather-style, matches the site's other inline SVG
+// icons like the module-lock icon) -- swapped in for the old plain-text
+// "PDF" badge, which read as an unstyled placeholder rather than a
+// deliberate icon.
+const DOC_FILE_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>';
+const DOC_CHEVRON_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>';
+
 function renderDocumentsList() {
   const listEl = document.querySelector('#doc-list');
   if (!listEl) return;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const countEl = document.querySelector('#doc-count');
+  if (countEl) {
+    const n = officialDocumentsCache.length;
+    countEl.textContent = n ? (lang === 'es' ? `${n} documento${n === 1 ? '' : 's'}` : `${n} document${n === 1 ? '' : 's'}`) : '';
+  }
   if (!officialDocumentsCache.length) {
     listEl.innerHTML = '<p class="empty-state">No documents available yet.</p>';
     return;
   }
   listEl.innerHTML = officialDocumentsCache.map((d) => `
     <button class="card doc-card" data-doc-open="${d.id}">
-      <span class="doc-card-icon" aria-hidden="true">PDF</span>
+      <span class="doc-card-icon" aria-hidden="true">${DOC_FILE_ICON_SVG}</span>
       <span class="doc-card-body">
         <h3>${escapeHtml(localize(d, 'title'))}</h3>
         ${d.description ? `<p class="small muted">${escapeHtml(localize(d, 'description'))}</p>` : ''}
       </span>
+      <span class="doc-card-arrow">${DOC_CHEVRON_SVG}</span>
     </button>
   `).join('');
 }

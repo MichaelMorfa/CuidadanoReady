@@ -758,15 +758,21 @@ textarea { resize: vertical; min-height: 120px; }
 
 /* Subtle flag watermark on pages that otherwise read as plain (Dashboard,
    Documents) -- baked-in low opacity in the SVG itself, layered as a
-   background-image so the topbar's own background-color still shows
+   background-image so the surface's own background-color still shows
    through everywhere else and text on top stays fully legible. Desktop
    only; not worth the visual clutter on narrow screens.
-   Sized/positioned to sit flush in the top-right corner with no negative
-   offset: the topbar itself is only ~85-95px tall (20px padding + a line
-   of small eyebrow text + the h1), so a bigger image pushed upward with a
-   negative background-position was being clipped by the box entirely --
-   background never paints past an element's own box, regardless of
-   overflow. 140px wide keeps the full ~93px-tall flag inside that box. */
+
+   Two placements, for two different reasons:
+   1. Topbar corner mark -- small, sits flush top-right, no negative
+      offset (the topbar is only ~85-95px tall; a bigger image pushed up
+      with a negative position was getting clipped entirely, since
+      background never paints past an element's own box).
+   2. Sidebar -- the real "watermark" treatment. The content column is
+      wall-to-wall opaque cards, so a background-image there only ever
+      peeks through the 32px padding gap no matter how big the source
+      image is. The sidebar's lower half, below the nav links, is the one
+      genuinely open patch of canvas on these pages, so that's where a
+      watermark big enough to actually read as a watermark can go. */
 body[data-dashboard-page] .app-topbar,
 body[data-documents-page] .app-topbar {
   background-image: url('flag-watermark.svg');
@@ -774,9 +780,18 @@ body[data-documents-page] .app-topbar {
   background-position: top right;
   background-size: 140px auto;
 }
+body[data-dashboard-page] .app-sidebar,
+body[data-documents-page] .app-sidebar {
+  background-image: url('flag-watermark.svg');
+  background-repeat: no-repeat;
+  background-position: center bottom 28px;
+  background-size: 210px auto;
+}
 @media (max-width: 900px) {
   body[data-dashboard-page] .app-topbar,
-  body[data-documents-page] .app-topbar {
+  body[data-documents-page] .app-topbar,
+  body[data-dashboard-page] .app-sidebar,
+  body[data-documents-page] .app-sidebar {
     background-image: none;
   }
 }

@@ -20,15 +20,24 @@
   .btn-primary:hover { background: #244F3B; }
   .badge-ocean { border-color: var(--forest); color: var(--forest); }
 
-  .doc-card { padding: 22px 24px; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
-  .doc-card:hover { border-color: var(--forest); }
-  .doc-card-icon { flex: none; width: 44px; height: 44px; border-radius: 10px; background: #F3F8F5; color: var(--forest); display: flex; align-items: center; justify-content: center; font-family: var(--font-serif); font-weight: 700; font-size: 1rem; }
+  .doc-card { padding: 20px 22px; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 16px; margin-bottom: 12px; border-left: 3px solid transparent; transition: border-color 0.15s ease, transform 0.1s ease; }
+  .doc-card:hover { border-color: var(--forest); border-left-color: var(--forest); transform: translateX(2px); }
+  .doc-card-icon { flex: none; width: 44px; height: 44px; border-radius: 10px; background: #F3F8F5; color: var(--forest); display: flex; align-items: center; justify-content: center; }
+  .doc-card-icon svg { width: 20px; height: 20px; }
+  .doc-card-body { flex: 1; min-width: 0; }
   .doc-card-body h3 { margin: 0 0 4px; font-size: 1.05rem; }
   .doc-card-body p { margin: 0; }
+  .doc-card-arrow { flex: none; color: var(--slate); opacity: 0.6; transition: transform 0.15s ease; }
+  .doc-card:hover .doc-card-arrow { transform: translateX(3px); opacity: 1; color: var(--forest); }
 
   .doc-viewer-frame { width: 100%; height: 78vh; min-height: 500px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); }
 
+  .doc-attribution-card { display: flex; align-items: flex-start; gap: 14px; background: #F3F8F5; border-color: var(--forest) !important; }
+  .doc-attribution-icon { flex: none; color: var(--forest); margin-top: 1px; }
   .doc-attribution { font-size: 0.82rem; color: var(--slate); }
+
+  .doc-section-heading { display: flex; align-items: baseline; justify-content: space-between; margin: 0 0 14px; flex-wrap: wrap; gap: 8px; }
+  .doc-section-heading h2 { margin: 0; font-size: 1.15rem; }
 </style>
 <meta name="description" content="Official USCIS reference documents for naturalization test prep.">
 <meta name="robots" content="noindex">
@@ -105,8 +114,15 @@
 
       <!-- ================= LIST VIEW ================= -->
       <div id="doc-list-view">
-        <div class="card card-pad" style="margin-bottom:24px; border-color: var(--ocean);">
+        <div class="card card-pad doc-attribution-card" style="margin-bottom:28px;">
+          <span class="doc-attribution-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 6v6c0 5 3.8 8.4 9 10 5.2-1.6 9-5 9-10V6l-9-4z"></path><path d="m9 12 2 2 4-4"></path></svg>
+          </span>
           <p class="doc-attribution" style="margin:0;" data-en="These documents are official materials provided by U.S. Citizenship and Immigration Services (USCIS). Ciudadano Ready provides these materials for educational and informational purposes." data-es="Estos documentos son materiales oficiales proporcionados por el Servicio de Ciudadanía e Inmigración de Estados Unidos (USCIS). Ciudadano Ready proporciona estos materiales con fines educativos e informativos.">These documents are official materials provided by U.S. Citizenship and Immigration Services (USCIS). Ciudadano Ready provides these materials for educational and informational purposes.</p>
+        </div>
+        <div class="doc-section-heading">
+          <h2 data-en="Reference Materials" data-es="Materiales de Referencia">Reference Materials</h2>
+          <span class="small muted" id="doc-count"></span>
         </div>
         <div id="doc-list"><p class="empty-state">Loading…</p></div>
       </div>
