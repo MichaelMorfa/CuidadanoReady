@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem("ciudadanoready-theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reading &amp; Writing | Ciudadano Ready</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ===== Member Area theme (matches dashboard.html / flashcards.html) ===== */
+  body { background: var(--paper-dim); }
+  .app-sidebar { background: var(--paper-dim); border-right: 1px solid var(--line); }
+  .app-nav a.active { color: var(--forest); background: var(--white); border-left-color: var(--forest); }
+  .app-nav a:hover { color: var(--forest); }
+  .app-topbar { background: var(--paper-dim); border-bottom: 1px solid var(--line); }
+  .app-content .card { box-shadow: none; }
+  .app-content .card:hover { box-shadow: none; }
+  .btn-primary { background: var(--forest); }
+  .btn-primary:hover { background: #244F3B; }
+  .badge-ocean { border-color: var(--forest); color: var(--forest); }
+
+  /* ---- Mode tabs ---- */
+  .rw-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+  .rw-tab { padding: 10px 18px; border: 1px solid var(--line); border-radius: 999px; background: var(--white); font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; color: var(--ink); }
+  .rw-tab.active { background: var(--forest); border-color: var(--forest); color: var(--paper); }
+  .rw-tab:hover:not(.active) { border-color: var(--forest); color: var(--forest); }
+
+  .rw-stage { max-width: 640px; margin: 0 auto; }
+  .rw-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .rw-progress-text { font-family: var(--font-mono); font-size: 0.8rem; color: var(--slate); }
+  .rw-nav-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+
+  /* ---- Reading flashcard ---- */
+  .rw-read-card { border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); padding: 40px 32px; text-align: center; box-shadow: var(--shadow-card); min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+  .rw-read-card h3 { font-size: 1.5rem; margin: 0; line-height: 1.4; }
+  .rw-audio-btn { display: inline-flex; align-items: center; gap: 8px; }
+  .rw-audio-pending { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--slate); border: 1px dashed var(--line); border-radius: 999px; padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px; }
+
+  /* ---- Hear It -> Write It ---- */
+  .rw-write-card { border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); padding: 32px; box-shadow: var(--shadow-card); }
+  .rw-write-card input[type="text"] { width: 100%; font-size: 1.05rem; padding: 12px 14px; }
+  .rw-write-result { margin-top: 18px; padding: 16px; border-radius: var(--radius); border: 1px solid var(--line); display: none; }
+  .rw-write-result.show { display: block; }
+  .rw-write-result.correct { border-color: var(--forest); background: #F3F8F5; }
+  .rw-write-result.incorrect { border-color: var(--danger); background: #FBF1F0; }
+  .rw-write-result .rw-result-line { margin: 4px 0; }
+  .rw-write-result .rw-result-label { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--slate); display: block; }
+
+  /* ---- Alphabet keyboard ---- */
+  .rw-keyboard { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin: 20px 0; }
+  .rw-key { aspect-ratio: 1; border: 1px solid var(--line); border-radius: 10px; background: var(--white); font-family: var(--font-serif); font-weight: 700; font-size: 1.2rem; cursor: pointer; color: var(--ink); }
+  .rw-key:hover { border-color: var(--forest); color: var(--forest); }
+  .rw-key.no-audio { opacity: 0.6; }
+  .rw-spell-output { min-height: 56px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); padding: 14px 18px; font-family: var(--font-mono); font-size: 1.3rem; letter-spacing: 0.08em; margin-bottom: 16px; word-break: break-all; }
+  .rw-spell-controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .rw-prompt-list { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .rw-prompt-btn { padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--white); font-size: 0.85rem; cursor: pointer; color: var(--ink); }
+  .rw-prompt-btn.active { background: var(--forest); border-color: var(--forest); color: var(--paper); }
+  .rw-active-prompt { font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--slate); margin-bottom: 10px; }
+
+  @media (max-width: 600px) {
+    .rw-read-card { padding: 28px 20px; }
+    .rw-keyboard { grid-template-columns: repeat(5, 1fr); }
+  }
+</style>
+<meta name="description" content="Practice the English reading, writing, and alphabet portions of the USCIS naturalization interview.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Ciudadano Ready">
+<meta property="og:title" content="Reading & Writing | Ciudadano Ready">
+<meta property="og:description" content="Practice the English reading, writing, and alphabet portions of the USCIS naturalization interview.">
+<meta property="og:image" content="https://ciudadanoready.com/og-image.png">
+<meta property="og:url" content="https://ciudadanoready.com/reading-writing.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Reading & Writing | Ciudadano Ready">
+<meta name="twitter:description" content="Practice the English reading, writing, and alphabet portions of the USCIS naturalization interview.">
+<meta name="twitter:image" content="https://ciudadanoready.com/og-image.png">
+</head>
+<body data-auth-required="true" data-rw-page="true">
+
+<div class="app-shell">
+  <div class="sidebar-backdrop"></div>
+  <aside class="app-sidebar">
+    <a href="dashboard.html" class="logo">Ciudadano<span class="dot">Ready</span></a>
+    <ul class="app-nav">
+      <li class="app-nav-group">
+        <h4 data-en="Overview" data-es="Resumen">Overview</h4>
+        <a href="dashboard.html" data-en="Continue Learning" data-es="Continuar Aprendiendo">Continue Learning</a>
+        <a href="progress.html" data-en="My Progress" data-es="Mi Progreso">My Progress</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="Course" data-es="Curso">Course</h4>
+        <ul class="app-nav" id="rw-page-module-nav" style="padding:0;">
+          <li class="small muted" style="padding:10px 24px;">Loading…</li>
+        </ul>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="Practice" data-es="Práctica">Practice</h4>
+        <a href="flashcards.html" data-en="Flashcards" data-es="Tarjetas de Estudio">Flashcards</a>
+        <a href="mock-interview.html" data-en="Mock Interview" data-es="Entrevista Simulada">Mock Interview</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="English Test" data-es="Examen de Inglés">English Test</h4>
+        <a href="reading-writing.html" class="active" data-en="Reading &amp; Writing" data-es="Lectura y Escritura">Reading &amp; Writing</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="Background" data-es="Contexto">Background</h4>
+        <a href="know-your-country.html" data-en="Know Your Country" data-es="Conoce Tu País">Know Your Country</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="More" data-es="Más">More</h4>
+        <a href="support.html" data-en="Support" data-es="Soporte">Support</a>
+        <a href="settings.html" data-en="Settings" data-es="Configuración">Settings</a>
+      </li>
+    </ul>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-topbar">
+      <div class="flex gap-16 items-center">
+        <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
+        <div>
+          <span class="eyebrow" style="margin-bottom:0;" data-en="ENGLISH TEST" data-es="EXAMEN DE INGLÉS">ENGLISH TEST</span>
+          <h1 style="margin:0;" data-en="Reading &amp; Writing" data-es="Lectura y Escritura">Reading &amp; Writing</h1>
+        </div>
+      </div>
+      <div class="flex gap-16 items-center">
+        <div class="lang-toggle">
+          <button data-lang-btn="en" class="active">EN</button>
+          <button data-lang-btn="es">ES</button>
+        </div>        <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link" data-en="Log Out" data-es="Cerrar Sesión">Log Out</a>
+      </div>
+    </div>
+
+    <div class="app-content">
+
+      <p class="small" style="max-width:680px; margin-bottom:20px;" data-en="During the naturalization interview, the officer tests your English by having you read a sentence aloud, write a sentence you hear, and sometimes spell out basic information like your name or address. The sentences and letters below use the same vocabulary USCIS uses on the real test." data-es="Durante la entrevista de naturalización, el oficial evalúa tu inglés pidiéndote que leas una oración en voz alta, escribas una oración que escuchas y, a veces, deletrees información básica como tu nombre o dirección. Las oraciones y letras a continuación usan el mismo vocabulario que USCIS utiliza en el examen real.">During the naturalization interview, the officer tests your English by having you read a sentence aloud, write a sentence you hear, and sometimes spell out basic information like your name or address. The sentences and letters below use the same vocabulary USCIS uses on the real test.</p>
+
+      <div class="rw-tabs">
+        <button class="rw-tab active" data-rw-tab="reading" data-en="Reading" data-es="Lectura">Reading</button>
+        <button class="rw-tab" data-rw-tab="writing" data-en="Hear It → Write It" data-es="Escúchalo → Escríbelo">Hear It → Write It</button>
+        <button class="rw-tab" data-rw-tab="alphabet" data-en="Alphabet &amp; Spelling" data-es="Alfabeto y Deletreo">Alphabet & Spelling</button>
+      </div>
+
+      <!-- ================= READING VIEW ================= -->
+      <div id="rw-reading-view">
+        <div class="card card-pad" style="margin-bottom:24px; border-color: var(--ocean);">
+          <p class="small" style="margin:0;" data-en="Read the sentence on the card out loud, in English. When you're done, click Play Audio to hear how it should sound and compare." data-es="Lee la oración de la tarjeta en voz alta, en inglés. Cuando termines, haz clic en Reproducir Audio para escuchar cómo debería sonar y comparar.">Read the sentence on the card out loud, in English. When you're done, click Play Audio to hear how it should sound and compare.</p>
+        </div>
+        <div class="rw-stage">
+          <div class="rw-controls">
+            <span class="badge" data-en="READING PRACTICE" data-es="PRÁCTICA DE LECTURA">READING PRACTICE</span>
+            <span class="rw-progress-text" id="rw-read-progress-text">1 / 1</span>
+          </div>
+          <div class="rw-read-card">
+            <h3 id="rw-read-sentence">–</h3>
+            <div id="rw-read-audio-slot"></div>
+          </div>
+          <div class="rw-nav-row">
+            <button class="btn btn-ghost" id="rw-read-prev-btn">← <span data-en="Previous" data-es="Anterior">Previous</span></button>
+            <button class="btn btn-ghost" id="rw-read-shuffle-btn" data-en="Shuffle" data-es="Mezclar">Shuffle</button>
+            <button class="btn btn-primary" id="rw-read-next-btn"><span data-en="Next" data-es="Siguiente">Next</span> →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= WRITING VIEW ================= -->
+      <div id="rw-writing-view" style="display:none;">
+        <div class="card card-pad" style="margin-bottom:24px; border-color: var(--ocean);">
+          <p class="small" style="margin:0;" data-en="Click Play Audio to hear a sentence, then type exactly what you heard. This is how the officer tests your written English." data-es="Haz clic en Reproducir Audio para escuchar una oración y luego escribe exactamente lo que escuchaste. Así es como el oficial evalúa tu inglés escrito.">Click Play Audio to hear a sentence, then type exactly what you heard. This is how the officer tests your written English.</p>
+        </div>
+        <div class="rw-stage">
+          <div class="rw-controls">
+            <span class="badge" data-en="LISTEN &amp; WRITE" data-es="ESCUCHA Y ESCRIBE">LISTEN &amp; WRITE</span>
+            <span class="rw-progress-text" id="rw-write-progress-text">1 / 1</span>
+          </div>
+          <div class="rw-write-card">
+            <div id="rw-write-audio-slot" style="margin-bottom:20px; text-align:center;"></div>
+            <label for="rw-write-input" data-en="Type what you heard:" data-es="Escribe lo que escuchaste:">Type what you heard:</label>
+            <input type="text" id="rw-write-input" autocomplete="off" spellcheck="false">
+            <button class="btn btn-primary" id="rw-write-check-btn" style="margin-top:14px;" data-en="Check Answer" data-es="Verificar Respuesta">Check Answer</button>
+            <div class="rw-write-result" id="rw-write-result">
+              <div class="rw-result-line">
+                <span class="rw-result-label" data-en="Your answer" data-es="Tu respuesta">Your answer</span>
+                <span id="rw-write-user-answer"></span>
+              </div>
+              <div class="rw-result-line">
+                <span class="rw-result-label" data-en="Correct answer" data-es="Respuesta correcta">Correct answer</span>
+                <span id="rw-write-correct-answer"></span>
+              </div>
+              <div class="rw-result-line" style="margin-top:10px; font-weight:600;" id="rw-write-verdict"></div>
+            </div>
+          </div>
+          <div class="rw-nav-row">
+            <button class="btn btn-ghost" id="rw-write-prev-btn">← <span data-en="Previous" data-es="Anterior">Previous</span></button>
+            <button class="btn btn-ghost" id="rw-write-shuffle-btn" data-en="Shuffle" data-es="Mezclar">Shuffle</button>
+            <button class="btn btn-primary" id="rw-write-next-btn"><span data-en="Next" data-es="Siguiente">Next</span> →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= ALPHABET VIEW ================= -->
+      <div id="rw-alphabet-view" style="display:none;">
+        <div class="card card-pad" style="margin-bottom:24px; border-color: var(--ocean);">
+          <p class="small" style="margin:0;" data-en="Click a letter to hear how it sounds. Officers sometimes ask you to spell your name, a family member's name, or your address out loud, letter by letter." data-es="Haz clic en una letra para escuchar cómo suena. A veces los oficiales piden que deletrees tu nombre, el nombre de un familiar o tu dirección en voz alta, letra por letra.">Click a letter to hear how it sounds. Officers sometimes ask you to spell your name, a family member's name, or your address out loud, letter by letter.</p>
+        </div>
+
+        <div class="rw-prompt-list">
+          <button class="rw-prompt-btn" data-rw-prompt-en="Spell your first name" data-rw-prompt-es="Deletrea tu primer nombre" data-en="Your Name" data-es="Tu Nombre">Your Name</button>
+          <button class="rw-prompt-btn" data-rw-prompt-en="Spell your child's name" data-rw-prompt-es="Deletrea el nombre de tu hijo/a" data-en="Child's Name" data-es="Nombre de tu Hijo/a">Child's Name</button>
+          <button class="rw-prompt-btn" data-rw-prompt-en="Spell your spouse's name" data-rw-prompt-es="Deletrea el nombre de tu esposo/a" data-en="Spouse's Name" data-es="Nombre de tu Esposo/a">Spouse's Name</button>
+          <button class="rw-prompt-btn" data-rw-prompt-en="Spell your address" data-rw-prompt-es="Deletrea tu dirección" data-en="Address" data-es="Dirección">Address</button>
+        </div>
+        <div class="rw-active-prompt" id="rw-active-prompt" style="display:none;"></div>
+
+        <div class="rw-spell-output" id="rw-spell-output">&nbsp;</div>
+        <div class="rw-spell-controls">
+          <button class="btn btn-ghost btn-sm" id="rw-spell-space-btn" data-en="Space" data-es="Espacio">Space</button>
+          <button class="btn btn-ghost btn-sm" id="rw-spell-backspace-btn" data-en="Backspace" data-es="Retroceso">Backspace</button>
+          <button class="btn btn-ghost btn-sm" id="rw-spell-clear-btn" data-en="Clear" data-es="Borrar">Clear</button>
+        </div>
+
+        <div class="rw-keyboard" id="rw-keyboard"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="app.js"></script>
+<script src="member.js"></script>
+</body>
+</html>

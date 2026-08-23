@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     flashcards: 'Flashcards Editor',
     'country-lessons': 'Know Your Country Editor',
     'mock-interview': 'Mock Interview Editor',
+    'reading-writing': 'Reading & Writing Editor',
     revenue: 'Payments',
     support: 'Support',
   };
@@ -65,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (name === 'flashcards') loadFlashcards();
     if (name === 'country-lessons') loadCountryLessons();
     if (name === 'mock-interview') loadMockInterview();
+    if (name === 'reading-writing') loadReadingWritingEditor();
     if (name === 'revenue') loadRevenue();
     if (name === 'support') loadSupport();
   }
@@ -990,6 +992,272 @@ document.addEventListener('DOMContentLoaded', () => {
       if (error) { alert('Could not delete: ' + error.message); return; }
       loadMockInterview();
     }
+  });
+
+  // ---- Reading & Writing editor -----------------------------------------
+  // Three content sets for the English literacy portion of the interview:
+  // reading_practice_items and writing_practice_items are near-identical
+  // shape (sort_order, sentence_text, audio_url, published), so their
+  // editors are handled together below; alphabet_letters is a fixed set of
+  // 26 rows (no add/delete, just an audio URL per letter).
+
+  function loadReadingWritingEditor() {
+    loadReadingItems();
+    loadWritingItems();
+    loadAlphabetLetters();
+  }
+
+  function rwAudioBadge(audioUrl) {
+    return audioUrl
+      ? '<span class="badge badge-forest" style="margin-left:8px;">Audio attached</span>'
+      : '<span class="badge" style="margin-left:8px;">Audio coming soon</span>';
+  }
+
+  // -- Reading items --
+  let editingReadingItemId = null;
+  let allReadingItems = [];
+
+  async function loadReadingItems() {
+    const list = document.querySelector('#reading-items-list');
+    const { data, error } = await supabaseClient.from('reading_practice_items').select('*').order('sort_order');
+    if (error) {
+      list.innerHTML = `<p class="empty-state">Could not load reading sentences: ${escapeHtml(error.message)}</p>`;
+      return;
+    }
+    allReadingItems = data || [];
+    renderReadingItemsList();
+  }
+
+  function renderReadingItemsList() {
+    const list = document.querySelector('#reading-items-list');
+    const countEl = document.querySelector('#reading-item-count');
+    if (countEl) countEl.textContent = `${allReadingItems.length} sentence${allReadingItems.length === 1 ? '' : 's'}`;
+    if (!allReadingItems.length) {
+      list.innerHTML = '<p class="empty-state">No reading sentences yet. Add one above.</p>';
+      return;
+    }
+    list.innerHTML = allReadingItems.map((r) => `
+      <div class="card card-pad" style="margin-bottom:12px;">
+        <div class="flex justify-between items-center">
+          <div>
+            <span class="small muted" style="font-family:var(--font-mono);">#${r.sort_order}</span>
+            <strong style="margin-left:6px;">${escapeHtml(r.sentence_text)}</strong>
+            ${r.published ? '<span class="badge badge-forest" style="margin-left:8px;">Published</span>' : '<span class="badge" style="margin-left:8px;">Draft</span>'}
+            ${rwAudioBadge(r.audio_url)}
+          </div>
+          <div class="flex gap-8">
+            <button class="btn btn-ghost btn-sm" data-reading-edit="${r.id}">Edit</button>
+            <button class="btn btn-ghost btn-sm" data-reading-delete="${r.id}">Delete</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  const readingItemForm = document.querySelector('#reading-item-form');
+  const readingItemCancelBtn = document.querySelector('#reading-item-cancel-edit');
+
+  function resetReadingItemForm() {
+    editingReadingItemId = null;
+    readingItemForm.reset();
+    document.querySelector('#reading-item-published').checked = true;
+    document.querySelector('#reading-item-submit').textContent = 'Add Sentence';
+    readingItemCancelBtn.style.display = 'none';
+  }
+
+  readingItemCancelBtn?.addEventListener('click', resetReadingItemForm);
+
+  readingItemForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      sort_order: Number(document.querySelector('#reading-item-sort').value) || 1,
+      sentence_text: document.querySelector('#reading-item-text').value,
+      audio_url: document.querySelector('#reading-item-audio').value || null,
+      published: document.querySelector('#reading-item-published').checked,
+    };
+    const submitBtn = document.querySelector('#reading-item-submit');
+    submitBtn.disabled = true;
+    let error;
+    if (editingReadingItemId) {
+      ({ error } = await supabaseClient.from('reading_practice_items').update(payload).eq('id', editingReadingItemId));
+    } else {
+      ({ error } = await supabaseClient.from('reading_practice_items').insert(payload));
+    }
+    submitBtn.disabled = false;
+    if (error) { alert('Could not save sentence: ' + error.message); return; }
+    resetReadingItemForm();
+    loadReadingItems();
+  });
+
+  document.querySelector('#reading-items-list')?.addEventListener('click', async (e) => {
+    const editBtn = e.target.closest('[data-reading-edit]');
+    const delBtn = e.target.closest('[data-reading-delete]');
+
+    if (editBtn) {
+      const id = editBtn.getAttribute('data-reading-edit');
+      const item = allReadingItems.find((r) => r.id === id);
+      if (!item) return;
+      editingReadingItemId = id;
+      document.querySelector('#reading-item-sort').value = item.sort_order;
+      document.querySelector('#reading-item-text').value = item.sentence_text;
+      document.querySelector('#reading-item-audio').value = item.audio_url || '';
+      document.querySelector('#reading-item-published').checked = !!item.published;
+      document.querySelector('#reading-item-submit').textContent = 'Save Changes';
+      readingItemCancelBtn.style.display = 'inline-flex';
+      smoothScrollIntoView(readingItemForm, { block: 'start' });
+    }
+
+    if (delBtn) {
+      const id = delBtn.getAttribute('data-reading-delete');
+      if (!confirm('Delete this reading sentence? This cannot be undone.')) return;
+      const { error } = await supabaseClient.from('reading_practice_items').delete().eq('id', id);
+      if (error) { alert('Could not delete: ' + error.message); return; }
+      loadReadingItems();
+    }
+  });
+
+  // -- Writing items --
+  let editingWritingItemId = null;
+  let allWritingItems = [];
+
+  async function loadWritingItems() {
+    const list = document.querySelector('#writing-items-list');
+    const { data, error } = await supabaseClient.from('writing_practice_items').select('*').order('sort_order');
+    if (error) {
+      list.innerHTML = `<p class="empty-state">Could not load writing sentences: ${escapeHtml(error.message)}</p>`;
+      return;
+    }
+    allWritingItems = data || [];
+    renderWritingItemsList();
+  }
+
+  function renderWritingItemsList() {
+    const list = document.querySelector('#writing-items-list');
+    const countEl = document.querySelector('#writing-item-count');
+    if (countEl) countEl.textContent = `${allWritingItems.length} sentence${allWritingItems.length === 1 ? '' : 's'}`;
+    if (!allWritingItems.length) {
+      list.innerHTML = '<p class="empty-state">No writing sentences yet. Add one above.</p>';
+      return;
+    }
+    list.innerHTML = allWritingItems.map((w) => `
+      <div class="card card-pad" style="margin-bottom:12px;">
+        <div class="flex justify-between items-center">
+          <div>
+            <span class="small muted" style="font-family:var(--font-mono);">#${w.sort_order}</span>
+            <strong style="margin-left:6px;">${escapeHtml(w.sentence_text)}</strong>
+            ${w.published ? '<span class="badge badge-forest" style="margin-left:8px;">Published</span>' : '<span class="badge" style="margin-left:8px;">Draft</span>'}
+            ${rwAudioBadge(w.audio_url)}
+          </div>
+          <div class="flex gap-8">
+            <button class="btn btn-ghost btn-sm" data-writing-edit="${w.id}">Edit</button>
+            <button class="btn btn-ghost btn-sm" data-writing-delete="${w.id}">Delete</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  const writingItemForm = document.querySelector('#writing-item-form');
+  const writingItemCancelBtn = document.querySelector('#writing-item-cancel-edit');
+
+  function resetWritingItemForm() {
+    editingWritingItemId = null;
+    writingItemForm.reset();
+    document.querySelector('#writing-item-published').checked = true;
+    document.querySelector('#writing-item-submit').textContent = 'Add Sentence';
+    writingItemCancelBtn.style.display = 'none';
+  }
+
+  writingItemCancelBtn?.addEventListener('click', resetWritingItemForm);
+
+  writingItemForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      sort_order: Number(document.querySelector('#writing-item-sort').value) || 1,
+      sentence_text: document.querySelector('#writing-item-text').value,
+      audio_url: document.querySelector('#writing-item-audio').value || null,
+      published: document.querySelector('#writing-item-published').checked,
+    };
+    const submitBtn = document.querySelector('#writing-item-submit');
+    submitBtn.disabled = true;
+    let error;
+    if (editingWritingItemId) {
+      ({ error } = await supabaseClient.from('writing_practice_items').update(payload).eq('id', editingWritingItemId));
+    } else {
+      ({ error } = await supabaseClient.from('writing_practice_items').insert(payload));
+    }
+    submitBtn.disabled = false;
+    if (error) { alert('Could not save sentence: ' + error.message); return; }
+    resetWritingItemForm();
+    loadWritingItems();
+  });
+
+  document.querySelector('#writing-items-list')?.addEventListener('click', async (e) => {
+    const editBtn = e.target.closest('[data-writing-edit]');
+    const delBtn = e.target.closest('[data-writing-delete]');
+
+    if (editBtn) {
+      const id = editBtn.getAttribute('data-writing-edit');
+      const item = allWritingItems.find((w) => w.id === id);
+      if (!item) return;
+      editingWritingItemId = id;
+      document.querySelector('#writing-item-sort').value = item.sort_order;
+      document.querySelector('#writing-item-text').value = item.sentence_text;
+      document.querySelector('#writing-item-audio').value = item.audio_url || '';
+      document.querySelector('#writing-item-published').checked = !!item.published;
+      document.querySelector('#writing-item-submit').textContent = 'Save Changes';
+      writingItemCancelBtn.style.display = 'inline-flex';
+      smoothScrollIntoView(writingItemForm, { block: 'start' });
+    }
+
+    if (delBtn) {
+      const id = delBtn.getAttribute('data-writing-delete');
+      if (!confirm('Delete this writing sentence? This cannot be undone.')) return;
+      const { error } = await supabaseClient.from('writing_practice_items').delete().eq('id', id);
+      if (error) { alert('Could not delete: ' + error.message); return; }
+      loadWritingItems();
+    }
+  });
+
+  // -- Alphabet letters (fixed 26 rows, audio-only editing) --
+  async function loadAlphabetLetters() {
+    const list = document.querySelector('#alphabet-letters-list');
+    const { data, error } = await supabaseClient.from('alphabet_letters').select('*').order('letter');
+    if (error) {
+      list.innerHTML = `<p class="empty-state">Could not load letters: ${escapeHtml(error.message)}</p>`;
+      return;
+    }
+    list.innerHTML = (data || []).map((l) => `
+      <div class="card card-pad" style="margin-bottom:10px;">
+        <div class="flex items-center gap-16" style="flex-wrap:wrap;">
+          <strong style="font-family:var(--font-serif); font-size:1.3rem; min-width:28px;">${escapeHtml(l.letter)}</strong>
+          <input type="text" data-letter-audio="${l.letter}" value="${escapeHtml(l.audio_url || '')}" placeholder="Leave blank until narration is recorded" style="flex:1; min-width:220px;">
+          ${rwAudioBadge(l.audio_url)}
+          <button class="btn btn-ghost btn-sm" data-letter-save="${l.letter}">Save</button>
+          <span class="row-save-msg" data-letter-msg="${l.letter}">Saved ✓</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  document.querySelector('#alphabet-letters-list')?.addEventListener('click', async (e) => {
+    const saveBtn = e.target.closest('[data-letter-save]');
+    if (!saveBtn) return;
+    const letter = saveBtn.getAttribute('data-letter-save');
+    const input = document.querySelector(`[data-letter-audio="${letter}"]`);
+    saveBtn.disabled = true;
+    const { error } = await supabaseClient.from('alphabet_letters').update({ audio_url: input.value || null }).eq('letter', letter);
+    saveBtn.disabled = false;
+    if (error) { alert('Could not save: ' + error.message); return; }
+    const msg = document.querySelector(`[data-letter-msg="${letter}"]`);
+    if (msg) {
+      msg.classList.add('show');
+      setTimeout(() => msg.classList.remove('show'), 2000);
+    }
+    // Update the badge in place instead of reloading the whole list, so the
+    // "Saved" confirmation above doesn't get wiped out by its own re-render.
+    const badge = input.closest('.flex').querySelector('.badge');
+    if (badge) badge.outerHTML = rwAudioBadge(input.value || null);
   });
 
   // ---- Revenue / Refunds ---------------------------------------------

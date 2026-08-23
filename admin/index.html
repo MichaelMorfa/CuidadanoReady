@@ -53,6 +53,7 @@
         <a href="#" data-panel-link="flashcards">Flashcards Editor</a>
         <a href="#" data-panel-link="country-lessons">Know Your Country Editor</a>
         <a href="#" data-panel-link="mock-interview">Mock Interview Editor</a>
+        <a href="#" data-panel-link="reading-writing">Reading &amp; Writing Editor</a>
       </li>
       <li class="app-nav-group">
         <h4>Revenue</h4>
@@ -473,6 +474,81 @@
       </section>
 
       <!-- ================= REVENUE / REFUNDS ================= -->
+      <section class="admin-panel" data-panel="reading-writing">
+        <div class="card card-pad" style="margin-bottom:24px;">
+          <span class="eyebrow">READING &amp; WRITING</span>
+          <p class="small muted" style="margin:4px 0 0;">Sentences are English-only by design (it's a literacy test). Paste an audio URL once narration exists for that item &mdash; until then, the member-facing page shows an "audio coming soon" badge automatically, no other change needed.</p>
+        </div>
+
+        <div class="card card-pad" style="margin-bottom:24px;">
+          <span class="eyebrow">ADD READING SENTENCE</span>
+          <p class="small muted" style="margin:4px 0 14px;">Members read these out loud, then play the audio to check their pronunciation.</p>
+          <form class="admin-add-form" id="reading-item-form">
+            <div>
+              <label for="reading-item-sort">Sort Order</label>
+              <input type="number" id="reading-item-sort" value="1" min="1">
+            </div>
+            <div class="span-2">
+              <label for="reading-item-text">Sentence (English)</label>
+              <input type="text" id="reading-item-text" placeholder="e.g. Who lives in the White House?" required>
+            </div>
+            <div class="span-2">
+              <label for="reading-item-audio">Audio URL (optional)</label>
+              <input type="text" id="reading-item-audio" placeholder="Leave blank until narration is recorded">
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px; padding-bottom:11px;">
+              <input type="checkbox" id="reading-item-published" style="width:auto; margin:0;" checked>
+              <label style="margin:0;" for="reading-item-published">Published</label>
+            </div>
+            <div class="span-2">
+              <button type="submit" class="btn btn-primary" id="reading-item-submit">Add Sentence</button>
+              <button type="button" class="btn btn-ghost" id="reading-item-cancel-edit" style="display:none;">Cancel Edit</button>
+            </div>
+          </form>
+        </div>
+        <div class="search-row">
+          <span class="small muted" id="reading-item-count"></span>
+        </div>
+        <div id="reading-items-list" style="max-height:420px; overflow-y:auto; margin-bottom:32px;"><p class="empty-state">Loading…</p></div>
+
+        <div class="card card-pad" style="margin-bottom:24px;">
+          <span class="eyebrow">ADD WRITING SENTENCE</span>
+          <p class="small muted" style="margin:4px 0 14px;">Members hear the audio for these and type what they heard (Hear It → Write It).</p>
+          <form class="admin-add-form" id="writing-item-form">
+            <div>
+              <label for="writing-item-sort">Sort Order</label>
+              <input type="number" id="writing-item-sort" value="1" min="1">
+            </div>
+            <div class="span-2">
+              <label for="writing-item-text">Sentence (English)</label>
+              <input type="text" id="writing-item-text" placeholder="e.g. The President lives in the White House." required>
+            </div>
+            <div class="span-2">
+              <label for="writing-item-audio">Audio URL (optional)</label>
+              <input type="text" id="writing-item-audio" placeholder="Leave blank until narration is recorded">
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px; padding-bottom:11px;">
+              <input type="checkbox" id="writing-item-published" style="width:auto; margin:0;" checked>
+              <label style="margin:0;" for="writing-item-published">Published</label>
+            </div>
+            <div class="span-2">
+              <button type="submit" class="btn btn-primary" id="writing-item-submit">Add Sentence</button>
+              <button type="button" class="btn btn-ghost" id="writing-item-cancel-edit" style="display:none;">Cancel Edit</button>
+            </div>
+          </form>
+        </div>
+        <div class="search-row">
+          <span class="small muted" id="writing-item-count"></span>
+        </div>
+        <div id="writing-items-list" style="max-height:420px; overflow-y:auto; margin-bottom:32px;"><p class="empty-state">Loading…</p></div>
+
+        <div class="card card-pad" style="margin-bottom:24px;">
+          <span class="eyebrow">ALPHABET LETTERS</span>
+          <p class="small muted" style="margin:4px 0 0;">Fixed set of 26 (A&ndash;Z). Paste an audio URL for each letter's sound as narration gets recorded &mdash; no need to add or delete rows.</p>
+        </div>
+        <div id="alphabet-letters-list"><p class="empty-state">Loading…</p></div>
+      </section>
+
       <section class="admin-panel" data-panel="revenue">
         <div class="card card-pad" style="margin-bottom:20px;">
           <span class="eyebrow">REFUNDS</span>

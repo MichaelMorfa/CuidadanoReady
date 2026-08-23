@@ -2940,6 +2940,289 @@ async function initSupportPage() {
   renderModuleNav('#support-module-nav', lessons || [], completedIds, null);
 }
 
+// ---- Reading & Writing (English literacy test prep) ---------------------
+// Three practice tools for the reading/writing/spelling portion of the
+// naturalization interview: read-aloud flashcards, a "hear it, write it"
+// dictation exercise, and an alphabet keyboard for spelling practice.
+// Content lives in reading_practice_items / writing_practice_items /
+// alphabet_letters. audio_url starts NULL on every row (narration hasn't
+// been recorded yet) -- every place that plays audio here checks for that
+// and shows an "audio coming soon" state instead of a dead button, so this
+// section can ship now and light up incrementally as audio gets added via
+// the admin editor, with no code changes required later.
+
+async function fetchReadingPracticeItems() {
+  const cached = getCachedContent('reading_practice_items');
+  if (cached) return cached;
+  const { data } = await supabaseClient.from('reading_practice_items').select('*').eq('published', true).order('sort_order');
+  const items = data || [];
+  setCachedContent('reading_practice_items', items);
+  return items;
+}
+
+async function fetchWritingPracticeItems() {
+  const cached = getCachedContent('writing_practice_items');
+  if (cached) return cached;
+  const { data } = await supabaseClient.from('writing_practice_items').select('*').eq('published', true).order('sort_order');
+  const items = data || [];
+  setCachedContent('writing_practice_items', items);
+  return items;
+}
+
+async function fetchAlphabetLetters() {
+  const cached = getCachedContent('alphabet_letters');
+  if (cached) return cached;
+  const { data } = await supabaseClient.from('alphabet_letters').select('*').order('letter');
+  const letters = data || [];
+  setCachedContent('alphabet_letters', letters);
+  return letters;
+}
+
+// One shared <audio> element reused by all three exercises so rapid
+// clicking (especially on the alphabet keyboard) cuts off the previous
+// clip instead of stacking overlapping sounds.
+const rwAudioPlayer = (typeof Audio !== 'undefined') ? new Audio() : null;
+function playRwAudio(url) {
+  if (!rwAudioPlayer || !url) return;
+  try {
+    rwAudioPlayer.src = url;
+    rwAudioPlayer.currentTime = 0;
+    rwAudioPlayer.play().catch(() => {});
+  } catch (e) { /* not fatal, just no sound this click */ }
+}
+
+// Builds the markup for a Play Audio button, or a muted "coming soon"
+// badge when audio_url is still null. Delegated click handling (see
+// initReadingWritingPage) reads the URL back off data-rw-play-audio, so
+// this can be reused anywhere without wiring a fresh listener per card.
+function buildRwAudioControl(audioUrl) {
+  if (audioUrl) {
+    return `<button type="button" class="btn btn-ghost rw-audio-btn" data-rw-play-audio="${escapeHtml(audioUrl)}">🔊 <span data-en="Play Audio" data-es="Reproducir Audio">Play Audio</span></button>`;
+  }
+  return `<span class="rw-audio-pending">🔇 <span data-en="Audio coming soon" data-es="Audio próximamente">Audio coming soon</span></span>`;
+}
+
+let rwActiveTab = 'reading';
+let readingPracticeCache = null; // { items, order, pos }
+let writingPracticeCache = null; // { items, order, pos }
+let alphabetLettersCache = [];
+let rwSpellBuffer = '';
+let rwActivePromptBtn = null;
+
+function switchRwTab(tab) {
+  rwActiveTab = tab;
+  document.querySelectorAll('.rw-tab').forEach((btn) => {
+    btn.classList.toggle('active', btn.getAttribute('data-rw-tab') === tab);
+  });
+  document.querySelector('#rw-reading-view').style.display = tab === 'reading' ? 'block' : 'none';
+  document.querySelector('#rw-writing-view').style.display = tab === 'writing' ? 'block' : 'none';
+  document.querySelector('#rw-alphabet-view').style.display = tab === 'alphabet' ? 'block' : 'none';
+}
+
+function renderRwReadingCard() {
+  if (!readingPracticeCache) return;
+  const { items, order, pos } = readingPracticeCache;
+  const item = items[order[pos]];
+  if (!item) return;
+  document.querySelector('#rw-read-sentence').textContent = item.sentence_text;
+  document.querySelector('#rw-read-audio-slot').innerHTML = buildRwAudioControl(item.audio_url);
+  document.querySelector('#rw-read-progress-text').textContent = `${pos + 1} / ${items.length}`;
+  document.querySelector('#rw-read-prev-btn').disabled = pos === 0;
+}
+
+function renderRwWritingCard() {
+  if (!writingPracticeCache) return;
+  const { items, order, pos } = writingPracticeCache;
+  const item = items[order[pos]];
+  if (!item) return;
+  document.querySelector('#rw-write-audio-slot').innerHTML = buildRwAudioControl(item.audio_url);
+  document.querySelector('#rw-write-progress-text').textContent = `${pos + 1} / ${items.length}`;
+  document.querySelector('#rw-write-prev-btn').disabled = pos === 0;
+  document.querySelector('#rw-write-input').value = '';
+  const resultEl = document.querySelector('#rw-write-result');
+  resultEl.classList.remove('show', 'correct', 'incorrect');
+}
+
+// Lenient grading: real officers don't fail someone over a missing period
+// or a capitalization slip, so comparison ignores case, punctuation, and
+// extra whitespace. The "correct answer" shown back always displays the
+// real sentence, exactly as written, regardless of how it was graded.
+function normalizeForCompare(s) {
+  return String(s || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function checkRwWritingAnswer() {
+  if (!writingPracticeCache) return;
+  const { items, order, pos } = writingPracticeCache;
+  const item = items[order[pos]];
+  if (!item) return;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const userAnswer = document.querySelector('#rw-write-input').value;
+  const isCorrect = normalizeForCompare(userAnswer) === normalizeForCompare(item.sentence_text) && userAnswer.trim().length > 0;
+
+  document.querySelector('#rw-write-user-answer').textContent = userAnswer.trim() || (lang === 'es' ? '(vacío)' : '(empty)');
+  document.querySelector('#rw-write-correct-answer').textContent = item.sentence_text;
+  const verdictEl = document.querySelector('#rw-write-verdict');
+  verdictEl.textContent = isCorrect
+    ? (lang === 'es' ? '✓ ¡Buen trabajo!' : '✓ Great job')
+    : (lang === 'es' ? '✗ Sigue practicando' : '✗ Keep practicing');
+
+  const resultEl = document.querySelector('#rw-write-result');
+  resultEl.classList.add('show');
+  resultEl.classList.toggle('correct', isCorrect);
+  resultEl.classList.toggle('incorrect', !isCorrect);
+}
+
+function renderRwKeyboard() {
+  const keyboardEl = document.querySelector('#rw-keyboard');
+  if (!keyboardEl) return;
+  keyboardEl.innerHTML = alphabetLettersCache.map((l) => {
+    const hasAudio = !!l.audio_url;
+    return `<button type="button" class="rw-key${hasAudio ? '' : ' no-audio'}" data-rw-letter="${l.letter}" data-rw-play-audio="${hasAudio ? escapeHtml(l.audio_url) : ''}" title="${hasAudio ? '' : 'Audio coming soon'}">${l.letter}</button>`;
+  }).join('');
+}
+
+function updateRwSpellOutput() {
+  const outputEl = document.querySelector('#rw-spell-output');
+  if (outputEl) outputEl.textContent = rwSpellBuffer || ' ';
+}
+
+async function initReadingWritingPage() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  const userId = session.user.id;
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('subscription_status')
+    .eq('id', userId)
+    .single();
+  const hasAccess = profile && ['active', 'trial', 'comp'].includes(profile.subscription_status);
+  if (!hasAccess) {
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  const lessons = await fetchPublishedLessons();
+  const { data: progressRows } = await supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId);
+  const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
+  renderModuleNav('#rw-page-module-nav', lessons || [], completedIds, null);
+
+  const [readingItems, writingItems, letters] = await Promise.all([
+    fetchReadingPracticeItems(),
+    fetchWritingPracticeItems(),
+    fetchAlphabetLetters(),
+  ]);
+
+  readingPracticeCache = { items: readingItems, order: readingItems.map((_, i) => i), pos: 0 };
+  writingPracticeCache = { items: writingItems, order: writingItems.map((_, i) => i), pos: 0 };
+  alphabetLettersCache = letters;
+
+  renderRwReadingCard();
+  renderRwWritingCard();
+  renderRwKeyboard();
+
+  // Tabs
+  document.querySelectorAll('.rw-tab').forEach((btn) => {
+    btn.addEventListener('click', () => switchRwTab(btn.getAttribute('data-rw-tab')));
+  });
+
+  // Delegated audio-button handling, covers reading cards, writing cards,
+  // and every alphabet key without binding a listener per element.
+  document.querySelector('.app-content').addEventListener('click', (e) => {
+    const audioBtn = e.target.closest('[data-rw-play-audio]');
+    if (!audioBtn) return;
+    const url = audioBtn.getAttribute('data-rw-play-audio');
+    if (url) playRwAudio(url); // no-audio alphabet key just skips playback
+
+    // Alphabet keys always append to the spelling buffer, whether or not
+    // their sound has been recorded yet -- spelling practice shouldn't be
+    // blocked on narration the same way hearing the letter is.
+    const letter = audioBtn.getAttribute('data-rw-letter');
+    if (letter) {
+      rwSpellBuffer += letter;
+      updateRwSpellOutput();
+    }
+  });
+
+  // Reading controls
+  document.querySelector('#rw-read-prev-btn').addEventListener('click', () => {
+    if (!readingPracticeCache || readingPracticeCache.pos === 0) return;
+    readingPracticeCache.pos -= 1;
+    renderRwReadingCard();
+  });
+  document.querySelector('#rw-read-next-btn').addEventListener('click', () => {
+    if (!readingPracticeCache) return;
+    readingPracticeCache.pos = (readingPracticeCache.pos + 1) % readingPracticeCache.order.length;
+    renderRwReadingCard();
+  });
+  document.querySelector('#rw-read-shuffle-btn').addEventListener('click', () => {
+    if (!readingPracticeCache) return;
+    readingPracticeCache.order = shuffleArray(readingPracticeCache.order);
+    readingPracticeCache.pos = 0;
+    renderRwReadingCard();
+  });
+
+  // Writing controls
+  document.querySelector('#rw-write-prev-btn').addEventListener('click', () => {
+    if (!writingPracticeCache || writingPracticeCache.pos === 0) return;
+    writingPracticeCache.pos -= 1;
+    renderRwWritingCard();
+  });
+  document.querySelector('#rw-write-next-btn').addEventListener('click', () => {
+    if (!writingPracticeCache) return;
+    writingPracticeCache.pos = (writingPracticeCache.pos + 1) % writingPracticeCache.order.length;
+    renderRwWritingCard();
+  });
+  document.querySelector('#rw-write-shuffle-btn').addEventListener('click', () => {
+    if (!writingPracticeCache) return;
+    writingPracticeCache.order = shuffleArray(writingPracticeCache.order);
+    writingPracticeCache.pos = 0;
+    renderRwWritingCard();
+  });
+  document.querySelector('#rw-write-check-btn').addEventListener('click', checkRwWritingAnswer);
+  document.querySelector('#rw-write-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); checkRwWritingAnswer(); }
+  });
+
+  // Alphabet / spelling controls
+  document.querySelector('#rw-spell-space-btn').addEventListener('click', () => {
+    rwSpellBuffer += ' ';
+    updateRwSpellOutput();
+  });
+  document.querySelector('#rw-spell-backspace-btn').addEventListener('click', () => {
+    rwSpellBuffer = rwSpellBuffer.slice(0, -1);
+    updateRwSpellOutput();
+  });
+  document.querySelector('#rw-spell-clear-btn').addEventListener('click', () => {
+    rwSpellBuffer = '';
+    updateRwSpellOutput();
+  });
+  document.querySelectorAll('.rw-prompt-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const alreadyActive = btn === rwActivePromptBtn;
+      document.querySelectorAll('.rw-prompt-btn').forEach((b) => b.classList.remove('active'));
+      const promptEl = document.querySelector('#rw-active-prompt');
+      if (alreadyActive) {
+        rwActivePromptBtn = null;
+        promptEl.style.display = 'none';
+        return;
+      }
+      btn.classList.add('active');
+      rwActivePromptBtn = btn;
+      const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+      promptEl.textContent = lang === 'es' ? btn.getAttribute('data-rw-prompt-es') : btn.getAttribute('data-rw-prompt-en');
+      promptEl.style.display = 'block';
+      rwSpellBuffer = '';
+      updateRwSpellOutput();
+    });
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof supabaseClient === 'undefined') return;
   if (document.body.hasAttribute('data-dashboard-page')) initDashboard();
@@ -2951,6 +3234,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.body.hasAttribute('data-progress-page')) initProgressPage();
   if (document.body.hasAttribute('data-support-page')) initSupportPage();
   if (document.body.hasAttribute('data-mock-interview-page')) initMockInterviewPage();
+  if (document.body.hasAttribute('data-rw-page')) initReadingWritingPage();
 });
 
 // Re-render dynamic content in place when the visitor toggles EN/ES;
@@ -2973,4 +3257,19 @@ window.addEventListener('ciudadanoready:langchange', () => {
     if (kycCache.currentLessonNumber != null) renderKycReading(); else renderKycPicker();
   }
   if (document.body.hasAttribute('data-progress-page')) renderProgressPage();
+  if (document.body.hasAttribute('data-rw-page')) {
+    // Reading/writing sentences are English-only by design (it's a literacy
+    // test), and the Play Audio / Audio coming soon labels already use
+    // data-en/data-es spans that app.js's setLang() sweeps automatically --
+    // no re-render needed here, and re-rendering would wipe out whatever
+    // the member was mid-typing in the writing exercise. Only the alphabet
+    // spelling prompt needs an explicit update, since its label text is
+    // swapped via data-rw-prompt-en/es rather than the standard attributes.
+    if (rwActivePromptBtn) {
+      const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+      document.querySelector('#rw-active-prompt').textContent = lang === 'es'
+        ? rwActivePromptBtn.getAttribute('data-rw-prompt-es')
+        : rwActivePromptBtn.getAttribute('data-rw-prompt-en');
+    }
+  }
 });
