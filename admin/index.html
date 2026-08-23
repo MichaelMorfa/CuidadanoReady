@@ -54,6 +54,7 @@
         <a href="#" data-panel-link="country-lessons">Know Your Country Editor</a>
         <a href="#" data-panel-link="mock-interview">Mock Interview Editor</a>
         <a href="#" data-panel-link="reading-writing">Reading &amp; Writing Editor</a>
+        <a href="#" data-panel-link="documents">Documents Editor</a>
       </li>
       <li class="app-nav-group">
         <h4>Revenue</h4>
@@ -547,6 +548,52 @@
           <p class="small muted" style="margin:4px 0 0;">Fixed set of 26 (A&ndash;Z). Paste an audio URL for each letter's sound as narration gets recorded &mdash; no need to add or delete rows.</p>
         </div>
         <div id="alphabet-letters-list"><p class="empty-state">Loading…</p></div>
+      </section>
+
+      <section class="admin-panel" data-panel="documents">
+        <div class="card card-pad" style="margin-bottom:24px;">
+          <span class="eyebrow">ADD DOCUMENT</span>
+          <p class="small muted" style="margin:4px 0 14px;">Choose a PDF from your computer &mdash; it uploads straight to this site's storage (not linked to USCIS.gov or anywhere else), and members view it embedded on the page, never as a download link. Public-domain U.S. government works only.</p>
+          <form class="admin-add-form" id="document-form">
+            <div>
+              <label for="document-sort">Sort Order</label>
+              <input type="number" id="document-sort" value="1" min="1">
+            </div>
+            <div class="span-2">
+              <label for="document-file">PDF File</label>
+              <input type="file" id="document-file" accept="application/pdf">
+              <p class="small muted" id="document-file-current" style="margin:4px 0 0; display:none;"></p>
+            </div>
+            <div class="span-2">
+              <label for="document-title">Title (English)</label>
+              <input type="text" id="document-title" placeholder="e.g. Reading Vocabulary for the Naturalization Test" required>
+            </div>
+            <div class="span-2">
+              <label for="document-title-es">Título (Spanish, optional)</label>
+              <input type="text" id="document-title-es" placeholder="Se usará el inglés si se deja en blanco">
+            </div>
+            <div class="span-2">
+              <label for="document-description">Short Description (English, optional)</label>
+              <input type="text" id="document-description" placeholder="One line shown under the title on the member-facing list">
+            </div>
+            <div class="span-2">
+              <label for="document-description-es">Descripción (Spanish, optional)</label>
+              <input type="text" id="document-description-es" placeholder="Se usará el inglés si se deja en blanco">
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px; padding-bottom:11px;">
+              <input type="checkbox" id="document-published" style="width:auto; margin:0;" checked>
+              <label style="margin:0;" for="document-published">Published</label>
+            </div>
+            <div class="span-2">
+              <button type="submit" class="btn btn-primary" id="document-submit">Add Document</button>
+              <button type="button" class="btn btn-ghost" id="document-cancel-edit" style="display:none;">Cancel Edit</button>
+            </div>
+          </form>
+        </div>
+        <div class="search-row">
+          <span class="small muted" id="document-count"></span>
+        </div>
+        <div id="documents-list"><p class="empty-state">Loading…</p></div>
       </section>
 
       <section class="admin-panel" data-panel="revenue">

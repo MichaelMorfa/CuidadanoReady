@@ -3226,6 +3226,98 @@ async function initReadingWritingPage() {
   });
 }
 
+// ---- Documents (official USCIS reference materials) ---------------------
+// Files live in Supabase Storage (official-documents bucket, public read,
+// admin-only write) and are shown in an inline <iframe> on this page --
+// never a direct download link, never linked out to uscis.gov or anywhere
+// else. file_url is stored as a complete Storage URL (same convention as
+// lesson video_url/audio_url), set by the admin panel's upload flow.
+let officialDocumentsCache = [];
+let openDocumentId = null;
+
+async function fetchOfficialDocuments() {
+  const cached = getCachedContent('official_documents');
+  if (cached) return cached;
+  const { data } = await supabaseClient.from('official_documents').select('*').eq('published', true).order('sort_order');
+  const docs = data || [];
+  setCachedContent('official_documents', docs);
+  return docs;
+}
+
+function renderDocumentsList() {
+  const listEl = document.querySelector('#doc-list');
+  if (!listEl) return;
+  if (!officialDocumentsCache.length) {
+    listEl.innerHTML = '<p class="empty-state">No documents available yet.</p>';
+    return;
+  }
+  listEl.innerHTML = officialDocumentsCache.map((d) => `
+    <button class="card doc-card" data-doc-open="${d.id}">
+      <span class="doc-card-icon" aria-hidden="true">PDF</span>
+      <span class="doc-card-body">
+        <h3>${escapeHtml(localize(d, 'title'))}</h3>
+        ${d.description ? `<p class="small muted">${escapeHtml(localize(d, 'description'))}</p>` : ''}
+      </span>
+    </button>
+  `).join('');
+}
+
+function openDocument(id) {
+  const doc = officialDocumentsCache.find((d) => d.id === id);
+  if (!doc) return;
+  openDocumentId = id;
+  document.querySelector('#doc-list-view').style.display = 'none';
+  document.querySelector('#doc-viewer-view').style.display = 'block';
+  document.querySelector('#doc-viewer-title').textContent = localize(doc, 'title');
+  // #toolbar=0 hides the built-in PDF viewer toolbar in browsers that
+  // honor it (Firefox, Chromium to a degree) -- there's no fully reliable
+  // cross-browser way to stop someone using their browser's own save
+  // function, but this at least removes our own download affordance and
+  // the most visible built-in one.
+  document.querySelector('#doc-viewer-frame').src = doc.file_url + '#toolbar=0';
+}
+
+function closeDocumentViewer() {
+  openDocumentId = null;
+  document.querySelector('#doc-viewer-view').style.display = 'none';
+  document.querySelector('#doc-list-view').style.display = 'block';
+  // 'about:blank', not '', actually clears the frame -- an empty string
+  // src just resolves back to the current page URL.
+  document.querySelector('#doc-viewer-frame').src = 'about:blank';
+}
+
+async function initDocumentsPage() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  const userId = session.user.id;
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('subscription_status')
+    .eq('id', userId)
+    .single();
+  const hasAccess = profile && ['active', 'trial', 'comp'].includes(profile.subscription_status);
+  if (!hasAccess) {
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  const lessons = await fetchPublishedLessons();
+  const { data: progressRows } = await supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId);
+  const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
+  renderModuleNav('#documents-page-module-nav', lessons || [], completedIds, null);
+
+  officialDocumentsCache = await fetchOfficialDocuments();
+  renderDocumentsList();
+
+  document.querySelector('#doc-list')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-doc-open]');
+    if (!btn) return;
+    openDocument(btn.getAttribute('data-doc-open'));
+  });
+  document.querySelector('#doc-back-btn')?.addEventListener('click', closeDocumentViewer);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof supabaseClient === 'undefined') return;
   if (document.body.hasAttribute('data-dashboard-page')) initDashboard();
@@ -3238,6 +3330,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.body.hasAttribute('data-support-page')) initSupportPage();
   if (document.body.hasAttribute('data-mock-interview-page')) initMockInterviewPage();
   if (document.body.hasAttribute('data-rw-page')) initReadingWritingPage();
+  if (document.body.hasAttribute('data-documents-page')) initDocumentsPage();
 });
 
 // Re-render dynamic content in place when the visitor toggles EN/ES;
@@ -3273,6 +3366,16 @@ window.addEventListener('ciudadanoready:langchange', () => {
       document.querySelector('#rw-active-prompt').textContent = lang === 'es'
         ? rwActivePromptBtn.getAttribute('data-rw-prompt-es')
         : rwActivePromptBtn.getAttribute('data-rw-prompt-en');
+    }
+  }
+  if (document.body.hasAttribute('data-documents-page')) {
+    renderDocumentsList();
+    // Title is plain textContent (JS-rendered), so it needs an explicit
+    // re-localize on language toggle; the iframe itself doesn't change.
+    if (openDocumentId) {
+      const doc = officialDocumentsCache.find((d) => d.id === openDocumentId);
+      const titleEl = document.querySelector('#doc-viewer-title');
+      if (doc && titleEl) titleEl.textContent = localize(doc, 'title');
     }
   }
 });

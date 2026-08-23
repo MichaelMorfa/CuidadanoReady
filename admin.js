@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     'country-lessons': 'Know Your Country Editor',
     'mock-interview': 'Mock Interview Editor',
     'reading-writing': 'Reading & Writing Editor',
+    documents: 'Documents Editor',
     revenue: 'Payments',
     support: 'Support',
   };
@@ -67,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (name === 'country-lessons') loadCountryLessons();
     if (name === 'mock-interview') loadMockInterview();
     if (name === 'reading-writing') loadReadingWritingEditor();
+    if (name === 'documents') loadDocuments();
     if (name === 'revenue') loadRevenue();
     if (name === 'support') loadSupport();
   }
@@ -1258,6 +1260,156 @@ document.addEventListener('DOMContentLoaded', () => {
     // "Saved" confirmation above doesn't get wiped out by its own re-render.
     const badge = input.closest('.flex').querySelector('.badge');
     if (badge) badge.outerHTML = rwAudioBadge(input.value || null);
+  });
+
+  // ---- Documents editor ---------------------------------------------
+  // PDFs upload straight from this browser session into the
+  // official-documents bucket via supabaseClient.storage -- the admin's
+  // own authenticated session already satisfies the admin-only storage
+  // RLS policy, so this never needs a service-role key or a separate
+  // upload endpoint. Members only ever see these embedded on-page, never
+  // as a direct download link (see documents.html / member.js).
+  let editingDocumentId = null;
+  let allDocuments = [];
+
+  function slugifyFilename(name) {
+    return String(name || 'file').toLowerCase().replace(/\.[^.]+$/, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'file';
+  }
+
+  async function loadDocuments() {
+    const list = document.querySelector('#documents-list');
+    const { data, error } = await supabaseClient.from('official_documents').select('*').order('sort_order');
+    if (error) {
+      list.innerHTML = `<p class="empty-state">Could not load documents: ${escapeHtml(error.message)}</p>`;
+      return;
+    }
+    allDocuments = data || [];
+    renderDocumentsAdminList();
+  }
+
+  function renderDocumentsAdminList() {
+    const list = document.querySelector('#documents-list');
+    const countEl = document.querySelector('#document-count');
+    if (countEl) countEl.textContent = `${allDocuments.length} document${allDocuments.length === 1 ? '' : 's'}`;
+    if (!allDocuments.length) {
+      list.innerHTML = '<p class="empty-state">No documents yet. Add one above.</p>';
+      return;
+    }
+    list.innerHTML = allDocuments.map((d) => `
+      <div class="card card-pad" style="margin-bottom:12px;">
+        <div class="flex justify-between items-center">
+          <div>
+            <span class="small muted" style="font-family:var(--font-mono);">#${d.sort_order}</span>
+            <strong style="margin-left:6px;">${escapeHtml(d.title)}</strong>
+            ${d.published ? '<span class="badge badge-forest" style="margin-left:8px;">Published</span>' : '<span class="badge" style="margin-left:8px;">Draft</span>'}
+          </div>
+          <div class="flex gap-8">
+            <a class="btn btn-ghost btn-sm" href="${escapeHtml(d.file_url)}" target="_blank" rel="noopener">Preview</a>
+            <button class="btn btn-ghost btn-sm" data-document-edit="${d.id}">Edit</button>
+            <button class="btn btn-ghost btn-sm" data-document-delete="${d.id}">Delete</button>
+          </div>
+        </div>
+        ${d.description ? `<p class="small" style="margin-top:10px; margin-bottom:0;">${escapeHtml(d.description)}</p>` : ''}
+      </div>
+    `).join('');
+  }
+
+  const documentForm = document.querySelector('#document-form');
+  const documentCancelBtn = document.querySelector('#document-cancel-edit');
+
+  function resetDocumentForm() {
+    editingDocumentId = null;
+    documentForm.reset();
+    document.querySelector('#document-published').checked = true;
+    document.querySelector('#document-submit').textContent = 'Add Document';
+    document.querySelector('#document-file-current').style.display = 'none';
+    documentCancelBtn.style.display = 'none';
+  }
+
+  documentCancelBtn?.addEventListener('click', resetDocumentForm);
+
+  documentForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = document.querySelector('#document-submit');
+    const fileInput = document.querySelector('#document-file');
+    const file = fileInput.files[0];
+
+    if (!editingDocumentId && !file) {
+      alert('Choose a PDF file to upload.');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = file ? 'Uploading…' : 'Saving…';
+
+    let fileUrl = null;
+    if (file) {
+      const path = `${Date.now()}-${slugifyFilename(file.name)}.pdf`;
+      const { error: uploadErr } = await supabaseClient.storage
+        .from('official-documents')
+        .upload(path, file, { contentType: 'application/pdf', upsert: false });
+      if (uploadErr) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = editingDocumentId ? 'Save Changes' : 'Add Document';
+        alert('Could not upload file: ' + uploadErr.message);
+        return;
+      }
+      const { data: publicUrlData } = supabaseClient.storage.from('official-documents').getPublicUrl(path);
+      fileUrl = publicUrlData && publicUrlData.publicUrl;
+    }
+
+    const payload = {
+      sort_order: Number(document.querySelector('#document-sort').value) || 1,
+      title: document.querySelector('#document-title').value,
+      title_es: document.querySelector('#document-title-es').value || null,
+      description: document.querySelector('#document-description').value || null,
+      description_es: document.querySelector('#document-description-es').value || null,
+      published: document.querySelector('#document-published').checked,
+    };
+    if (fileUrl) payload.file_url = fileUrl;
+
+    let error;
+    if (editingDocumentId) {
+      ({ error } = await supabaseClient.from('official_documents').update(payload).eq('id', editingDocumentId));
+    } else {
+      ({ error } = await supabaseClient.from('official_documents').insert(payload));
+    }
+    submitBtn.disabled = false;
+    if (error) { alert('Could not save document: ' + error.message); return; }
+    resetDocumentForm();
+    loadDocuments();
+  });
+
+  document.querySelector('#documents-list')?.addEventListener('click', async (e) => {
+    const editBtn = e.target.closest('[data-document-edit]');
+    const delBtn = e.target.closest('[data-document-delete]');
+
+    if (editBtn) {
+      const id = editBtn.getAttribute('data-document-edit');
+      const doc = allDocuments.find((d) => d.id === id);
+      if (!doc) return;
+      editingDocumentId = id;
+      document.querySelector('#document-sort').value = doc.sort_order;
+      document.querySelector('#document-title').value = doc.title;
+      document.querySelector('#document-title-es').value = doc.title_es || '';
+      document.querySelector('#document-description').value = doc.description || '';
+      document.querySelector('#document-description-es').value = doc.description_es || '';
+      document.querySelector('#document-published').checked = !!doc.published;
+      const currentFileEl = document.querySelector('#document-file-current');
+      currentFileEl.textContent = 'Current file stays unless you choose a new one to replace it.';
+      currentFileEl.style.display = 'block';
+      document.querySelector('#document-submit').textContent = 'Save Changes';
+      documentCancelBtn.style.display = 'inline-flex';
+      smoothScrollIntoView(documentForm, { block: 'start' });
+    }
+
+    if (delBtn) {
+      const id = delBtn.getAttribute('data-document-delete');
+      if (!confirm('Delete this document? This cannot be undone.')) return;
+      const { error } = await supabaseClient.from('official_documents').delete().eq('id', id);
+      if (error) { alert('Could not delete: ' + error.message); return; }
+      loadDocuments();
+    }
   });
 
   // ---- Revenue / Refunds ---------------------------------------------
