@@ -177,9 +177,16 @@ function renderLessonBody(text) {
   }).join('');
 }
 
-function renderStampPath(selector, lessons, completedIds, currentLesson, small) {
+// `linkable` turns each module circle into a click target that jumps to
+// that module's first lesson, same destination the sidebar module nav
+// already uses -- so numbers 1-7 on the Dashboard's "Your Path" row take
+// you straight to that stage instead of being purely decorative. Locked
+// modules stay non-interactive (matches renderModuleNav's lock treatment).
+function renderStampPath(selector, lessons, completedIds, currentLesson, small, linkable) {
   const container = document.querySelector(selector);
   if (!container) return;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const lockedWord = lang === 'es' ? 'Bloqueado' : 'Locked';
   let html = '';
   for (let m = 1; m <= TOTAL_MODULES; m++) {
     const moduleLessons = lessons.filter((l) => l.module_number === m);
@@ -190,7 +197,17 @@ function renderStampPath(selector, lessons, completedIds, currentLesson, small) 
     if (allDone) circleClass = ' done';
     else if (isCurrent) circleClass = ' current';
     const label = small ? '' : `<span class="stamp-label">${escapeHtml(moduleName(m))}</span>`;
-    html += `<div class="stamp-item"><div class="stamp-circle${circleClass}">${m}</div>${label}</div>`;
+    const unlocked = hasLessons && isModuleUnlocked(m, lessons, completedIds);
+    let circleHtml;
+    if (linkable && unlocked) {
+      const firstLesson = moduleLessons[0];
+      circleHtml = `<a href="lesson.html?id=${firstLesson.id}" class="stamp-circle${circleClass}" aria-label="${escapeHtml(moduleName(m))}">${m}</a>`;
+    } else if (linkable && hasLessons) {
+      circleHtml = `<span class="stamp-circle${circleClass} stamp-circle-locked" title="${lockedWord}" aria-label="${lockedWord}: ${escapeHtml(moduleName(m))}">${m}</span>`;
+    } else {
+      circleHtml = `<div class="stamp-circle${circleClass}">${m}</div>`;
+    }
+    html += `<div class="stamp-item">${circleHtml}${label}</div>`;
     if (m < TOTAL_MODULES) html += `<div class="stamp-connector${allDone ? ' done' : ''}"></div>`;
   }
   container.innerHTML = html;
@@ -555,7 +572,7 @@ function renderDashboard() {
     if (streakNote) streakNote.textContent = streak > 0 ? dl.keepGoing : dl.startStreak;
   }
 
-  renderStampPath('#dashboard-stamp-path', lessons, completedIds, currentLesson, false);
+  renderStampPath('#dashboard-stamp-path', lessons, completedIds, currentLesson, false, true);
   renderModuleNav('#dashboard-module-nav', lessons, completedIds, null);
 }
 
@@ -3116,8 +3133,10 @@ async function initReadingWritingPage() {
     fetchAlphabetLetters(),
   ]);
 
-  readingPracticeCache = { items: readingItems, order: readingItems.map((_, i) => i), pos: 0 };
-  writingPracticeCache = { items: writingItems, order: writingItems.map((_, i) => i), pos: 0 };
+  // Shuffled fresh on every visit (not just when the Shuffle button is
+  // clicked), so the order is different each time someone logs in.
+  readingPracticeCache = { items: readingItems, order: shuffleArray(readingItems.map((_, i) => i)), pos: 0 };
+  writingPracticeCache = { items: writingItems, order: shuffleArray(writingItems.map((_, i) => i)), pos: 0 };
   alphabetLettersCache = letters;
 
   renderRwReadingCard();

@@ -395,6 +395,14 @@ img { max-width: 100%; display: block; }
 }
 .stamp-circle.current { border-color: var(--ink); color: var(--ink); }
 .stamp-circle.done { background: var(--ocean); border-color: var(--ocean); color: var(--paper); }
+
+/* Clickable module circles (Dashboard "Your Path" only -- renderStampPath's
+   linkable flag). <a> resets its own text-decoration/color so it inherits
+   the same look as the plain <div> version, then gains a hover/focus state
+   so it's clear the number is interactive. */
+a.stamp-circle { text-decoration: none; cursor: pointer; transition: transform 0.1s ease, box-shadow 0.15s ease; }
+a.stamp-circle:hover, a.stamp-circle:focus-visible { transform: scale(1.08); box-shadow: 0 0 0 3px var(--line); }
+.stamp-circle-locked { cursor: default; opacity: 0.55; }
 .stamp-label { font-family: var(--font-mono); font-size: 0.72rem; color: var(--slate); margin-top: 6px; text-align: center; }
 .stamp-connector { width: 40px; height: 2px; background: var(--line); flex-shrink: 0; }
 .stamp-connector.done { background: var(--ocean); }
@@ -747,6 +755,25 @@ textarea { resize: vertical; min-height: 120px; }
   z-index: 10;
 }
 .app-content { padding: 32px; }
+
+/* Subtle flag watermark on pages that otherwise read as plain (Dashboard,
+   Documents) -- baked-in low opacity in the SVG itself, layered as a
+   background-image so the topbar's own background-color still shows
+   through everywhere else and text on top stays fully legible. Desktop
+   only; not worth the visual clutter on narrow screens. */
+body[data-dashboard-page] .app-topbar,
+body[data-documents-page] .app-topbar {
+  background-image: url('flag-watermark.svg');
+  background-repeat: no-repeat;
+  background-position: right -30px top -60px;
+  background-size: 320px auto;
+}
+@media (max-width: 900px) {
+  body[data-dashboard-page] .app-topbar,
+  body[data-documents-page] .app-topbar {
+    background-image: none;
+  }
+}
 
 .stat-card { padding: 22px; }
 .stat-card .eyebrow { margin-bottom: 8px; }
