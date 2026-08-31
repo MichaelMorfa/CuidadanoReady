@@ -487,6 +487,20 @@ a.stamp-circle:hover, a.stamp-circle:focus-visible { transform: scale(1.08); box
 .grid-2 { grid-template-columns: repeat(2, 1fr); }
 .grid-3 { grid-template-columns: repeat(3, 1fr); }
 .grid-4 { grid-template-columns: repeat(4, 1fr); }
+/* A grid item's default min-width is "auto", which means its content's
+   own min-content size (not the track size) sets the floor -- so a card
+   containing a wide, non-wrapping row (like the homepage hero's "Your
+   Path to Citizenship" stepper, which has flex-wrap:nowrap + overflow-x:
+   auto so it can scroll horizontally) can silently force the whole 1fr
+   track wider than the viewport instead of shrinking, even though
+   overflow-x:auto was specifically added so it WOULD shrink and scroll.
+   This was invisible in testing because .hero (and similar sections) set
+   overflow-x:hidden, which clips the runoff instead of showing a page
+   scrollbar -- so the text just went blank past the edge with no visual
+   sign anything was wrong until you looked closely on an actual mobile
+   width. min-width:0 is the standard fix: it lets a grid item shrink to
+   its track's size and defers to the item's own overflow handling. */
+.grid > * { min-width: 0; }
 
 @media (max-width: 900px) {
   .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); }
