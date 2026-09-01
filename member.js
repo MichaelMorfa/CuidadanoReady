@@ -654,6 +654,32 @@ async function initDashboard() {
   renderDashboard();
 }
 
+// ---- Per-line quiz audio (question + each answer choice, EN/ES) --------
+// quiz_questions carries a separate audio_url column per line per language
+// (audio_question_en/es, audio_choice_a_en/es, ...), populated later by an
+// admin pasting a Storage URL -- none exist yet, so every button below
+// renders in the muted "coming soon" state until then. `part` is
+// 'question' or 'choice_a'..'choice_d'.
+function quizAudioUrl(q, part) {
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  return q['audio_' + part + '_' + (lang === 'es' ? 'es' : 'en')] || null;
+}
+
+// Compact icon-only variant of buildRwAudioControl (that one's a full-width
+// labeled button, sized for its own card; here the button sits inline next
+// to a question heading or a single answer choice, so it needs to be small
+// enough not to dominate the line). Reuses the same shared <audio> element
+// and playRwAudio() helper as Reading & Writing -- one player is plenty
+// since only one clip should ever play at a time anyway.
+function buildQuizAudioBtn(url, lang) {
+  const label = lang === 'es' ? 'Escuchar' : 'Listen';
+  if (url) {
+    return `<button type="button" class="quiz-audio-btn" data-quiz-play-audio="${escapeHtml(url)}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">🔊</button>`;
+  }
+  const pendingLabel = lang === 'es' ? 'Audio próximamente' : 'Audio coming soon';
+  return `<span class="quiz-audio-btn quiz-audio-btn-pending" aria-hidden="true" title="${escapeHtml(pendingLabel)}">🔇</span>`;
+}
+
 // ---- Module quiz (submit-and-grade, shown only on the last lesson of a
 // module, gates that lesson's "Mark Complete") -----------------------------
 // Distinct from buildQuizBoxHtml (the older instant-feedback single-question
@@ -697,14 +723,17 @@ function buildModuleQuizHtml(quizQs) {
       ['d', localize(q, 'choice_d')],
     ].filter(([, text]) => text && String(text).trim()));
     const optionsHtml = choices.map(([key, text]) => `
-      <label class="module-quiz-option" data-key="${key}">
-        <input type="radio" name="mq-${q.id}" value="${key}">
-        <span>${escapeHtml(text)}</span>
-        <span class="module-quiz-option-mark" aria-hidden="true"></span>
-        <span class="sr-only module-quiz-option-mark-sr"></span>
-      </label>`).join('');
+      <div class="module-quiz-option-row">
+        <label class="module-quiz-option" data-key="${key}">
+          <input type="radio" name="mq-${q.id}" value="${key}">
+          <span>${escapeHtml(text)}</span>
+          <span class="module-quiz-option-mark" aria-hidden="true"></span>
+          <span class="sr-only module-quiz-option-mark-sr"></span>
+        </label>
+        ${buildQuizAudioBtn(quizAudioUrl(q, 'choice_' + key), lang)}
+      </div>`).join('');
     return `<div class="module-quiz-q" data-question-id="${q.id}" data-correct="${q.correct_choice}">
-      <h4>${i + 1}. ${escapeHtml(localize(q, 'question'))}</h4>
+      <h4>${i + 1}. ${escapeHtml(localize(q, 'question'))} ${buildQuizAudioBtn(quizAudioUrl(q, 'question'), lang)}</h4>
       <div class="module-quiz-options">${optionsHtml}</div>
     </div>`;
   }).join('');
@@ -854,9 +883,9 @@ function buildModuleQuizReviewHtml(attempt, quizQs, lang) {
     return `<div class="module-quiz-review-item">
       <div class="module-quiz-review-icon ${isCorrect ? 'correct' : 'incorrect'}" aria-hidden="true">${isCorrect ? '✓' : '✗'}</div>
       <div>
-        <p class="module-quiz-review-question"><span class="sr-only">${isCorrect ? ml.yourAnswerCorrect : ml.yourAnswerIncorrect}: </span>${i + 1}. ${escapeHtml(localize(q, 'question'))}</p>
-        <p class="module-quiz-review-answer">${escapeHtml(ml.yourAnswer)} <strong>${escapeHtml(choiceText(a.selected_choice))}</strong></p>
-        ${!isCorrect ? `<p class="module-quiz-review-answer correct-answer">${escapeHtml(ml.correctAnswer)} <strong>${escapeHtml(choiceText(q.correct_choice))}</strong></p>` : ''}
+        <p class="module-quiz-review-question"><span class="sr-only">${isCorrect ? ml.yourAnswerCorrect : ml.yourAnswerIncorrect}: </span>${i + 1}. ${escapeHtml(localize(q, 'question'))} ${buildQuizAudioBtn(quizAudioUrl(q, 'question'), lang)}</p>
+        <p class="module-quiz-review-answer">${escapeHtml(ml.yourAnswer)} <strong>${escapeHtml(choiceText(a.selected_choice))}</strong> ${a.selected_choice ? buildQuizAudioBtn(quizAudioUrl(q, 'choice_' + a.selected_choice), lang) : ''}</p>
+        ${!isCorrect ? `<p class="module-quiz-review-answer correct-answer">${escapeHtml(ml.correctAnswer)} <strong>${escapeHtml(choiceText(q.correct_choice))}</strong> ${buildQuizAudioBtn(quizAudioUrl(q, 'choice_' + q.correct_choice), lang)}</p>` : ''}
       </div>
     </div>`;
   }).join('') : `<p class="small muted">${escapeHtml(ml.noAnswerDetail)}</p>`;
@@ -3364,6 +3393,17 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.body.hasAttribute('data-mock-interview-page')) initMockInterviewPage();
   if (document.body.hasAttribute('data-rw-page')) initReadingWritingPage();
   if (document.body.hasAttribute('data-documents-page')) initDocumentsPage();
+
+  // Module quiz audio buttons (question + each answer choice) live inside
+  // dynamically-rendered, frequently-rebuilt quiz markup (take-quiz form,
+  // review-past-attempt view), so a single delegated listener on the whole
+  // document is simpler and more robust than re-binding it after every
+  // re-render. Harmless on pages with no quiz UI -- it just never matches.
+  document.addEventListener('click', (e) => {
+    const audioBtn = e.target.closest('[data-quiz-play-audio]');
+    if (!audioBtn) return;
+    playRwAudio(audioBtn.getAttribute('data-quiz-play-audio'));
+  });
 });
 
 // Re-render dynamic content in place when the visitor toggles EN/ES;

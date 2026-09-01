@@ -457,6 +457,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---- Quiz questions ------------------------------------------------
   let editingQuizId = null;
+  let allQuizQuestions = [];
+
+  // Each question has up to 10 audio slots (question + choices A-D, each
+  // EN/ES). Choices C/D only apply when that question actually has a
+  // choice_c/choice_d (true/false questions only use A/B). This list is
+  // the single source of truth for both the "X/Y audio attached" badge
+  // and the fields rendered in the expandable audio panel.
+  function quizAudioSlotsForQuestion(q) {
+    const slots = [{ key: 'question', label: 'Question' }, { key: 'choice_a', label: 'Choice A' }, { key: 'choice_b', label: 'Choice B' }];
+    if (q.choice_c) slots.push({ key: 'choice_c', label: 'Choice C' });
+    if (q.choice_d) slots.push({ key: 'choice_d', label: 'Choice D' });
+    return slots;
+  }
+
+  function quizAudioCountBadge(q) {
+    const slots = quizAudioSlotsForQuestion(q);
+    const total = slots.length * 2; // EN + ES
+    let attached = 0;
+    slots.forEach((s) => {
+      if (q['audio_' + s.key + '_en']) attached++;
+      if (q['audio_' + s.key + '_es']) attached++;
+    });
+    return attached === 0
+      ? `<span class="badge" style="margin-left:6px;">No audio yet</span>`
+      : `<span class="badge ${attached === total ? 'badge-forest' : ''}" style="margin-left:6px;">${attached}/${total} audio</span>`;
+  }
+
+  function buildQuizAudioPanelHtml(q) {
+    const rows = quizAudioSlotsForQuestion(q).map((s) => `
+      <div class="flex items-center gap-16" style="flex-wrap:wrap; padding:8px 0; border-top:1px solid var(--line);">
+        <span class="small" style="min-width:90px;">${s.label}</span>
+        <input type="text" data-quiz-audio-field="audio_${s.key}_en" value="${escapeHtml(q['audio_' + s.key + '_en'] || '')}" placeholder="EN audio URL" style="flex:1; min-width:180px;">
+        <input type="text" data-quiz-audio-field="audio_${s.key}_es" value="${escapeHtml(q['audio_' + s.key + '_es'] || '')}" placeholder="ES audio URL" style="flex:1; min-width:180px;">
+      </div>
+    `).join('');
+    return `
+      <div class="quiz-audio-panel" data-quiz-audio-panel="${q.id}" style="display:none; margin-top:12px; padding-top:4px;">
+        <p class="small muted" style="margin:0 0 4px;">Paste the public Storage URL for each recording. Leave blank until it's ready -- members see a muted "audio coming soon" icon for anything empty.</p>
+        ${rows}
+        <div class="flex items-center gap-8" style="margin-top:12px;">
+          <button class="btn btn-ghost btn-sm" data-quiz-audio-save="${q.id}">Save Audio</button>
+          <span class="row-save-msg" data-quiz-audio-msg="${q.id}">Saved ✓</span>
+        </div>
+      </div>
+    `;
+  }
 
   async function loadQuizzes() {
     const list = document.querySelector('#quizzes-list');
@@ -465,13 +511,14 @@ document.addEventListener('DOMContentLoaded', () => {
       list.innerHTML = `<p class="empty-state">Could not load questions: ${escapeHtml(error.message)}</p>`;
       return;
     }
-    if (!data || !data.length) {
+    allQuizQuestions = data || [];
+    if (!allQuizQuestions.length) {
       list.innerHTML = '<p class="empty-state">No quiz questions yet. Add your first one above.</p>';
       return;
     }
     let html = '';
     let currentModule = null;
-    data.forEach((q) => {
+    allQuizQuestions.forEach((q) => {
       if (q.module_number !== currentModule) {
         currentModule = q.module_number;
         html += `<div class="module-heading">Module ${currentModule}: ${escapeHtml(MODULE_NAMES[currentModule] || '')}</div>`;
@@ -485,13 +532,16 @@ document.addEventListener('DOMContentLoaded', () => {
               <strong>${escapeHtml(q.question)}</strong>
               ${q.published ? '<span class="badge badge-forest" style="margin-left:8px;">Published</span>' : '<span class="badge" style="margin-left:8px;">Draft</span>'}
               ${accuracy !== null ? `<span class="accuracy-pill ${accuracy < 70 ? 'low' : ''}" style="margin-left:6px;">${accuracy}% correct (${total} attempts)</span>` : '<span class="accuracy-pill" style="margin-left:6px;">No attempts yet</span>'}
+              ${quizAudioCountBadge(q)}
             </div>
             <div class="flex gap-8">
+              <button class="btn btn-ghost btn-sm" data-quiz-audio-toggle="${q.id}">Audio</button>
               <button class="btn btn-ghost btn-sm" data-quiz-edit="${q.id}">Edit</button>
               <button class="btn btn-ghost btn-sm" data-quiz-delete="${q.id}">Delete</button>
             </div>
           </div>
           <p class="small" style="margin-top:10px; margin-bottom:0;">Correct answer: <strong>${escapeHtml(q['choice_' + q.correct_choice])}</strong></p>
+          ${buildQuizAudioPanelHtml(q)}
         </div>
       `;
     });
@@ -548,6 +598,52 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelector('#quizzes-list')?.addEventListener('click', async (e) => {
     const editBtn = e.target.closest('[data-quiz-edit]');
     const delBtn = e.target.closest('[data-quiz-delete]');
+    const audioToggleBtn = e.target.closest('[data-quiz-audio-toggle]');
+    const audioSaveBtn = e.target.closest('[data-quiz-audio-save]');
+
+    if (audioToggleBtn) {
+      const id = audioToggleBtn.getAttribute('data-quiz-audio-toggle');
+      const panel = document.querySelector(`[data-quiz-audio-panel="${id}"]`);
+      if (panel) panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      return;
+    }
+
+    if (audioSaveBtn) {
+      const id = audioSaveBtn.getAttribute('data-quiz-audio-save');
+      const panel = document.querySelector(`[data-quiz-audio-panel="${id}"]`);
+      if (!panel) return;
+      const payload = {};
+      panel.querySelectorAll('[data-quiz-audio-field]').forEach((input) => {
+        payload[input.getAttribute('data-quiz-audio-field')] = input.value.trim() || null;
+      });
+      audioSaveBtn.disabled = true;
+      const { error } = await supabaseClient.from('quiz_questions').update(payload).eq('id', id);
+      audioSaveBtn.disabled = false;
+      if (error) { alert('Could not save audio: ' + error.message); return; }
+      const q = allQuizQuestions.find((x) => x.id === id);
+      if (q) Object.assign(q, payload);
+      const msg = document.querySelector(`[data-quiz-audio-msg="${id}"]`);
+      if (msg) {
+        msg.classList.add('show');
+        setTimeout(() => msg.classList.remove('show'), 2000);
+      }
+      // Update the badge in place (rather than a full loadQuizzes() reload)
+      // so the panel stays open and the "Saved" confirmation isn't wiped out.
+      if (q) {
+        const card = document.querySelector(`[data-quiz-card="${id}"]`);
+        const oldBadge = card?.querySelector('.badge');
+        // The audio-count badge is the last .badge in the header row (Published
+        // and accuracy badges come first), so target it specifically via a
+        // dedicated wrapper rather than guessing position.
+        const badgeHolder = card?.querySelector('.flex.justify-between .flex:first-child');
+        if (badgeHolder) {
+          const existing = badgeHolder.querySelectorAll('.badge');
+          const last = existing[existing.length - 1];
+          if (last && /audio/i.test(last.textContent)) last.outerHTML = quizAudioCountBadge(q);
+        }
+      }
+      return;
+    }
 
     if (editBtn) {
       const id = editBtn.getAttribute('data-quiz-edit');

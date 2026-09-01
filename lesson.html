@@ -43,8 +43,21 @@
   .module-quiz-q:first-of-type { border-top:none; padding-top:0; }
   .module-quiz-q h4 { font-family: var(--font-sans); font-size:0.94rem; font-weight:600; margin:0 0 10px; }
   .module-quiz-options { display:flex; flex-direction:column; gap:1px; }
-  .module-quiz-option { display:flex; align-items:center; gap:10px; padding:7px 8px; border-radius:6px; cursor:pointer; font-size:0.9rem; text-align:left; }
+  .module-quiz-option { display:flex; align-items:center; gap:10px; padding:7px 8px; border-radius:6px; cursor:pointer; font-size:0.9rem; text-align:left; flex:1; min-width:0; }
   .module-quiz-option:hover { background: var(--paper-dim); }
+  /* Each choice row now wraps the label PLUS a sibling audio button (see
+     buildModuleQuizHtml in member.js -- the button lives outside the
+     <label> so clicking it doesn't also toggle the radio via label
+     click-through). The row itself owns the hover/spacing; the label
+     inside no longer needs its own hover background. */
+  .module-quiz-option-row { display:flex; align-items:center; gap:2px; }
+  .quiz-audio-btn { flex:none; width:26px; height:26px; border-radius:50%; border:1px solid var(--line); background: var(--white); display:flex; align-items:center; justify-content:center; font-size:0.8rem; line-height:1; cursor:pointer; padding:0; color: var(--forest); transition: background 0.12s ease, border-color 0.12s ease; }
+  .quiz-audio-btn:hover { background: #F0F6F2; border-color: var(--forest); }
+  .quiz-audio-btn-pending { color: var(--slate); opacity:0.5; cursor:default; background:none; border-color: transparent; }
+  .quiz-audio-btn-pending:hover { background:none; border-color:transparent; }
+  .module-quiz-q h4 .quiz-audio-btn, .module-quiz-q h4 .quiz-audio-btn-pending { margin-left:8px; vertical-align:middle; }
+  .module-quiz-review-answer .quiz-audio-btn, .module-quiz-review-question .quiz-audio-btn,
+  .module-quiz-review-answer .quiz-audio-btn-pending, .module-quiz-review-question .quiz-audio-btn-pending { width:22px; height:22px; font-size:0.72rem; margin-left:6px; vertical-align:middle; }
   /* Global form styles (styles.css `input { width:100%; padding:11px 14px; ... }`)
      are meant for text/email/password fields; override them back to a
      normal native radio button here, or the choice rows render broken and
