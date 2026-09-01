@@ -652,6 +652,24 @@ async function initDashboard() {
   const streak = (profile && profile.streak_count) || 0;
   dashboardCache = { lessons, completedIds, streak };
   renderDashboard();
+
+  // Reflect today's 10-Minute-English status on the promo card -- separate
+  // from the streak check above since a lesson can also keep the streak
+  // alive; this specifically answers "did I already do the quick daily
+  // session today," which daily_practice_log tracks precisely.
+  if (await checkDailyPracticeAlreadyDoneToday(userId)) {
+    const card = document.querySelector('#daily-practice-card');
+    const cta = document.querySelector('#daily-practice-cta');
+    if (card) card.classList.add('done');
+    if (cta) {
+      cta.classList.remove('btn-primary');
+      cta.classList.add('btn-ghost');
+      cta.setAttribute('data-en', "✓ Completed Today — Do Another Round");
+      cta.setAttribute('data-es', "✓ Completado Hoy — Hacer Otra Ronda");
+      const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+      cta.textContent = lang === 'es' ? '✓ Completado Hoy — Hacer Otra Ronda' : '✓ Completed Today — Do Another Round';
+    }
+  }
 }
 
 // ---- Per-line quiz audio (question + each answer choice, EN/ES) --------
@@ -3593,6 +3611,236 @@ function updateVocabSearchPlaceholder() {
   if (ph) input.placeholder = ph;
 }
 
+// ---- 10 Minute English (daily-practice.html) -----------------------------
+// A short, auto-composed daily session mixing vocabulary, civics quiz
+// questions, and reading sentences already stored in the DB -- no new
+// content type to author or keep in sync. Completing a session inserts one
+// row into daily_practice_log, which fires the same record_activity()
+// trigger lesson_progress already uses, so it feeds the one PRACTICE STREAK
+// shown on the dashboard/progress page -- there's no separate streak here,
+// intentionally, so a quick 10-minute session and a full lesson both keep
+// the same streak alive.
+const DP_COUNTS = { vocab: 4, quiz: 3, reading: 3 };
+
+async function fetchAllQuizQuestions() {
+  const cached = getCachedContent('quiz_questions_all');
+  if (cached) return cached;
+  const { data } = await supabaseClient.from('quiz_questions').select('*').eq('published', true).order('module_number');
+  const items = data || [];
+  setCachedContent('quiz_questions_all', items);
+  return items;
+}
+
+let dpSession = null; // { items: [{type, data, answered?}], index, correctCount }
+let dpUserId = null;
+
+function dpQuizChoices(q) {
+  return ['a', 'b', 'c', 'd']
+    .filter((l) => q['choice_' + l] != null && String(q['choice_' + l]).trim() !== '')
+    .map((l) => ({ letter: l, text: localize(q, 'choice_' + l) }));
+}
+
+async function buildDailyPracticeItems() {
+  const [vocab, quiz, reading] = await Promise.all([
+    fetchVocabularyWords(),
+    fetchAllQuizQuestions(),
+    fetchReadingPracticeItems(),
+  ]);
+  const vocabItems = shuffleArray(vocab).slice(0, DP_COUNTS.vocab).map((w) => ({ type: 'vocab', data: w }));
+  const quizItems = shuffleArray(quiz).slice(0, DP_COUNTS.quiz).map((q) => ({ type: 'quiz', data: q }));
+  const readingItems = shuffleArray(reading).slice(0, DP_COUNTS.reading).map((r) => ({ type: 'reading', data: r }));
+  return shuffleArray([...vocabItems, ...quizItems, ...readingItems]);
+}
+
+function renderDailyPracticeItem() {
+  if (!dpSession) return;
+  const { items, index } = dpSession;
+  const item = items[index];
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+
+  document.querySelector('#dp-progress-text').textContent =
+    (lang === 'es' ? 'Elemento' : 'Item') + ' ' + (index + 1) + ' ' + (lang === 'es' ? 'de' : 'of') + ' ' + items.length;
+  document.querySelector('#dp-progress-bar').style.width = Math.round((index / items.length) * 100) + '%';
+
+  const typeLabelEl = document.querySelector('#dp-item-type-label');
+  const bodyEl = document.querySelector('#dp-item-body');
+  document.querySelector('#dp-next-btn').disabled = true;
+
+  if (item.type === 'vocab') {
+    typeLabelEl.textContent = lang === 'es' ? '🔤 VOCABULARIO' : '🔤 VOCABULARY';
+    const w = item.data;
+    bodyEl.innerHTML = `
+      <div class="dp-vocab-term">${escapeHtml(w.term)}</div>
+      ${w.term_es ? `<div class="dp-vocab-term-es">${escapeHtml(w.term_es)}</div>` : ''}
+      <button type="button" class="btn btn-ghost dp-vocab-reveal-btn" id="dp-vocab-reveal-btn" data-en="Reveal Definition" data-es="Mostrar Definición">Reveal Definition</button>
+      <div class="dp-vocab-definition" id="dp-vocab-definition">${escapeHtml(vocabDefinition(w))}</div>
+    `;
+  } else if (item.type === 'quiz') {
+    typeLabelEl.textContent = lang === 'es' ? '❓ CÍVICA' : '❓ CIVICS';
+    const q = item.data;
+    const choices = dpQuizChoices(q);
+    bodyEl.innerHTML = `
+      <div class="dp-quiz-question">${escapeHtml(localize(q, 'question'))}</div>
+      <div class="dp-quiz-options" id="dp-quiz-options">
+        ${choices.map((c) => `
+          <button type="button" class="dp-quiz-option-btn" data-dp-choice="${c.letter}">
+            <span class="dp-quiz-option-letter">${c.letter.toUpperCase()}</span>
+            <span>${escapeHtml(c.text)}</span>
+          </button>
+        `).join('')}
+      </div>
+    `;
+  } else {
+    typeLabelEl.textContent = lang === 'es' ? '📖 LECTURA' : '📖 READING';
+    const r = item.data;
+    bodyEl.innerHTML = `
+      <div class="dp-reading-sentence">${escapeHtml(r.sentence_text)}</div>
+      <div style="margin-bottom:16px;">${buildRwAudioControl(r.audio_url)}</div>
+      <button type="button" class="btn btn-primary" id="dp-reading-done-btn" data-en="I Read It" data-es="Lo Leí">I Read It</button>
+    `;
+  }
+}
+
+async function checkDailyPracticeAlreadyDoneToday(userId) {
+  const { data } = await supabaseClient
+    .from('daily_practice_log')
+    .select('practice_date')
+    .eq('user_id', userId)
+    .order('practice_date', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!data) return false;
+  const today = new Date().toISOString().slice(0, 10);
+  return data.practice_date === today;
+}
+
+async function finishDailyPracticeSession() {
+  const { items, correctCount } = dpSession;
+  document.querySelector('#dp-session-view').style.display = 'none';
+
+  const quizCount = items.filter((i) => i.type === 'quiz').length;
+  await supabaseClient.from('daily_practice_log').insert({ user_id: dpUserId, item_count: items.length });
+
+  const { data: profile } = await supabaseClient.from('profiles').select('streak_count').eq('id', dpUserId).single();
+  const streak = (profile && profile.streak_count) || 0;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+
+  document.querySelector('#dp-summary-streak-value').textContent = streak;
+  document.querySelector('#dp-summary-streak-label').textContent = lang === 'es'
+    ? (streak === 1 ? 'día de racha' : 'días de racha')
+    : (streak === 1 ? 'day streak' : 'day streak');
+  document.querySelector('#dp-stat-items').textContent = items.length;
+  document.querySelector('#dp-stat-correct').textContent = correctCount + '/' + quizCount;
+
+  document.querySelector('#dp-already-done').style.display = 'block';
+  document.querySelector('#dp-summary-view').style.display = 'block';
+}
+
+async function initDailyPracticePage() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  dpUserId = session.user.id;
+
+  const { data: profile } = await supabaseClient.from('profiles').select('subscription_status').eq('id', dpUserId).single();
+  const hasAccess = profile && ['active', 'trial', 'comp'].includes(profile.subscription_status);
+  if (!hasAccess) { window.location.href = 'dashboard.html'; return; }
+
+  const lessons = await fetchPublishedLessons();
+  const { data: progressRows } = await supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', dpUserId);
+  const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
+  renderModuleNav('#dp-page-module-nav', lessons || [], completedIds, null);
+
+  if (await checkDailyPracticeAlreadyDoneToday(dpUserId)) {
+    document.querySelector('#dp-already-done').style.display = 'block';
+  }
+
+  async function beginSession() {
+    const beginBtn = document.querySelector('#dp-begin-btn');
+    const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+    beginBtn.disabled = true;
+    beginBtn.textContent = lang === 'es' ? 'Cargando…' : 'Loading…';
+    const items = await buildDailyPracticeItems();
+    beginBtn.disabled = false;
+    beginBtn.textContent = lang === 'es' ? "Comenzar Práctica de Hoy →" : "Start Today's Practice →";
+    if (!items.length) {
+      alert('Could not load practice content. Please try again.');
+      return;
+    }
+    dpSession = { items, index: 0, correctCount: 0 };
+    document.querySelector('#dp-intro-view').style.display = 'none';
+    document.querySelector('#dp-summary-view').style.display = 'none';
+    document.querySelector('#dp-session-view').style.display = 'block';
+    renderDailyPracticeItem();
+  }
+
+  document.querySelector('#dp-begin-btn')?.addEventListener('click', beginSession);
+
+  document.querySelector('#dp-again-btn')?.addEventListener('click', () => {
+    document.querySelector('#dp-summary-view').style.display = 'none';
+    document.querySelector('#dp-intro-view').style.display = 'block';
+  });
+
+  document.querySelector('#dp-quit-btn')?.addEventListener('click', () => {
+    const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+    const msg = lang === 'es'
+      ? '¿Salir de la práctica de hoy? El progreso de esta sesión no se guardará.'
+      : "Quit today's practice? Progress in this session won't be saved.";
+    if (!confirm(msg)) return;
+    dpSession = null;
+    document.querySelector('#dp-session-view').style.display = 'none';
+    document.querySelector('#dp-intro-view').style.display = 'block';
+  });
+
+  document.querySelector('#dp-item-body')?.addEventListener('click', (e) => {
+    if (!dpSession) return;
+    const item = dpSession.items[dpSession.index];
+
+    const revealBtn = e.target.closest('#dp-vocab-reveal-btn');
+    if (revealBtn) {
+      document.querySelector('#dp-vocab-definition').classList.add('shown');
+      revealBtn.style.display = 'none';
+      document.querySelector('#dp-next-btn').disabled = false;
+      return;
+    }
+
+    const choiceBtn = e.target.closest('[data-dp-choice]');
+    if (choiceBtn && item.type === 'quiz') {
+      if (item.answered) return;
+      item.answered = true;
+      const chosen = choiceBtn.getAttribute('data-dp-choice');
+      const correct = (item.data.correct_choice || '').toLowerCase();
+      if (chosen.toLowerCase() === correct) dpSession.correctCount++;
+      document.querySelectorAll('[data-dp-choice]').forEach((btn) => {
+        btn.disabled = true;
+        const letter = btn.getAttribute('data-dp-choice');
+        if (letter.toLowerCase() === correct) btn.classList.add('correct');
+        else if (letter === chosen) btn.classList.add('incorrect');
+      });
+      document.querySelector('#dp-next-btn').disabled = false;
+      return;
+    }
+
+    const readingDoneBtn = e.target.closest('#dp-reading-done-btn');
+    if (readingDoneBtn) {
+      readingDoneBtn.disabled = true;
+      const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+      readingDoneBtn.textContent = lang === 'es' ? '✓ Leído' : '✓ Read';
+      document.querySelector('#dp-next-btn').disabled = false;
+      return;
+    }
+  });
+
+  document.querySelector('#dp-next-btn')?.addEventListener('click', () => {
+    if (!dpSession) return;
+    dpSession.index++;
+    if (dpSession.index >= dpSession.items.length) {
+      finishDailyPracticeSession();
+    } else {
+      renderDailyPracticeItem();
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof supabaseClient === 'undefined') return;
   if (document.body.hasAttribute('data-dashboard-page')) initDashboard();
@@ -3607,6 +3855,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.body.hasAttribute('data-rw-page')) initReadingWritingPage();
   if (document.body.hasAttribute('data-documents-page')) initDocumentsPage();
   if (document.body.hasAttribute('data-vocabulary-page')) initVocabularyPage();
+  if (document.body.hasAttribute('data-daily-practice-page')) initDailyPracticePage();
 
   // Module quiz audio buttons (question + each answer choice) live inside
   // dynamically-rendered, frequently-rebuilt quiz markup (take-quiz form,
@@ -3669,5 +3918,9 @@ window.addEventListener('ciudadanoready:langchange', () => {
     renderVocabularyPills();
     renderVocabularyList();
     updateVocabSearchPlaceholder();
+  }
+  if (document.body.hasAttribute('data-daily-practice-page') && dpSession) {
+    const sessionView = document.querySelector('#dp-session-view');
+    if (sessionView && sessionView.style.display !== 'none') renderDailyPracticeItem();
   }
 });

@@ -44,6 +44,14 @@
      top padding gives them room. */
   #dashboard-stamp-path { flex-wrap: nowrap; overflow-x: auto; padding: 8px 0 4px; }
   #dashboard-stamp-path .stamp-connector { flex: 1 1 auto; min-width: 16px; }
+
+  /* Daily practice promo card: a lighter accent than the main "Continue
+     Learning" card so it reads as a secondary/optional habit-builder, not
+     a replacement for the course itself. Swaps to a "done" look once
+     today's session is logged (see renderDashboard in member.js). */
+  .daily-practice-card { background: #F3F8F5; border-color: var(--forest); }
+  .daily-practice-card.done { background: var(--white); border-color: var(--line); }
+  .daily-practice-card .btn-ghost { border-color: var(--forest); color: var(--forest); }
 </style>
 <meta name="description" content="Your Ciudadano Ready member dashboard.">
 <meta name="robots" content="noindex">
@@ -82,6 +90,7 @@
       </li>
       <li class="app-nav-group">
         <h4 data-en="Practice" data-es="Práctica">Practice</h4>
+        <a href="daily-practice.html" data-en="10 Minute English" data-es="10 Minutos de Inglés">10 Minute English</a>
         <a href="flashcards.html" data-en="Flashcards" data-es="Tarjetas de Estudio">Flashcards</a>
         <a href="mock-interview.html" data-en="Mock Interview" data-es="Entrevista Simulada">Mock Interview</a>
         <a href="reading-writing.html" data-en="Reading &amp; Writing" data-es="Lectura y Escritura">Reading &amp; Writing</a>
@@ -167,6 +176,17 @@
               <p class="small" style="margin:0;" id="continue-lesson-meta"></p>
             </div>
             <a href="#" class="btn btn-primary" id="continue-lesson-link" data-en="Resume Lesson →" data-es="Reanudar Lección →">Resume Lesson →</a>
+          </div>
+        </div>
+
+        <div class="card card-pad daily-practice-card" style="margin-bottom:28px;" id="daily-practice-card">
+          <span class="eyebrow" data-en="DAILY PRACTICE" data-es="PRÁCTICA DIARIA">DAILY PRACTICE</span>
+          <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:16px;">
+            <div>
+              <h3 style="margin-bottom:4px;" data-en="10 Minute English" data-es="10 Minutos de Inglés">10 Minute English</h3>
+              <p class="small" style="margin:0;" id="daily-practice-note" data-en="A quick daily mix of vocabulary, civics questions, and reading practice. Keeps your streak alive even on busy days." data-es="Una mezcla diaria rápida de vocabulario, preguntas cívicas y práctica de lectura. Mantiene tu racha activa incluso en los días ocupados.">A quick daily mix of vocabulary, civics questions, and reading practice. Keeps your streak alive even on busy days.</p>
+            </div>
+            <a href="daily-practice.html" class="btn btn-primary" id="daily-practice-cta" data-en="Start Today's Practice →" data-es="Comenzar Práctica de Hoy →">Start Today's Practice →</a>
           </div>
         </div>
 

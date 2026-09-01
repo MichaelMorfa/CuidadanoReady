@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem("ciudadanoready-theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>10 Minute English | Ciudadano Ready</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ===== Member Area theme (matches dashboard.html / mock-interview.html) ===== */
+  body { background: var(--paper-dim); }
+  .app-sidebar { background: var(--paper-dim); border-right: 1px solid var(--line); }
+  .app-nav a.active { color: var(--forest); background: var(--white); border-left-color: var(--forest); }
+  .app-nav a:hover { color: var(--forest); }
+  .app-topbar { background: var(--paper-dim); border-bottom: 1px solid var(--line); }
+  .app-content .card { box-shadow: none; }
+  .app-content .card:hover { box-shadow: none; }
+  .btn-primary { background: var(--forest); }
+  .btn-primary:hover { background: #244F3B; }
+  .badge-ocean { border-color: var(--forest); color: var(--forest); }
+  .progress-bar-fill { background: var(--forest); }
+
+  .dp-stage { max-width: 680px; margin: 0 auto; }
+
+  /* ---- Intro ---- */
+  .dp-intro-card { padding: 36px; text-align: center; }
+  .dp-intro-icon { font-size: 2.4rem; margin-bottom: 6px; }
+  .dp-intro-mix { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 20px 0 26px; }
+  .dp-intro-mix-item {
+    display: flex; align-items: center; gap: 8px; padding: 8px 14px; border: 1px solid var(--line);
+    border-radius: 999px; font-size: 0.82rem; color: var(--slate); background: var(--surface);
+  }
+  .dp-already-done { margin-top: 18px; padding: 14px 16px; border-radius: var(--radius-sm); background: rgba(47,107,79,0.08); color: var(--forest); font-size: 0.88rem; font-weight: 600; }
+
+  /* ---- Progress ---- */
+  .dp-progress-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .dp-progress-text { font-family: var(--font-mono); font-size: 0.8rem; color: var(--slate); }
+
+  /* ---- Item card ---- */
+  .dp-item-card { padding: 30px 32px; margin-bottom: 20px; min-height: 180px; }
+  .dp-item-type-label { display: inline-flex; align-items: center; gap: 6px; }
+
+  /* Vocabulary item */
+  .dp-vocab-term { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; margin: 10px 0 2px; }
+  .dp-vocab-term-es { font-size: 0.95rem; color: var(--slate); margin: 0 0 18px; }
+  .dp-vocab-reveal-btn { margin-top: 4px; }
+  .dp-vocab-definition { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--line); font-size: 0.95rem; line-height: 1.5; display: none; }
+  .dp-vocab-definition.shown { display: block; }
+
+  /* Quiz item */
+  .dp-quiz-question { font-size: 1.15rem; margin: 8px 0 20px; line-height: 1.4; }
+  .dp-quiz-options { display: flex; flex-direction: column; gap: 10px; }
+  .dp-quiz-option-btn {
+    display: flex; align-items: center; gap: 12px; text-align: left; width: 100%;
+    padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+    background: var(--surface); color: var(--ink); font-family: var(--font-sans); font-size: 0.92rem; cursor: pointer;
+  }
+  .dp-quiz-option-btn:hover:not(:disabled) { border-color: var(--forest); background: var(--paper-dim); }
+  .dp-quiz-option-btn.correct { border-color: var(--forest); background: rgba(47,107,79,0.1); font-weight: 600; }
+  .dp-quiz-option-btn.incorrect { border-color: var(--danger); background: rgba(179,73,47,0.08); }
+  .dp-quiz-option-btn:disabled { cursor: default; opacity: 0.85; }
+  .dp-quiz-option-letter {
+    width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: var(--slate);
+  }
+  .dp-quiz-option-btn.correct .dp-quiz-option-letter { border-color: var(--forest); background: var(--forest); color: var(--paper); }
+  .dp-quiz-option-btn.incorrect .dp-quiz-option-letter { border-color: var(--danger); background: var(--danger); color: var(--paper); }
+
+  /* Reading item */
+  .dp-reading-sentence { font-family: var(--font-serif); font-size: 1.3rem; line-height: 1.5; margin: 12px 0 20px; }
+  .rw-audio-btn { margin-bottom: 4px; }
+  .rw-audio-pending { display: inline-block; font-size: 0.82rem; color: var(--slate); }
+
+  .dp-next-row { text-align: center; margin-top: 4px; }
+
+  .dp-quit-row { text-align: center; margin-top: 20px; }
+
+  /* ---- Summary ---- */
+  .dp-summary-header { text-align: center; padding: 40px 24px; margin-bottom: 24px; }
+  .dp-summary-streak-flame { font-size: 2.6rem; margin-bottom: 4px; }
+  .dp-summary-streak-value { font-family: var(--font-serif); font-size: 2rem; font-weight: 700; color: var(--forest); }
+  .dp-summary-streak-label { font-size: 0.85rem; color: var(--slate); margin-top: 2px; }
+  .dp-summary-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 440px; margin: 20px auto 0; }
+  .dp-summary-stat { text-align: center; }
+  .dp-summary-stat-value { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; }
+  .dp-summary-stat-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--slate); margin-top: 2px; }
+</style>
+<meta name="description" content="A quick daily 10-minute mix of vocabulary, civics questions, and reading practice.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Ciudadano Ready">
+<meta property="og:title" content="10 Minute English | Ciudadano Ready">
+<meta property="og:description" content="A quick daily 10-minute mix of vocabulary, civics questions, and reading practice.">
+<meta property="og:image" content="https://ciudadanoready.com/og-image.png">
+<meta property="og:url" content="https://ciudadanoready.com/daily-practice.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="10 Minute English | Ciudadano Ready">
+<meta name="twitter:description" content="A quick daily 10-minute mix of vocabulary, civics questions, and reading practice.">
+<meta name="twitter:image" content="https://ciudadanoready.com/og-image.png">
+</head>
+<body data-auth-required="true" data-daily-practice-page="true">
+
+<div class="app-shell">
+  <div class="sidebar-backdrop"></div>
+  <aside class="app-sidebar">
+    <a href="dashboard.html" class="logo">Ciudadano<span class="dot">Ready</span></a>
+    <ul class="app-nav">
+      <li class="app-nav-group">
+        <h4 data-en="Overview" data-es="Resumen">Overview</h4>
+        <a href="dashboard.html" data-en="Continue Learning" data-es="Continuar Aprendiendo">Continue Learning</a>
+        <a href="progress.html" data-en="My Progress" data-es="Mi Progreso">My Progress</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="Course" data-es="Curso">Course</h4>
+        <ul class="app-nav" id="dp-page-module-nav" style="padding:0;">
+          <li class="small muted" style="padding:10px 24px;">Loading…</li>
+        </ul>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="Practice" data-es="Práctica">Practice</h4>
+        <a href="daily-practice.html" class="active" data-en="10 Minute English" data-es="10 Minutos de Inglés">10 Minute English</a>
+        <a href="flashcards.html" data-en="Flashcards" data-es="Tarjetas de Estudio">Flashcards</a>
+        <a href="mock-interview.html" data-en="Mock Interview" data-es="Entrevista Simulada">Mock Interview</a>
+        <a href="reading-writing.html" data-en="Reading &amp; Writing" data-es="Lectura y Escritura">Reading &amp; Writing</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="Background" data-es="Contexto">Background</h4>
+        <a href="know-your-country.html" data-en="Know Your Country" data-es="Conoce Tu País">Know Your Country</a>
+        <a href="documents.html" data-en="Documents" data-es="Documentos">Documents</a>
+        <a href="vocabulary.html" data-en="Vocabulary" data-es="Vocabulario">Vocabulary</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="More" data-es="Más">More</h4>
+        <a href="support.html" data-en="Support" data-es="Soporte">Support</a>
+        <a href="settings.html" data-en="Settings" data-es="Configuración">Settings</a>
+      </li>
+    </ul>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-topbar">
+      <div class="flex gap-16 items-center">
+        <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
+        <div>
+          <span class="eyebrow" style="margin-bottom:0;" data-en="PRACTICE" data-es="PRÁCTICA">PRACTICE</span>
+          <h1 style="margin:0;" data-en="10 Minute English" data-es="10 Minutos de Inglés">10 Minute English</h1>
+        </div>
+      </div>
+      <div class="flex gap-16 items-center">
+        <div class="lang-toggle">
+          <button data-lang-btn="en" class="active">EN</button>
+          <button data-lang-btn="es">ES</button>
+        </div>        <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link" data-en="Log Out" data-es="Cerrar Sesión">Log Out</a>
+      </div>
+    </div>
+
+    <div class="app-content">
+
+      <!-- Intro -->
+      <div id="dp-intro-view">
+        <span class="eyebrow" data-en="A QUICK DAILY HABIT" data-es="UN HÁBITO DIARIO RÁPIDO">A QUICK DAILY HABIT</span>
+        <h2 style="margin-top:4px;" data-en="Ten minutes. Every day." data-es="Diez minutos. Todos los días.">Ten minutes. Every day.</h2>
+        <div class="card dp-intro-card dp-stage" style="margin:0;">
+          <div class="dp-intro-icon" aria-hidden="true">📚</div>
+          <p data-en="A short, mixed session pulled fresh from your course content: a few vocabulary words, a few civics questions, and a couple of reading sentences. No new material to study, just quick review." data-es="Una sesión corta y variada tomada de tu contenido del curso: algunas palabras de vocabulario, algunas preguntas cívicas y un par de oraciones de lectura. No hay material nuevo que estudiar, solo un repaso rápido.">A short, mixed session pulled fresh from your course content: a few vocabulary words, a few civics questions, and a couple of reading sentences. No new material to study, just quick review.</p>
+          <div class="dp-intro-mix">
+            <span class="dp-intro-mix-item">🔤 <span data-en="4 vocabulary words" data-es="4 palabras de vocabulario">4 vocabulary words</span></span>
+            <span class="dp-intro-mix-item">❓ <span data-en="3 civics questions" data-es="3 preguntas cívicas">3 civics questions</span></span>
+            <span class="dp-intro-mix-item">📖 <span data-en="3 reading sentences" data-es="3 oraciones de lectura">3 reading sentences</span></span>
+          </div>
+          <button class="btn btn-primary" id="dp-begin-btn" data-en="Start Today's Practice →" data-es="Comenzar Práctica de Hoy →">Start Today's Practice →</button>
+          <div class="dp-already-done" id="dp-already-done" style="display:none;" data-en="✓ You already completed today's practice. Come back tomorrow to keep your streak going, or do another round now just for review." data-es="✓ Ya completaste la práctica de hoy. Vuelve mañana para mantener tu racha, o haz otra ronda ahora solo para repasar.">✓ You already completed today's practice. Come back tomorrow to keep your streak going, or do another round now just for review.</div>
+        </div>
+      </div>
+
+      <!-- In-progress session -->
+      <div id="dp-session-view" class="dp-stage" style="display:none;">
+        <div class="dp-progress-row">
+          <span class="dp-progress-text" id="dp-progress-text">Item 1 of 10</span>
+        </div>
+        <div class="progress-bar" style="margin-bottom:20px;"><div class="progress-bar-fill" id="dp-progress-bar" style="width:0%;"></div></div>
+
+        <div class="card dp-item-card" id="dp-item-card">
+          <span class="eyebrow dp-item-type-label" id="dp-item-type-label">–</span>
+          <div id="dp-item-body"></div>
+        </div>
+
+        <div class="dp-next-row">
+          <button class="btn btn-primary" id="dp-next-btn" disabled data-en="Next →" data-es="Siguiente →">Next →</button>
+        </div>
+
+        <div class="dp-quit-row">
+          <button class="btn btn-ghost btn-sm" id="dp-quit-btn" data-en="Quit for now" data-es="Salir por ahora">Quit for now</button>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div id="dp-summary-view" class="dp-stage" style="display:none;">
+        <div class="card dp-summary-header">
+          <span class="eyebrow" data-en="SESSION COMPLETE" data-es="SESIÓN COMPLETADA">SESSION COMPLETE</span>
+          <div class="dp-summary-streak-flame" aria-hidden="true">🔥</div>
+          <div class="dp-summary-streak-value" id="dp-summary-streak-value">0</div>
+          <div class="dp-summary-streak-label" id="dp-summary-streak-label" data-en="day streak" data-es="días de racha">day streak</div>
+          <div class="dp-summary-stats">
+            <div class="dp-summary-stat">
+              <div class="dp-summary-stat-value" id="dp-stat-items">0</div>
+              <div class="dp-summary-stat-label" data-en="Items Reviewed" data-es="Elementos Revisados">Items Reviewed</div>
+            </div>
+            <div class="dp-summary-stat">
+              <div class="dp-summary-stat-value" id="dp-stat-correct">0</div>
+              <div class="dp-summary-stat-label" data-en="Quiz Correct" data-es="Preguntas Correctas">Quiz Correct</div>
+            </div>
+            <div class="dp-summary-stat">
+              <div class="dp-summary-stat-value" id="dp-stat-minutes">~10</div>
+              <div class="dp-summary-stat-label" data-en="Minutes" data-es="Minutos">Minutes</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-16 justify-center" style="margin-bottom:32px; flex-wrap:wrap;">
+          <a href="dashboard.html" class="btn btn-primary" data-en="← Back to Dashboard" data-es="← Volver al Panel">← Back to Dashboard</a>
+          <button class="btn btn-ghost" id="dp-again-btn" data-en="Do Another Round" data-es="Hacer Otra Ronda">Do Another Round</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="app.js"></script>
+<script src="member.js"></script>
+</body>
+</html>
