@@ -59,6 +59,17 @@
   .fc-answer-list li { padding: 6px 0 6px 22px; position: relative; color: var(--ink); font-weight: 600; }
   .fc-answer-list li::before { content: "•"; position: absolute; left: 4px; color: var(--forest); }
 
+  /* Audio button sits in the top-right corner of each face, as a sibling of
+     the flip-triggering content rather than wrapped around it. The card's
+     click-to-flip listener is bound on #fc-flip-card (the ancestor), so this
+     button's own click handler calls stopPropagation() to tap-to-listen
+     without also flipping the card underneath it. */
+  .fc-face-audio-btn { position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--white); display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; color: var(--forest); transition: background 0.12s ease, border-color 0.12s ease; }
+  .fc-face-audio-btn:hover { background: #F0F6F2; border-color: var(--forest); }
+  .fc-face-audio-btn.fc-face-audio-pending { color: var(--slate); opacity: 0.5; cursor: default; }
+  .fc-face-audio-btn.fc-face-audio-pending:hover { background: var(--white); border-color: var(--line); }
+  .fc-face-back .fc-face-audio-btn { background: var(--white); }
+
   .fc-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
   .fc-progress-text { font-family: var(--font-mono); font-size: 0.8rem; color: var(--slate); }
   .fc-nav-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
@@ -184,10 +195,12 @@
           <div class="fc-flip-outer">
             <div class="fc-flip-card" id="fc-flip-card" role="button" tabindex="0" aria-label="Flip card">
               <div class="fc-face fc-face-front">
+                <button type="button" class="fc-face-audio-btn" id="fc-question-audio-btn" aria-label="Listen">🔊</button>
                 <h3 id="fc-question-text">–</h3>
                 <span class="fc-hint" data-en="TAP CARD TO REVEAL ANSWER" data-es="TOCA LA TARJETA PARA VER LA RESPUESTA">TAP CARD TO REVEAL ANSWER</span>
               </div>
               <div class="fc-face fc-face-back">
+                <button type="button" class="fc-face-audio-btn" id="fc-answer-audio-btn" aria-label="Listen">🔊</button>
                 <ul class="fc-answer-list" id="fc-answer-list"></ul>
                 <span class="fc-hint" data-en="TAP CARD TO SEE QUESTION" data-es="TOCA LA TARJETA PARA VER LA PREGUNTA">TAP CARD TO SEE QUESTION</span>
               </div>

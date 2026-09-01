@@ -1186,6 +1186,29 @@ const FLASHCARD_TEST_LABELS = {
 
 let flashcardsCache = null; // { testType, cards, order: [idx...], pos, flipped }
 
+// Same per-field/per-language audio URL lookup as quizAudioUrl (member.js,
+// quiz audio section) -- 'question' or 'answer', column is audio_<part>_en/es.
+function flashcardAudioUrl(card, part) {
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  return card['audio_' + part + '_' + (lang === 'es' ? 'es' : 'en')] || null;
+}
+
+// Sets a face's audio button to either a live, clickable "play" state or a
+// muted "not recorded yet" state, without touching its position in the DOM
+// (the button itself never moves -- see .fc-face-audio-btn in flashcards.html
+// for why it has to stay a sibling of the flip-triggering face content).
+function setFlashcardAudioBtn(btn, url) {
+  if (!btn) return;
+  if (url) {
+    btn.classList.remove('fc-face-audio-pending');
+    btn.setAttribute('data-audio-url', url);
+    btn.removeAttribute('aria-hidden');
+  } else {
+    btn.classList.add('fc-face-audio-pending');
+    btn.removeAttribute('data-audio-url');
+  }
+}
+
 function renderFlashcardsStudy() {
   if (!flashcardsCache) return;
   const { testType, cards, order, pos, flipped } = flashcardsCache;
@@ -1201,12 +1224,14 @@ function renderFlashcardsStudy() {
   if (progressText) progressText.textContent = `${pos + 1} / ${order.length}`;
 
   document.querySelector('#fc-question-text').textContent = localize(card, 'question');
+  setFlashcardAudioBtn(document.querySelector('#fc-question-audio-btn'), flashcardAudioUrl(card, 'question'));
 
   const answerList = document.querySelector('#fc-answer-list');
   if (answerList) {
     const answerLines = (localize(card, 'answer') || '').split('\n').map((l) => l.trim()).filter(Boolean);
     answerList.innerHTML = answerLines.map((l) => `<li>${escapeHtml(l)}</li>`).join('');
   }
+  setFlashcardAudioBtn(document.querySelector('#fc-answer-audio-btn'), flashcardAudioUrl(card, 'answer'));
 
   const flipEl = document.querySelector('#fc-flip-card');
   if (flipEl) flipEl.classList.toggle('flipped', !!flipped);
@@ -1295,6 +1320,20 @@ async function initFlashcardsPage() {
     if (!flashcardsCache) return;
     flashcardsCache.flipped = !flashcardsCache.flipped;
     renderFlashcardsStudy();
+  });
+  // Audio buttons live inside #fc-flip-card's faces (siblings of the
+  // question/answer content, per the flashcards.html comment), so a plain
+  // click on them would otherwise bubble up and also trigger the flip
+  // listener above. stopPropagation() keeps "listen" and "flip" independent.
+  ['#fc-question-audio-btn', '#fc-answer-audio-btn'].forEach((sel) => {
+    const btn = document.querySelector(sel);
+    if (!btn) return;
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const url = btn.getAttribute('data-audio-url');
+      if (url) playRwAudio(url);
+    });
+    btn.addEventListener('keydown', (e) => { e.stopPropagation(); });
   });
   document.querySelector('#fc-prev-btn').addEventListener('click', () => {
     if (!flashcardsCache || flashcardsCache.pos === 0) return;

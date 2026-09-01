@@ -693,6 +693,43 @@ document.addEventListener('DOMContentLoaded', () => {
     renderFlashcardsList();
   }
 
+  // Flashcards only ever have 2 lines (question, answer) so unlike quiz
+  // questions there's no per-question variation in which slots apply --
+  // always 4: question/answer x EN/ES.
+  const FLASHCARD_AUDIO_SLOTS = [{ key: 'question', label: 'Question' }, { key: 'answer', label: 'Answer' }];
+
+  function flashcardAudioCountBadge(c) {
+    const total = FLASHCARD_AUDIO_SLOTS.length * 2;
+    let attached = 0;
+    FLASHCARD_AUDIO_SLOTS.forEach((s) => {
+      if (c['audio_' + s.key + '_en']) attached++;
+      if (c['audio_' + s.key + '_es']) attached++;
+    });
+    return attached === 0
+      ? `<span class="badge" style="margin-left:6px;">No audio yet</span>`
+      : `<span class="badge ${attached === total ? 'badge-forest' : ''}" style="margin-left:6px;">${attached}/${total} audio</span>`;
+  }
+
+  function buildFlashcardAudioPanelHtml(c) {
+    const rows = FLASHCARD_AUDIO_SLOTS.map((s) => `
+      <div class="flex items-center gap-16" style="flex-wrap:wrap; padding:8px 0; border-top:1px solid var(--line);">
+        <span class="small" style="min-width:90px;">${s.label}</span>
+        <input type="text" data-flashcard-audio-field="audio_${s.key}_en" value="${escapeHtml(c['audio_' + s.key + '_en'] || '')}" placeholder="EN audio URL" style="flex:1; min-width:180px;">
+        <input type="text" data-flashcard-audio-field="audio_${s.key}_es" value="${escapeHtml(c['audio_' + s.key + '_es'] || '')}" placeholder="ES audio URL" style="flex:1; min-width:180px;">
+      </div>
+    `).join('');
+    return `
+      <div class="quiz-audio-panel" data-flashcard-audio-panel="${c.id}" style="display:none; margin-top:12px; padding-top:4px;">
+        <p class="small muted" style="margin:0 0 4px;">Paste the public Storage URL for each recording. Leave blank until it's ready.</p>
+        ${rows}
+        <div class="flex items-center gap-8" style="margin-top:12px;">
+          <button class="btn btn-ghost btn-sm" data-flashcard-audio-save="${c.id}">Save Audio</button>
+          <span class="row-save-msg" data-flashcard-audio-msg="${c.id}">Saved ✓</span>
+        </div>
+      </div>
+    `;
+  }
+
   function renderFlashcardsList() {
     const list = document.querySelector('#flashcards-list');
     const countEl = document.querySelector('#flashcard-count');
@@ -719,13 +756,16 @@ document.addEventListener('DOMContentLoaded', () => {
               <span class="small muted" style="font-family:var(--font-mono);">#${c.sort_order}</span>
               <strong style="margin-left:6px;">${escapeHtml(c.question)}</strong>
               ${c.published ? '<span class="badge badge-forest" style="margin-left:8px;">Published</span>' : '<span class="badge" style="margin-left:8px;">Draft</span>'}
+              ${flashcardAudioCountBadge(c)}
             </div>
             <div class="flex gap-8">
+              <button class="btn btn-ghost btn-sm" data-flashcard-audio-toggle="${c.id}">Audio</button>
               <button class="btn btn-ghost btn-sm" data-flashcard-edit="${c.id}">Edit</button>
               <button class="btn btn-ghost btn-sm" data-flashcard-delete="${c.id}">Delete</button>
             </div>
           </div>
           <p class="small" style="margin-top:10px; margin-bottom:0;">${escapeHtml((c.answer || '').split('\n').join(' · '))}</p>
+          ${buildFlashcardAudioPanelHtml(c)}
         </div>
       `;
     });
@@ -775,6 +815,46 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelector('#flashcards-list')?.addEventListener('click', async (e) => {
     const editBtn = e.target.closest('[data-flashcard-edit]');
     const delBtn = e.target.closest('[data-flashcard-delete]');
+    const audioToggleBtn = e.target.closest('[data-flashcard-audio-toggle]');
+    const audioSaveBtn = e.target.closest('[data-flashcard-audio-save]');
+
+    if (audioToggleBtn) {
+      const id = audioToggleBtn.getAttribute('data-flashcard-audio-toggle');
+      const panel = document.querySelector(`[data-flashcard-audio-panel="${id}"]`);
+      if (panel) panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      return;
+    }
+
+    if (audioSaveBtn) {
+      const id = audioSaveBtn.getAttribute('data-flashcard-audio-save');
+      const panel = document.querySelector(`[data-flashcard-audio-panel="${id}"]`);
+      if (!panel) return;
+      const payload = {};
+      panel.querySelectorAll('[data-flashcard-audio-field]').forEach((input) => {
+        payload[input.getAttribute('data-flashcard-audio-field')] = input.value.trim() || null;
+      });
+      audioSaveBtn.disabled = true;
+      const { error } = await supabaseClient.from('flashcards').update(payload).eq('id', id);
+      audioSaveBtn.disabled = false;
+      if (error) { alert('Could not save audio: ' + error.message); return; }
+      const c = allFlashcards.find((x) => x.id === id);
+      if (c) Object.assign(c, payload);
+      const msg = document.querySelector(`[data-flashcard-audio-msg="${id}"]`);
+      if (msg) {
+        msg.classList.add('show');
+        setTimeout(() => msg.classList.remove('show'), 2000);
+      }
+      if (c) {
+        const card = document.querySelector(`[data-flashcard-card="${id}"]`);
+        const badgeHolder = card?.querySelector('.flex.justify-between .flex:first-child');
+        if (badgeHolder) {
+          const existing = badgeHolder.querySelectorAll('.badge');
+          const last = existing[existing.length - 1];
+          if (last && /audio/i.test(last.textContent)) last.outerHTML = flashcardAudioCountBadge(c);
+        }
+      }
+      return;
+    }
 
     if (editBtn) {
       const id = editBtn.getAttribute('data-flashcard-edit');
