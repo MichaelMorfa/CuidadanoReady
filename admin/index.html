@@ -55,6 +55,7 @@
         <a href="#" data-panel-link="mock-interview">Mock Interview Editor</a>
         <a href="#" data-panel-link="reading-writing">Reading &amp; Writing Editor</a>
         <a href="#" data-panel-link="documents">Documents Editor</a>
+        <a href="#" data-panel-link="vocabulary">Vocabulary Editor</a>
       </li>
       <li class="app-nav-group">
         <h4>Revenue</h4>
@@ -594,6 +595,75 @@
           <span class="small muted" id="document-count"></span>
         </div>
         <div id="documents-list"><p class="empty-state">Loading…</p></div>
+      </section>
+
+      <section class="admin-panel" data-panel="vocabulary">
+        <div class="card card-pad" style="margin-bottom:24px;">
+          <span class="eyebrow">ADD VOCABULARY WORD</span>
+          <p class="small muted" style="margin:4px 0 14px;">Seeded from the official USCIS reading/writing vocabulary lists plus curated naturalization-process terms. Add more here as needed &mdash; members see these on the Vocabulary page, click any word to reveal its definition.</p>
+          <form class="admin-add-form" id="vocab-form">
+            <div>
+              <label for="vocab-sort">Sort Order</label>
+              <input type="number" id="vocab-sort" value="1" min="1">
+            </div>
+            <div>
+              <label for="vocab-category">Category</label>
+              <select id="vocab-category">
+                <option>People</option>
+                <option>Civics</option>
+                <option>Places</option>
+                <option>Months</option>
+                <option>Holidays</option>
+                <option>Question Words</option>
+                <option>Verbs</option>
+                <option>Function Words</option>
+                <option>Content Words</option>
+                <option>Naturalization Process</option>
+              </select>
+            </div>
+            <div class="span-2">
+              <label for="vocab-term">Term (English)</label>
+              <input type="text" id="vocab-term" placeholder="e.g. naturalization" required>
+            </div>
+            <div class="span-2">
+              <label for="vocab-term-es">Término (Spanish)</label>
+              <input type="text" id="vocab-term-es" placeholder="e.g. naturalización">
+            </div>
+            <div class="span-2">
+              <label for="vocab-def-en">Definition (English)</label>
+              <input type="text" id="vocab-def-en" placeholder="Plain-language definition" required>
+            </div>
+            <div class="span-2">
+              <label for="vocab-def-es">Definición (Spanish)</label>
+              <input type="text" id="vocab-def-es" placeholder="Definición en español">
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px; padding-bottom:11px;">
+              <input type="checkbox" id="vocab-published" style="width:auto; margin:0;" checked>
+              <label style="margin:0;" for="vocab-published">Published</label>
+            </div>
+            <div class="span-2">
+              <button type="submit" class="btn btn-primary" id="vocab-submit">Add Word</button>
+              <button type="button" class="btn btn-ghost" id="vocab-cancel-edit" style="display:none;">Cancel Edit</button>
+            </div>
+          </form>
+        </div>
+        <div class="search-row">
+          <select id="vocab-filter" style="max-width:240px;">
+            <option value="all">All Categories</option>
+            <option value="People">People</option>
+            <option value="Civics">Civics</option>
+            <option value="Places">Places</option>
+            <option value="Months">Months</option>
+            <option value="Holidays">Holidays</option>
+            <option value="Question Words">Question Words</option>
+            <option value="Verbs">Verbs</option>
+            <option value="Function Words">Function Words</option>
+            <option value="Content Words">Content Words</option>
+            <option value="Naturalization Process">Naturalization Process</option>
+          </select>
+          <span class="small muted" id="vocab-count"></span>
+        </div>
+        <div id="vocab-list"><p class="empty-state">Loading…</p></div>
       </section>
 
       <section class="admin-panel" data-panel="revenue">

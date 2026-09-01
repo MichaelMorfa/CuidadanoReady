@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script>(function(){try{if(localStorage.getItem("ciudadanoready-theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vocabulary | Ciudadano Ready</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* ===== Member Area theme (matches dashboard.html / documents.html) ===== */
+  body { background: var(--paper-dim); }
+  .app-sidebar { background: var(--paper-dim); border-right: 1px solid var(--line); }
+  .app-nav a.active { color: var(--forest); background: var(--white); border-left-color: var(--forest); }
+  .app-nav a:hover { color: var(--forest); }
+  .app-topbar { background: var(--paper-dim); border-bottom: 1px solid var(--line); }
+  .app-content .card { box-shadow: none; }
+  .app-content .card:hover { box-shadow: none; }
+  .btn-primary { background: var(--forest); }
+  .btn-primary:hover { background: #244F3B; }
+  .badge-ocean { border-color: var(--forest); color: var(--forest); }
+
+  /* ---- Search + category filter bar ---- */
+  .voc-toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; }
+  .voc-search { flex: 1; min-width: 220px; }
+  .voc-search input { margin: 0; }
+  .voc-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .voc-pill { border: 1px solid var(--line); background: var(--white); border-radius: 999px; padding: 6px 14px; font-size: 0.82rem; cursor: pointer; color: var(--slate); white-space: nowrap; transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease; }
+  .voc-pill:hover { border-color: var(--forest); color: var(--forest); }
+  .voc-pill.active { background: var(--forest); border-color: var(--forest); color: var(--white); }
+
+  /* ---- Word list: each term is a button that expands its own definition
+     in place (accordion), so the whole page never needs a modal/tooltip
+     positioning system -- the definition just becomes part of the page
+     flow directly under the word that was clicked. ---- */
+  .voc-group-heading { font-family: var(--font-sans); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--slate); margin: 28px 0 10px; }
+  .voc-group-heading:first-of-type { margin-top: 0; }
+  .voc-item { border: 1px solid var(--line); border-radius: var(--radius-sm); margin-bottom: 8px; background: var(--white); overflow: hidden; }
+  .voc-item-btn { width: 100%; text-align: left; background: none; border: none; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; font: inherit; color: var(--ink); }
+  .voc-item-btn:hover { background: var(--paper-dim); }
+  .voc-term { font-weight: 600; }
+  .voc-term-es { font-size: 0.82rem; color: var(--slate); font-weight: 400; margin-left: 8px; }
+  .voc-chevron { flex: none; color: var(--slate); transition: transform 0.15s ease; }
+  .voc-item.open .voc-chevron { transform: rotate(180deg); }
+  .voc-definition { display: none; padding: 0 16px 16px; font-size: 0.9rem; color: var(--slate); border-top: 1px solid var(--line); padding-top: 12px; margin-top: -1px; }
+  .voc-item.open .voc-definition { display: block; }
+  .voc-definition strong { color: var(--ink); }
+
+  .voc-empty { text-align: center; padding: 40px 20px; color: var(--slate); }
+  .voc-count { font-size: 0.85rem; color: var(--slate); margin-bottom: 16px; }
+</style>
+<meta name="description" content="Bilingual glossary of key words and phrases for the U.S. citizenship test.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Ciudadano Ready">
+<meta property="og:title" content="Vocabulary | Ciudadano Ready">
+<meta property="og:description" content="Bilingual glossary of key words and phrases for the U.S. citizenship test.">
+<meta property="og:image" content="https://ciudadanoready.com/og-image.png">
+<meta property="og:url" content="https://ciudadanoready.com/vocabulary.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Vocabulary | Ciudadano Ready">
+<meta name="twitter:description" content="Bilingual glossary of key words and phrases for the U.S. citizenship test.">
+<meta name="twitter:image" content="https://ciudadanoready.com/og-image.png">
+</head>
+<body data-auth-required="true" data-vocabulary-page="true">
+
+<div class="app-shell">
+  <div class="sidebar-backdrop"></div>
+  <aside class="app-sidebar">
+    <a href="dashboard.html" class="logo">Ciudadano<span class="dot">Ready</span></a>
+    <ul class="app-nav">
+      <li class="app-nav-group">
+        <h4 data-en="Overview" data-es="Resumen">Overview</h4>
+        <a href="dashboard.html" data-en="Continue Learning" data-es="Continuar Aprendiendo">Continue Learning</a>
+        <a href="progress.html" data-en="My Progress" data-es="Mi Progreso">My Progress</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="Course" data-es="Curso">Course</h4>
+        <ul class="app-nav" id="vocabulary-page-module-nav" style="padding:0;">
+          <li class="small muted" style="padding:10px 24px;">Loading…</li>
+        </ul>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="Practice" data-es="Práctica">Practice</h4>
+        <a href="flashcards.html" data-en="Flashcards" data-es="Tarjetas de Estudio">Flashcards</a>
+        <a href="mock-interview.html" data-en="Mock Interview" data-es="Entrevista Simulada">Mock Interview</a>
+        <a href="reading-writing.html" data-en="Reading &amp; Writing" data-es="Lectura y Escritura">Reading &amp; Writing</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="Background" data-es="Contexto">Background</h4>
+        <a href="know-your-country.html" data-en="Know Your Country" data-es="Conoce Tu País">Know Your Country</a>
+        <a href="documents.html" data-en="Documents" data-es="Documentos">Documents</a>
+        <a href="vocabulary.html" class="active" data-en="Vocabulary" data-es="Vocabulario">Vocabulary</a>
+      </li>
+      <li class="app-nav-group">
+        <h4 data-en="More" data-es="Más">More</h4>
+        <a href="support.html" data-en="Support" data-es="Soporte">Support</a>
+        <a href="settings.html" data-en="Settings" data-es="Configuración">Settings</a>
+      </li>
+    </ul>
+  </aside>
+
+  <main class="app-main">
+    <div class="app-topbar">
+      <div class="flex gap-16 items-center">
+        <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
+        <div>
+          <span class="eyebrow" style="margin-bottom:0;" data-en="BACKGROUND" data-es="CONTEXTO">BACKGROUND</span>
+          <h1 style="margin:0;" data-en="Vocabulary" data-es="Vocabulario">Vocabulary</h1>
+        </div>
+      </div>
+      <div class="flex gap-16 items-center">
+        <div class="lang-toggle">
+          <button data-lang-btn="en" class="active">EN</button>
+          <button data-lang-btn="es">ES</button>
+        </div>        <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link" data-en="Log Out" data-es="Cerrar Sesión">Log Out</a>
+      </div>
+    </div>
+
+    <div class="app-content">
+      <p class="small muted" style="margin:0 0 20px;" data-en="Words you need for citizenship: the official USCIS reading and writing vocabulary, plus key terms from the naturalization process. Tap any word to see its definition." data-es="Las palabras que necesitas para la ciudadanía: el vocabulario oficial de lectura y escritura de USCIS, además de términos clave del proceso de naturalización. Toca cualquier palabra para ver su definición.">Words you need for citizenship: the official USCIS reading and writing vocabulary, plus key terms from the naturalization process. Tap any word to see its definition.</p>
+
+      <div class="voc-toolbar">
+        <div class="voc-search">
+          <input type="text" id="voc-search-input" placeholder="Search words…" data-en-placeholder="Search words…" data-es-placeholder="Buscar palabras…">
+        </div>
+      </div>
+      <div class="voc-pills" id="voc-category-pills"></div>
+
+      <p class="voc-count" id="voc-count"></p>
+      <div id="voc-list"><p class="empty-state">Loading…</p></div>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script src="app.js"></script>
+<script src="member.js"></script>
+</body>
+</html>

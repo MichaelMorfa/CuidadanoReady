@@ -3419,6 +3419,180 @@ async function initDocumentsPage() {
   document.querySelector('#doc-back-btn')?.addEventListener('click', closeDocumentViewer);
 }
 
+// ---- Citizenship Vocabulary Database (vocabulary.html) ------------------
+// A standalone bilingual glossary, distinct from reading_practice_items /
+// writing_practice_items (which are sentence-practice content for the
+// literacy exercises) -- vocabulary_words is just term + definition pairs,
+// seeded from the official USCIS reading/writing vocabulary lists plus
+// curated naturalization-process terms. Every word is "interactive" via a
+// click-to-expand accordion (per the member's answer when this feature was
+// scoped: tapping a word shows its definition) rather than a tooltip/modal,
+// so there's no positioning logic to get wrong on mobile.
+let vocabularyCache = [];
+let vocabActiveCategory = 'all';
+let vocabSearchQuery = '';
+let vocabOpenIds = new Set(); // preserved across re-renders (search, lang toggle) so an open definition doesn't snap shut
+
+async function fetchVocabularyWords() {
+  const cached = getCachedContent('vocabulary_words');
+  if (cached) return cached;
+  const { data } = await supabaseClient.from('vocabulary_words').select('*').eq('published', true).order('sort_order');
+  const words = data || [];
+  setCachedContent('vocabulary_words', words);
+  return words;
+}
+
+const VOC_CATEGORY_LABELS = {
+  People: { en: 'People', es: 'Personas' },
+  Civics: { en: 'Civics', es: 'Educación Cívica' },
+  Places: { en: 'Places', es: 'Lugares' },
+  Months: { en: 'Months', es: 'Meses' },
+  Holidays: { en: 'Holidays', es: 'Días Festivos' },
+  'Question Words': { en: 'Question Words', es: 'Palabras Interrogativas' },
+  Verbs: { en: 'Verbs', es: 'Verbos' },
+  'Function Words': { en: 'Function Words', es: 'Palabras Funcionales' },
+  'Content Words': { en: 'Content Words', es: 'Palabras de Contenido' },
+  'Naturalization Process': { en: 'Naturalization Process', es: 'Proceso de Naturalización' },
+};
+function vocabCategoryLabel(cat) {
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const entry = VOC_CATEGORY_LABELS[cat];
+  return entry ? (entry[lang] || entry.en) : cat;
+}
+
+function vocabDefinition(word) {
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  return (lang === 'es' && word.definition_es) ? word.definition_es : word.definition_en;
+}
+
+function renderVocabularyPills() {
+  const wrap = document.querySelector('#voc-category-pills');
+  if (!wrap) return;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  // Order pills the same way the categories first appear in sort_order,
+  // not alphabetically -- keeps People/Civics/Places... reading in the same
+  // order as the official USCIS list before the added process-terms group.
+  const seen = [];
+  vocabularyCache.forEach((w) => { if (!seen.includes(w.category)) seen.push(w.category); });
+  const allLabel = lang === 'es' ? 'Todos' : 'All';
+  const pills = [{ key: 'all', label: allLabel }, ...seen.map((c) => ({ key: c, label: vocabCategoryLabel(c) }))];
+  wrap.innerHTML = pills.map((p) => `<button type="button" class="voc-pill ${vocabActiveCategory === p.key ? 'active' : ''}" data-voc-pill="${escapeHtml(p.key)}">${escapeHtml(p.label)}</button>`).join('');
+}
+
+function renderVocabularyList() {
+  const listEl = document.querySelector('#voc-list');
+  const countEl = document.querySelector('#voc-count');
+  if (!listEl) return;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const q = vocabSearchQuery.trim().toLowerCase();
+
+  const filtered = vocabularyCache.filter((w) => {
+    if (vocabActiveCategory !== 'all' && w.category !== vocabActiveCategory) return false;
+    if (!q) return true;
+    const term = (w.term || '').toLowerCase();
+    const termEs = (w.term_es || '').toLowerCase();
+    return term.includes(q) || termEs.includes(q);
+  });
+
+  if (countEl) {
+    const n = filtered.length;
+    countEl.textContent = n ? (lang === 'es' ? `${n} palabra${n === 1 ? '' : 's'}` : `${n} word${n === 1 ? '' : 's'}`) : '';
+  }
+
+  if (!filtered.length) {
+    listEl.innerHTML = `<p class="voc-empty">${lang === 'es' ? 'No se encontraron palabras.' : 'No words found.'}</p>`;
+    return;
+  }
+
+  // Group under a category heading only in the "All" view -- once a single
+  // category pill is selected every visible word already shares that
+  // category, so a repeated heading would just be noise above the list.
+  let html = '';
+  let currentCategory = null;
+  filtered.forEach((w) => {
+    if (vocabActiveCategory === 'all' && w.category !== currentCategory) {
+      currentCategory = w.category;
+      html += `<div class="voc-group-heading">${escapeHtml(vocabCategoryLabel(currentCategory))}</div>`;
+    }
+    const isOpen = vocabOpenIds.has(w.id);
+    html += `
+      <div class="voc-item ${isOpen ? 'open' : ''}" data-voc-item="${w.id}">
+        <button type="button" class="voc-item-btn" data-voc-toggle="${w.id}" aria-expanded="${isOpen}">
+          <span><span class="voc-term">${escapeHtml(w.term)}</span>${w.term_es ? `<span class="voc-term-es">${escapeHtml(w.term_es)}</span>` : ''}</span>
+          <span class="voc-chevron" aria-hidden="true">${DOC_CHEVRON_SVG}</span>
+        </button>
+        <div class="voc-definition">${escapeHtml(vocabDefinition(w))}</div>
+      </div>
+    `;
+  });
+  listEl.innerHTML = html;
+}
+
+async function initVocabularyPage() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  const userId = session.user.id;
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('subscription_status')
+    .eq('id', userId)
+    .single();
+  const hasAccess = profile && ['active', 'trial', 'comp'].includes(profile.subscription_status);
+  if (!hasAccess) {
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  const lessons = await fetchPublishedLessons();
+  const { data: progressRows } = await supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId);
+  const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
+  renderModuleNav('#vocabulary-page-module-nav', lessons || [], completedIds, null);
+
+  vocabularyCache = await fetchVocabularyWords();
+  renderVocabularyPills();
+  renderVocabularyList();
+  updateVocabSearchPlaceholder();
+
+  document.querySelector('#voc-category-pills')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-voc-pill]');
+    if (!btn) return;
+    vocabActiveCategory = btn.getAttribute('data-voc-pill');
+    renderVocabularyPills();
+    renderVocabularyList();
+  });
+
+  document.querySelector('#voc-search-input')?.addEventListener('input', (e) => {
+    vocabSearchQuery = e.target.value;
+    renderVocabularyList();
+  });
+
+  document.querySelector('#voc-list')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-voc-toggle]');
+    if (!btn) return;
+    const id = btn.getAttribute('data-voc-toggle');
+    if (vocabOpenIds.has(id)) vocabOpenIds.delete(id); else vocabOpenIds.add(id);
+    const item = document.querySelector(`[data-voc-item="${id}"]`);
+    if (item) {
+      const nowOpen = vocabOpenIds.has(id);
+      item.classList.toggle('open', nowOpen);
+      btn.setAttribute('aria-expanded', String(nowOpen));
+    }
+  });
+}
+
+// The search input's placeholder is set via plain data-en-placeholder /
+// data-es-placeholder attributes rather than app.js's standard data-en/
+// data-es sweep (that one only ever touches textContent, never a form
+// field's placeholder), so it needs this small explicit helper instead.
+function updateVocabSearchPlaceholder() {
+  const input = document.querySelector('#voc-search-input');
+  if (!input) return;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const ph = input.getAttribute('data-' + lang + '-placeholder');
+  if (ph) input.placeholder = ph;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof supabaseClient === 'undefined') return;
   if (document.body.hasAttribute('data-dashboard-page')) initDashboard();
@@ -3432,6 +3606,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.body.hasAttribute('data-mock-interview-page')) initMockInterviewPage();
   if (document.body.hasAttribute('data-rw-page')) initReadingWritingPage();
   if (document.body.hasAttribute('data-documents-page')) initDocumentsPage();
+  if (document.body.hasAttribute('data-vocabulary-page')) initVocabularyPage();
 
   // Module quiz audio buttons (question + each answer choice) live inside
   // dynamically-rendered, frequently-rebuilt quiz markup (take-quiz form,
@@ -3489,5 +3664,10 @@ window.addEventListener('ciudadanoready:langchange', () => {
       const titleEl = document.querySelector('#doc-viewer-title');
       if (doc && titleEl) titleEl.textContent = localize(doc, 'title');
     }
+  }
+  if (document.body.hasAttribute('data-vocabulary-page')) {
+    renderVocabularyPills();
+    renderVocabularyList();
+    updateVocabSearchPlaceholder();
   }
 });

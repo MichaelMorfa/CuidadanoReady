@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     'mock-interview': 'Mock Interview Editor',
     'reading-writing': 'Reading & Writing Editor',
     documents: 'Documents Editor',
+    vocabulary: 'Vocabulary Editor',
     revenue: 'Payments',
     support: 'Support',
   };
@@ -69,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (name === 'mock-interview') loadMockInterview();
     if (name === 'reading-writing') loadReadingWritingEditor();
     if (name === 'documents') loadDocuments();
+    if (name === 'vocabulary') loadVocabulary();
     if (name === 'revenue') loadRevenue();
     if (name === 'support') loadSupport();
   }
@@ -1585,6 +1587,127 @@ document.addEventListener('DOMContentLoaded', () => {
       const { error } = await supabaseClient.from('official_documents').delete().eq('id', id);
       if (error) { alert('Could not delete: ' + error.message); return; }
       loadDocuments();
+    }
+  });
+
+  // ---- Vocabulary editor ----------------------------------------------
+  // Mirrors the Documents editor pattern: one add/edit form up top, a
+  // filterable list below, edit/delete wired via delegated click handler.
+  let editingVocabId = null;
+  let allVocabWords = [];
+
+  async function loadVocabulary() {
+    const list = document.querySelector('#vocab-list');
+    const { data, error } = await supabaseClient.from('vocabulary_words').select('*').order('sort_order');
+    if (error) {
+      list.innerHTML = `<p class="empty-state">Could not load vocabulary: ${escapeHtml(error.message)}</p>`;
+      return;
+    }
+    allVocabWords = data || [];
+    renderVocabAdminList();
+  }
+
+  function renderVocabAdminList() {
+    const list = document.querySelector('#vocab-list');
+    const countEl = document.querySelector('#vocab-count');
+    const filterVal = document.querySelector('#vocab-filter')?.value || 'all';
+    const words = filterVal === 'all' ? allVocabWords : allVocabWords.filter((w) => w.category === filterVal);
+    if (countEl) countEl.textContent = `${words.length} word${words.length === 1 ? '' : 's'}`;
+    if (!words.length) {
+      list.innerHTML = '<p class="empty-state">No words yet. Add one above.</p>';
+      return;
+    }
+    list.innerHTML = words.map((w) => `
+      <div class="card card-pad" style="margin-bottom:12px;">
+        <div class="flex justify-between items-center">
+          <div>
+            <span class="small muted" style="font-family:var(--font-mono);">#${w.sort_order}</span>
+            <span class="badge" style="margin-left:8px;">${escapeHtml(w.category)}</span>
+            <strong style="margin-left:8px;">${escapeHtml(w.term)}</strong>
+            ${w.term_es ? `<span class="small muted" style="margin-left:6px;">(${escapeHtml(w.term_es)})</span>` : ''}
+            ${w.published ? '<span class="badge badge-forest" style="margin-left:8px;">Published</span>' : '<span class="badge" style="margin-left:8px;">Draft</span>'}
+          </div>
+          <div class="flex gap-8">
+            <button class="btn btn-ghost btn-sm" data-vocab-edit="${w.id}">Edit</button>
+            <button class="btn btn-ghost btn-sm" data-vocab-delete="${w.id}">Delete</button>
+          </div>
+        </div>
+        <p class="small" style="margin-top:10px; margin-bottom:0;">${escapeHtml(w.definition_en)}</p>
+        ${w.definition_es ? `<p class="small muted" style="margin-top:4px; margin-bottom:0;">${escapeHtml(w.definition_es)}</p>` : ''}
+      </div>
+    `).join('');
+  }
+
+  const vocabForm = document.querySelector('#vocab-form');
+  const vocabCancelBtn = document.querySelector('#vocab-cancel-edit');
+
+  function resetVocabForm() {
+    editingVocabId = null;
+    vocabForm.reset();
+    document.querySelector('#vocab-published').checked = true;
+    document.querySelector('#vocab-submit').textContent = 'Add Word';
+    vocabCancelBtn.style.display = 'none';
+  }
+
+  vocabCancelBtn?.addEventListener('click', resetVocabForm);
+
+  document.querySelector('#vocab-filter')?.addEventListener('change', renderVocabAdminList);
+
+  vocabForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = document.querySelector('#vocab-submit');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving…';
+
+    const payload = {
+      sort_order: Number(document.querySelector('#vocab-sort').value) || 1,
+      category: document.querySelector('#vocab-category').value,
+      term: document.querySelector('#vocab-term').value,
+      term_es: document.querySelector('#vocab-term-es').value || null,
+      definition_en: document.querySelector('#vocab-def-en').value,
+      definition_es: document.querySelector('#vocab-def-es').value || null,
+      published: document.querySelector('#vocab-published').checked,
+    };
+
+    let error;
+    if (editingVocabId) {
+      ({ error } = await supabaseClient.from('vocabulary_words').update(payload).eq('id', editingVocabId));
+    } else {
+      ({ error } = await supabaseClient.from('vocabulary_words').insert(payload));
+    }
+    submitBtn.disabled = false;
+    if (error) { alert('Could not save word: ' + error.message); return; }
+    resetVocabForm();
+    loadVocabulary();
+  });
+
+  document.querySelector('#vocab-list')?.addEventListener('click', async (e) => {
+    const editBtn = e.target.closest('[data-vocab-edit]');
+    const delBtn = e.target.closest('[data-vocab-delete]');
+
+    if (editBtn) {
+      const id = editBtn.getAttribute('data-vocab-edit');
+      const word = allVocabWords.find((w) => w.id === id);
+      if (!word) return;
+      editingVocabId = id;
+      document.querySelector('#vocab-sort').value = word.sort_order;
+      document.querySelector('#vocab-category').value = word.category;
+      document.querySelector('#vocab-term').value = word.term;
+      document.querySelector('#vocab-term-es').value = word.term_es || '';
+      document.querySelector('#vocab-def-en').value = word.definition_en;
+      document.querySelector('#vocab-def-es').value = word.definition_es || '';
+      document.querySelector('#vocab-published').checked = !!word.published;
+      document.querySelector('#vocab-submit').textContent = 'Save Changes';
+      vocabCancelBtn.style.display = 'inline-flex';
+      smoothScrollIntoView(vocabForm, { block: 'start' });
+    }
+
+    if (delBtn) {
+      const id = delBtn.getAttribute('data-vocab-delete');
+      if (!confirm('Delete this word? This cannot be undone.')) return;
+      const { error } = await supabaseClient.from('vocabulary_words').delete().eq('id', id);
+      if (error) { alert('Could not delete: ' + error.message); return; }
+      loadVocabulary();
     }
   });
 
