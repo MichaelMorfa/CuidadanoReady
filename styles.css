@@ -418,6 +418,23 @@ a.stamp-circle:hover, a.stamp-circle:focus-visible { transform: scale(1.08); box
 #hero-stamp-path { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
 #hero-stamp-path .stamp-connector { flex: 1 1 auto; min-width: 12px; }
 
+/* On desktop, give the roadmap card more of the hero row so all 7 steps
+   fit without the horizontal scroll above being needed. The 50/50 split
+   from the shared .grid-2 class is too tight for "Interview & Exam Prep"
+   plus 6 other labels next to a fixed-width circle row, so this shifts the
+   ratio in favor of the roadmap card and shrinks the circles/labels
+   slightly so the whole thing comfortably fits at typical desktop widths.
+   Scoped to .hero .grid-2 (not .grid-2 itself) so no other 2-column
+   section on the site is affected, and only above 1024px so mobile/tablet
+   keep the original 50/50 layout with scroll as a safety fallback. */
+@media (min-width: 1024px) {
+  .hero .grid-2 { grid-template-columns: 1fr 1.6fr; }
+  #hero-stamp-path .stamp-circle { width: 38px; height: 38px; font-size: 0.78rem; }
+  #hero-stamp-path .stamp-item { width: 62px; }
+  #hero-stamp-path .stamp-label { font-size: 0.66rem; white-space: normal; line-height: 1.25; }
+  #hero-stamp-path .stamp-connector { min-width: 8px; }
+}
+
 /* --------------------------------------------------------------------
    Cards
    -------------------------------------------------------------------- */
