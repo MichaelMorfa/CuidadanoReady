@@ -36,7 +36,8 @@
   .voc-group-heading { font-family: var(--font-sans); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--slate); margin: 28px 0 10px; }
   .voc-group-heading:first-of-type { margin-top: 0; }
   .voc-item { border: 1px solid var(--line); border-radius: var(--radius-sm); margin-bottom: 8px; background: var(--white); overflow: hidden; }
-  .voc-item-btn { width: 100%; text-align: left; background: none; border: none; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; font: inherit; color: var(--ink); }
+  .voc-item-row { display: flex; align-items: center; gap: 4px; padding-right: 10px; }
+  .voc-item-btn { flex: 1; min-width: 0; text-align: left; background: none; border: none; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; font: inherit; color: var(--ink); }
   .voc-item-btn:hover { background: var(--paper-dim); }
   .voc-term { font-weight: 600; }
   .voc-term-es { font-size: 0.82rem; color: var(--slate); font-weight: 400; margin-left: 8px; }
@@ -45,6 +46,14 @@
   .voc-definition { display: none; padding: 0 16px 16px; font-size: 0.9rem; color: var(--slate); border-top: 1px solid var(--line); padding-top: 12px; margin-top: -1px; }
   .voc-item.open .voc-definition { display: block; }
   .voc-definition strong { color: var(--ink); }
+
+  /* Per-term audio button, same compact icon-only treatment used for quiz
+     audio on lesson.html (that CSS is page-scoped there too, so it's
+     repeated here rather than shared). */
+  .quiz-audio-btn { flex: none; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); background: var(--white); display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; line-height: 1; cursor: pointer; padding: 0; color: var(--forest); transition: background 0.12s ease, border-color 0.12s ease; }
+  .quiz-audio-btn:hover { background: #F0F6F2; border-color: var(--forest); }
+  .quiz-audio-btn-pending { color: var(--slate); opacity: 0.5; cursor: default; background: none; border-color: transparent; }
+  .quiz-audio-btn-pending:hover { background: none; border-color: transparent; }
 
   .voc-empty { text-align: center; padding: 40px 20px; color: var(--slate); }
   .voc-count { font-size: 0.85rem; color: var(--slate); margin-bottom: 16px; }
@@ -77,6 +86,7 @@
         <h4 data-en="Overview" data-es="Resumen">Overview</h4>
         <a href="dashboard.html" data-en="Dashboard" data-es="Panel">Dashboard</a>
         <a href="progress.html" data-en="My Progress" data-es="Mi Progreso">My Progress</a>
+        <a href="achievements.html" data-en="Achievements" data-es="Logros">Achievements</a>
       </li>
       <li class="app-nav-group">
         <h4 data-en="Course" data-es="Curso">Course</h4>

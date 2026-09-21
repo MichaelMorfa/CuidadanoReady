@@ -33,9 +33,38 @@
   .rw-picker-icon svg { width: 24px; height: 24px; }
 
   .rw-stage { max-width: 640px; margin: 0 auto; }
-  .rw-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .rw-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
   .rw-progress-text { font-family: var(--font-mono); font-size: 0.8rem; color: var(--slate); }
   .rw-nav-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+
+  /* Mini progress bar under the controls row -- makes "you're on a new
+     question now" visible at a glance, not just a small number changing. */
+  .rw-progress-bar-track { height: 5px; border-radius: 3px; background: var(--line); margin-bottom: 20px; overflow: hidden; }
+  .rw-progress-bar-fill { height: 100%; background: var(--forest); transition: width 0.25s ease; }
+
+  /* Brief highlight pulse on the card itself when its content changes
+     (Next/Previous/Shuffle), so the change reads as "new item loaded" even
+     for someone who isn't watching the progress number. Respects the
+     site-wide prefers-reduced-motion override in styles.css. */
+  .rw-read-card.rw-flash, .rw-write-card.rw-flash { animation: rwCardFlash 0.6s ease; }
+  @keyframes rwCardFlash {
+    0% { background: #EAF4EE; border-color: var(--forest); }
+    100% { background: var(--white); border-color: var(--line); }
+  }
+
+  /* ---- Session review (what they've gone through since entering this
+     section; cleared every time they re-enter from the picker) ---- */
+  .rw-review-row { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+  .rw-review-toggle-btn { font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px; }
+  .rw-review-panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); padding: 6px 16px; margin-bottom: 18px; max-height: 260px; overflow-y: auto; display: none; }
+  .rw-review-panel.open { display: block; }
+  .rw-review-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); cursor: pointer; font-size: 0.86rem; background: none; border-left: none; border-right: none; border-top: none; width: 100%; text-align: left; color: var(--ink); }
+  .rw-review-item:last-child { border-bottom: none; }
+  .rw-review-item:hover { color: var(--forest); }
+  .rw-review-mark { flex: none; width: 16px; text-align: center; font-weight: 700; }
+  .rw-review-mark.correct { color: var(--forest); }
+  .rw-review-mark.incorrect { color: var(--danger); }
+  .rw-review-empty { font-size: 0.85rem; color: var(--slate); padding: 10px 0; margin: 0; }
 
   /* ---- Reading flashcard ---- */
   .rw-read-card { border: 1px solid var(--line); border-radius: var(--radius); background: var(--white); padding: 40px 32px; text-align: center; box-shadow: var(--shadow-card); min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
@@ -99,6 +128,7 @@
         <h4 data-en="Overview" data-es="Resumen">Overview</h4>
         <a href="dashboard.html" data-en="Dashboard" data-es="Panel">Dashboard</a>
         <a href="progress.html" data-en="My Progress" data-es="Mi Progreso">My Progress</a>
+        <a href="achievements.html" data-en="Achievements" data-es="Logros">Achievements</a>
       </li>
       <li class="app-nav-group">
         <h4 data-en="Course" data-es="Curso">Course</h4>
@@ -195,6 +225,16 @@
             <span class="badge" data-en="READING PRACTICE" data-es="PRÁCTICA DE LECTURA">READING PRACTICE</span>
             <span class="rw-progress-text" id="rw-read-progress-text">1 / 1</span>
           </div>
+          <div class="rw-progress-bar-track"><div class="rw-progress-bar-fill" id="rw-read-progress-fill" style="width:0%;"></div></div>
+          <div class="rw-review-row">
+            <button type="button" class="btn btn-ghost btn-sm rw-review-toggle-btn" id="rw-read-review-toggle-btn">
+              <span data-en="Reviewed this session" data-es="Revisado en esta sesión">Reviewed this session</span> (<span id="rw-read-review-count">0</span>)
+            </button>
+          </div>
+          <div class="rw-review-panel" id="rw-read-review-panel">
+            <p class="rw-review-empty" id="rw-read-review-empty" data-en="Sentences you go through will show up here as you practice." data-es="Las oraciones que practiques aparecerán aquí a medida que avances.">Sentences you go through will show up here as you practice.</p>
+            <div id="rw-read-review-list"></div>
+          </div>
           <div class="rw-read-card">
             <h3 id="rw-read-sentence">–</h3>
             <div id="rw-read-audio-slot"></div>
@@ -219,6 +259,16 @@
           <div class="rw-controls">
             <span class="badge" data-en="LISTEN &amp; WRITE" data-es="ESCUCHA Y ESCRIBE">LISTEN &amp; WRITE</span>
             <span class="rw-progress-text" id="rw-write-progress-text">1 / 1</span>
+          </div>
+          <div class="rw-progress-bar-track"><div class="rw-progress-bar-fill" id="rw-write-progress-fill" style="width:0%;"></div></div>
+          <div class="rw-review-row">
+            <button type="button" class="btn btn-ghost btn-sm rw-review-toggle-btn" id="rw-write-review-toggle-btn">
+              <span data-en="Reviewed this session" data-es="Revisado en esta sesión">Reviewed this session</span> (<span id="rw-write-review-count">0</span>)
+            </button>
+          </div>
+          <div class="rw-review-panel" id="rw-write-review-panel">
+            <p class="rw-review-empty" id="rw-write-review-empty" data-en="Sentences you go through will show up here as you practice." data-es="Las oraciones que practiques aparecerán aquí a medida que avances.">Sentences you go through will show up here as you practice.</p>
+            <div id="rw-write-review-list"></div>
           </div>
           <div class="rw-write-card">
             <div id="rw-write-audio-slot" style="margin-bottom:20px; text-align:center;"></div>

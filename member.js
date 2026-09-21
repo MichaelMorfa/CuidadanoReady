@@ -680,6 +680,17 @@ async function initDashboard() {
   dashboardCache = { lessons, completedIds, streak };
   renderDashboard();
 
+  // Broader achievement-award coverage: the dashboard is the one page
+  // almost every session touches, so checking here (in addition to the
+  // dedicated My Progress / Achievements pages) means most newly-earned
+  // achievements surface a notification within a session or two of being
+  // earned, without needing to instrument every individual completion
+  // handler site-wide. Not awaited -- this must never block or delay
+  // dashboard rendering above.
+  buildProgressCache(userId, profile).then((cache) => {
+    checkAndAwardAchievements(userId, cache);
+  }).catch(() => {});
+
   // Reflect today's 10-Minute-English status on the promo card -- separate
   // from the streak check above since a lesson can also keep the streak
   // alive; this specifically answers "did I already do the quick daily
@@ -2820,22 +2831,14 @@ function renderProgressPage() {
   renderModuleNav('#progress-module-nav', progressCache.lessons, progressCache.completedIds, null);
 }
 
-async function initProgressPage() {
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (!session) return;
-  const userId = session.user.id;
-
-  const { data: profile } = await supabaseClient
-    .from('profiles')
-    .select('subscription_status, streak_count')
-    .eq('id', userId)
-    .single();
-  const hasAccess = profile && ['active', 'trial', 'comp'].includes(profile.subscription_status);
-  if (!hasAccess) {
-    window.location.href = 'dashboard.html';
-    return;
-  }
-
+// Gathers everything evaluateAchievements() needs to check every catalog
+// criterion, plus everything renderProgressPage() displays -- shared so
+// achievements can be checked/awarded from more than one page (My Progress,
+// the dedicated Achievements page, and once per Dashboard visit for faster
+// real-world coverage) without four copies of this same set of queries.
+// `profile` is passed in since most callers already fetched
+// subscription_status for their own access check.
+async function buildProgressCache(userId, profile) {
   const [lessons, { data: progressRows }, { data: moduleQuizRows }, { data: practiceAttemptsRaw }, { data: flashcardRows }, { data: dailyPracticeRows }, { data: kycRows }] = await Promise.all([
     fetchPublishedLessons(),
     supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId),
@@ -2912,7 +2915,7 @@ async function initProgressPage() {
   // (module completion requires a passing quiz score) -- 70%.
   const quizPassedCount = bestPcts.filter((p) => p >= 70).length;
 
-  progressCache = {
+  return {
     lessons: lessons || [],
     completedIds,
     courseCompletionPct,
@@ -2926,6 +2929,25 @@ async function initProgressPage() {
     dailyPracticeCount: (dailyPracticeRows || []).length,
     kycCompletedCount: (kycRows || []).length,
   };
+}
+
+async function initProgressPage() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  const userId = session.user.id;
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('subscription_status, streak_count')
+    .eq('id', userId)
+    .single();
+  const hasAccess = profile && ['active', 'trial', 'comp'].includes(profile.subscription_status);
+  if (!hasAccess) {
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  progressCache = await buildProgressCache(userId, profile);
   renderProgressPage();
   checkAndAwardAchievements(userId, progressCache);
 }
@@ -3005,12 +3027,28 @@ async function checkAndAwardAchievements(userId, cache) {
   renderAchievements(achievementDefinitionsCache, earnedKeys, newlyEarned);
 }
 
+// Marks every currently-unseen earned achievement as seen, clearing the
+// notification-bell badge for them. Called once the member actually lands
+// on achievements.html -- opening the bell itself doesn't count, so the
+// badge stays an honest "you haven't looked at this yet" signal.
+async function markAchievementsSeen(userId) {
+  const { error } = await supabaseClient
+    .from('user_achievements')
+    .update({ seen_at: new Date().toISOString() })
+    .eq('user_id', userId)
+    .is('seen_at', null);
+  if (!error) renderMemberNotifications();
+}
+
 function renderAchievements(definitions, earnedKeys, newlyEarned) {
   const gridEl = document.querySelector('#achievements-grid');
-  if (!gridEl) return;
+  const summaryCountEl = document.querySelector('#achievements-summary-count');
+  if (!gridEl && !summaryCountEl) return;
   const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
   const countEl = document.querySelector('#achievements-count');
   if (countEl) countEl.textContent = `${earnedKeys.size} / ${definitions.length}`;
+  if (summaryCountEl) summaryCountEl.textContent = `${earnedKeys.size} / ${definitions.length}`;
+  if (!gridEl) return;
 
   gridEl.innerHTML = definitions.map((d) => {
     const earned = earnedKeys.has(d.key);
@@ -3026,6 +3064,36 @@ function renderAchievements(definitions, earnedKeys, newlyEarned) {
       </div>
     `;
   }).join('');
+}
+
+// Dedicated achievements.html page: same catalog/awarding engine as My
+// Progress, just with the full grid front-and-center instead of a summary
+// card. Landing here is also what clears the notification-bell badge for
+// any newly-earned achievements (see markAchievementsSeen above).
+async function initAchievementsPage() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  const userId = session.user.id;
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('subscription_status, streak_count')
+    .eq('id', userId)
+    .single();
+  const hasAccess = profile && ['active', 'trial', 'comp'].includes(profile.subscription_status);
+  if (!hasAccess) {
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  const lessons = await fetchPublishedLessons();
+  const { data: progressRows } = await supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId);
+  const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
+  renderModuleNav('#achievements-page-module-nav', lessons || [], completedIds, null);
+
+  const cache = await buildProgressCache(userId, profile);
+  await checkAndAwardAchievements(userId, cache);
+  await markAchievementsSeen(userId);
 }
 
 // ==========================================================================
@@ -3508,8 +3576,8 @@ function buildRwAudioControl(audioUrl) {
   return `<span class="rw-audio-pending">${ICON_SPEAKER_MUTED_SVG} <span data-en="Audio coming soon" data-es="Audio próximamente">Audio coming soon</span></span>`;
 }
 
-let readingPracticeCache = null; // { items, order, pos }
-let writingPracticeCache = null; // { items, order, pos }
+let readingPracticeCache = null; // { items, order, pos, visited }
+let writingPracticeCache = null; // { items, order, pos, visited }
 let alphabetLettersCache = [];
 let rwSpellBuffer = '';
 let rwActivePromptBtn = null;
@@ -3523,6 +3591,67 @@ function showRwSection(section) {
   document.querySelector('#rw-alphabet-view').style.display = section === 'alphabet' ? 'block' : 'none';
 }
 
+// ---- Session review tracking (Reading Practice / Hear It -> Write It) ----
+// A lightweight in-memory log of which items the member has gone through
+// since they last entered this section, so "I clicked Next but nothing
+// looked different" has an obvious answer: open Reviewed This Session and
+// see the sentence you were just on. Intentionally NOT persisted to the
+// database -- it's scoped to "this sitting" and explicitly reset every time
+// the member re-enters the section from the picker (see the picker-card
+// click handler in initReadingWritingPage), not carried across visits.
+function markRwVisited(cache, itemId) {
+  if (!cache.visited) cache.visited = [];
+  if (!cache.visited.some((v) => v.id === itemId)) {
+    cache.visited.push({ id: itemId, status: 'seen' });
+  }
+}
+
+function updateRwVisitedStatus(cache, itemId, status) {
+  if (!cache.visited) cache.visited = [];
+  const entry = cache.visited.find((v) => v.id === itemId);
+  if (entry) entry.status = status;
+  else cache.visited.push({ id: itemId, status });
+}
+
+function renderRwReviewPanel(kind) {
+  const cache = kind === 'read' ? readingPracticeCache : writingPracticeCache;
+  const countEl = document.querySelector(`#rw-${kind}-review-count`);
+  const listEl = document.querySelector(`#rw-${kind}-review-list`);
+  const emptyEl = document.querySelector(`#rw-${kind}-review-empty`);
+  if (!cache || !countEl || !listEl) return;
+  const visited = cache.visited || [];
+  countEl.textContent = visited.length;
+  if (!visited.length) {
+    listEl.innerHTML = '';
+    if (emptyEl) emptyEl.style.display = 'block';
+    return;
+  }
+  if (emptyEl) emptyEl.style.display = 'none';
+  listEl.innerHTML = visited.map((v) => {
+    const item = cache.items.find((it) => it.id === v.id);
+    if (!item) return '';
+    const mark = kind === 'write'
+      ? (v.status === 'correct' ? '<span class="rw-review-mark correct" aria-hidden="true">✓</span>'
+        : v.status === 'incorrect' ? '<span class="rw-review-mark incorrect" aria-hidden="true">✗</span>'
+        : '<span class="rw-review-mark" aria-hidden="true"></span>')
+      : '';
+    return `<button type="button" class="rw-review-item" data-rw-review-jump="${escapeHtml(v.id)}">${mark}<span>${escapeHtml(item.sentence_text)}</span></button>`;
+  }).join('');
+}
+
+function jumpToRwItem(kind, itemId) {
+  const cache = kind === 'read' ? readingPracticeCache : writingPracticeCache;
+  if (!cache) return;
+  const itemIdx = cache.items.findIndex((it) => it.id === itemId);
+  if (itemIdx === -1) return;
+  const orderIdx = cache.order.indexOf(itemIdx);
+  if (orderIdx === -1) return;
+  cache.pos = orderIdx;
+  if (kind === 'read') renderRwReadingCard(); else renderRwWritingCard();
+  const panel = document.querySelector(`#rw-${kind}-review-panel`);
+  if (panel) panel.classList.remove('open');
+}
+
 function renderRwReadingCard() {
   if (!readingPracticeCache) return;
   const { items, order, pos } = readingPracticeCache;
@@ -3531,7 +3660,23 @@ function renderRwReadingCard() {
   document.querySelector('#rw-read-sentence').textContent = item.sentence_text;
   document.querySelector('#rw-read-audio-slot').innerHTML = buildRwAudioControl(item.audio_url);
   document.querySelector('#rw-read-progress-text').textContent = `${pos + 1} / ${items.length}`;
+  const fillEl = document.querySelector('#rw-read-progress-fill');
+  if (fillEl) fillEl.style.width = `${Math.round(((pos + 1) / items.length) * 100)}%`;
   document.querySelector('#rw-read-prev-btn').disabled = pos === 0;
+
+  markRwVisited(readingPracticeCache, item.id);
+  renderRwReviewPanel('read');
+
+  // Brief highlight pulse so a new card reads as "new item loaded" at a
+  // glance, not just a small progress number changing (re-add the class on
+  // every render, including repeat clicks on the same card, by forcing a
+  // reflow in between so the CSS animation restarts).
+  const cardEl = document.querySelector('.rw-read-card');
+  if (cardEl) {
+    cardEl.classList.remove('rw-flash');
+    void cardEl.offsetWidth;
+    cardEl.classList.add('rw-flash');
+  }
 }
 
 function renderRwWritingCard() {
@@ -3541,10 +3686,22 @@ function renderRwWritingCard() {
   if (!item) return;
   document.querySelector('#rw-write-audio-slot').innerHTML = buildRwAudioControl(item.audio_url);
   document.querySelector('#rw-write-progress-text').textContent = `${pos + 1} / ${items.length}`;
+  const fillEl = document.querySelector('#rw-write-progress-fill');
+  if (fillEl) fillEl.style.width = `${Math.round(((pos + 1) / items.length) * 100)}%`;
   document.querySelector('#rw-write-prev-btn').disabled = pos === 0;
   document.querySelector('#rw-write-input').value = '';
   const resultEl = document.querySelector('#rw-write-result');
   resultEl.classList.remove('show', 'correct', 'incorrect');
+
+  markRwVisited(writingPracticeCache, item.id);
+  renderRwReviewPanel('write');
+
+  const cardEl = document.querySelector('.rw-write-card');
+  if (cardEl) {
+    cardEl.classList.remove('rw-flash');
+    void cardEl.offsetWidth;
+    cardEl.classList.add('rw-flash');
+  }
 }
 
 // Lenient grading: real officers don't fail someone over a missing period
@@ -3579,6 +3736,9 @@ function checkRwWritingAnswer() {
   resultEl.classList.add('show');
   resultEl.classList.toggle('correct', isCorrect);
   resultEl.classList.toggle('incorrect', !isCorrect);
+
+  updateRwVisitedStatus(writingPracticeCache, item.id, isCorrect ? 'correct' : 'incorrect');
+  renderRwReviewPanel('write');
 }
 
 function renderRwKeyboard() {
@@ -3634,12 +3794,46 @@ async function initReadingWritingPage() {
   showRwSection('picker');
 
   // Landing picker cards open a section; each section's back button
-  // returns to the picker.
+  // returns to the picker. Entering Reading or Writing from the picker is
+  // treated as the start of a fresh sitting: reshuffle, jump back to item 1,
+  // and clear the "reviewed this session" log so it never carries stale
+  // entries over from an earlier visit.
   document.querySelectorAll('.rw-picker-card').forEach((btn) => {
-    btn.addEventListener('click', () => showRwSection(btn.getAttribute('data-rw-section')));
+    btn.addEventListener('click', () => {
+      const section = btn.getAttribute('data-rw-section');
+      if (section === 'reading' && readingPracticeCache) {
+        readingPracticeCache.order = shuffleArray(readingPracticeCache.items.map((_, i) => i));
+        readingPracticeCache.pos = 0;
+        readingPracticeCache.visited = [];
+        renderRwReadingCard();
+      } else if (section === 'writing' && writingPracticeCache) {
+        writingPracticeCache.order = shuffleArray(writingPracticeCache.items.map((_, i) => i));
+        writingPracticeCache.pos = 0;
+        writingPracticeCache.visited = [];
+        renderRwWritingCard();
+      }
+      showRwSection(section);
+    });
   });
   document.querySelectorAll('[data-rw-back]').forEach((btn) => {
     btn.addEventListener('click', () => showRwSection('picker'));
+  });
+
+  // Session review panels: toggle open/closed, and jump straight to an
+  // item when it's clicked in the list.
+  document.querySelector('#rw-read-review-toggle-btn')?.addEventListener('click', () => {
+    document.querySelector('#rw-read-review-panel')?.classList.toggle('open');
+  });
+  document.querySelector('#rw-write-review-toggle-btn')?.addEventListener('click', () => {
+    document.querySelector('#rw-write-review-panel')?.classList.toggle('open');
+  });
+  document.querySelector('#rw-read-review-list')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-rw-review-jump]');
+    if (btn) jumpToRwItem('read', btn.getAttribute('data-rw-review-jump'));
+  });
+  document.querySelector('#rw-write-review-list')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-rw-review-jump]');
+    if (btn) jumpToRwItem('write', btn.getAttribute('data-rw-review-jump'));
   });
 
   // Delegated audio-button handling, covers reading cards, writing cards,
@@ -3958,10 +4152,13 @@ function renderVocabularyList() {
     const isOpen = vocabOpenIds.has(w.id);
     html += `
       <div class="voc-item ${isOpen ? 'open' : ''}" data-voc-item="${w.id}">
-        <button type="button" class="voc-item-btn" data-voc-toggle="${w.id}" aria-expanded="${isOpen}">
-          <span><span class="voc-term">${escapeHtml(w.term)}</span>${w.term_es ? `<span class="voc-term-es">${escapeHtml(w.term_es)}</span>` : ''}</span>
-          <span class="voc-chevron" aria-hidden="true">${DOC_CHEVRON_SVG}</span>
-        </button>
+        <div class="voc-item-row">
+          <button type="button" class="voc-item-btn" data-voc-toggle="${w.id}" aria-expanded="${isOpen}">
+            <span><span class="voc-term">${escapeHtml(w.term)}</span>${w.term_es ? `<span class="voc-term-es">${escapeHtml(w.term_es)}</span>` : ''}</span>
+            <span class="voc-chevron" aria-hidden="true">${DOC_CHEVRON_SVG}</span>
+          </button>
+          ${buildQuizAudioBtn(w.audio_url, lang)}
+        </div>
         <div class="voc-definition">${escapeHtml(vocabDefinition(w))}</div>
       </div>
     `;
@@ -4093,7 +4290,10 @@ function renderDailyPracticeItem() {
     typeLabelEl.innerHTML = `${ICON_LETTERS_SVG} ${lang === 'es' ? 'VOCABULARIO' : 'VOCABULARY'}`;
     const w = item.data;
     bodyEl.innerHTML = `
-      <div class="dp-vocab-term">${escapeHtml(w.term)}</div>
+      <div class="dp-vocab-term-row">
+        <div class="dp-vocab-term">${escapeHtml(w.term)}</div>
+        ${buildQuizAudioBtn(w.audio_url, lang)}
+      </div>
       ${w.term_es ? `<div class="dp-vocab-term-es">${escapeHtml(w.term_es)}</div>` : ''}
       <button type="button" class="btn btn-ghost dp-vocab-reveal-btn" id="dp-vocab-reveal-btn" data-en="Reveal Definition" data-es="Mostrar Definición">Reveal Definition</button>
       <div class="dp-vocab-definition" id="dp-vocab-definition">${escapeHtml(vocabDefinition(w))}</div>
@@ -4103,13 +4303,16 @@ function renderDailyPracticeItem() {
     const q = item.data;
     const choices = dpQuizChoices(q);
     bodyEl.innerHTML = `
-      <div class="dp-quiz-question">${escapeHtml(localize(q, 'question'))}</div>
+      <div class="dp-quiz-question">${escapeHtml(localize(q, 'question'))} ${buildQuizAudioBtn(quizAudioUrl(q, 'question'), lang)}</div>
       <div class="dp-quiz-options" id="dp-quiz-options">
         ${choices.map((c) => `
-          <button type="button" class="dp-quiz-option-btn" data-dp-choice="${c.letter}">
-            <span class="dp-quiz-option-letter">${c.letter.toUpperCase()}</span>
-            <span>${escapeHtml(c.text)}</span>
-          </button>
+          <div class="dp-quiz-option-row">
+            <button type="button" class="dp-quiz-option-btn" data-dp-choice="${c.letter}">
+              <span class="dp-quiz-option-letter">${c.letter.toUpperCase()}</span>
+              <span>${escapeHtml(c.text)}</span>
+            </button>
+            ${buildQuizAudioBtn(quizAudioUrl(q, 'choice_' + c.letter), lang)}
+          </div>
         `).join('')}
       </div>
     `;
@@ -4277,6 +4480,7 @@ const NOTIF_LABELS = {
     streakBody: 'Do a quick 10 Minute English session today.',
     startTitle: 'Welcome! Start here', startBody: "Begin Module 1 to start your citizenship prep.",
     completeTitle: 'Course complete, keep practicing', completeBody: 'Try Flashcards or 10 Minute English to stay sharp.',
+    achievementTitle: 'Achievement unlocked',
     empty: "You're all caught up.",
   },
   es: {
@@ -4286,6 +4490,7 @@ const NOTIF_LABELS = {
     streakBody: 'Haz una sesión rápida de 10 Minutos de Inglés hoy.',
     startTitle: '¡Bienvenido! Comienza aquí', startBody: 'Comienza el Módulo 1 para iniciar tu preparación de ciudadanía.',
     completeTitle: 'Curso completo, sigue practicando', completeBody: 'Prueba Tarjetas de Estudio o 10 Minutos de Inglés para mantenerte al día.',
+    achievementTitle: 'Logro desbloqueado',
     empty: 'Estás al día.',
   },
 };
@@ -4335,6 +4540,28 @@ async function renderMemberNotifications() {
     }
   }
 
+  // Achievements earned but not yet viewed on the Achievements page --
+  // cleared by markAchievementsSeen() when the member actually opens that
+  // page, not just by opening this bell, so the badge is a real "you have
+  // something new to look at" signal rather than disappearing on a glance.
+  const { data: unseenRows } = await supabaseClient
+    .from('user_achievements')
+    .select('achievement_key')
+    .eq('user_id', userId)
+    .is('seen_at', null);
+  if (unseenRows && unseenRows.length) {
+    if (!achievementDefinitionsCache) {
+      const { data: defs } = await supabaseClient.from('achievement_definitions').select('*').order('sort_order');
+      achievementDefinitionsCache = defs || [];
+    }
+    unseenRows.forEach((row) => {
+      const def = achievementDefinitionsCache.find((d) => d.key === row.achievement_key);
+      if (!def) return;
+      const title = (lang === 'es' && def.title_es) ? def.title_es : def.title;
+      items.push({ href: 'achievements.html', title: l.achievementTitle, body: title, urgent: false });
+    });
+  }
+
   if (dotEl) dotEl.hidden = items.length === 0;
   listEl.innerHTML = items.length
     ? items.map((it) => `
@@ -4376,6 +4603,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.body.hasAttribute('data-kyc-page')) initKycPage();
   if (document.body.hasAttribute('data-settings-page')) initSettingsPage();
   if (document.body.hasAttribute('data-progress-page')) initProgressPage();
+  if (document.body.hasAttribute('data-achievements-page')) initAchievementsPage();
   if (document.body.hasAttribute('data-support-page')) initSupportPage();
   if (document.body.hasAttribute('data-mock-interview-page')) initMockInterviewPage();
   if (document.body.hasAttribute('data-rw-page')) initReadingWritingPage();

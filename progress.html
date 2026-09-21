@@ -120,6 +120,7 @@
         <h4 data-en="Overview" data-es="Resumen">Overview</h4>
         <a href="dashboard.html" data-en="Dashboard" data-es="Panel">Dashboard</a>
         <a href="progress.html" class="active" data-en="My Progress" data-es="Mi Progreso">My Progress</a>
+        <a href="achievements.html" data-en="Achievements" data-es="Logros">Achievements</a>
       </li>
       <li class="app-nav-group">
         <h4 data-en="Course" data-es="Curso">Course</h4>
@@ -235,13 +236,16 @@
         </a>
       </div>
 
-      <div class="doc-section-heading" style="margin-top:32px;">
-        <h2 data-en="Achievements" data-es="Logros">Achievements</h2>
-        <span class="small muted" id="achievements-count">0 / 0</span>
-      </div>
-      <div class="achievements-grid" id="achievements-grid">
-        <p class="small muted">Loading…</p>
-      </div>
+      <a href="achievements.html" class="card card-pad progress-clickable-card" style="margin-top:20px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+        <div>
+          <h3 style="margin:0 0 4px;" data-en="Achievements" data-es="Logros">Achievements</h3>
+          <p class="small muted" style="margin:0;" data-en="Medals earned along the way as you study." data-es="Medallas ganadas mientras estudias.">Medals earned along the way as you study.</p>
+        </div>
+        <div style="text-align:right;">
+          <div class="stat-value" style="margin:0;" id="achievements-summary-count">0 / 0</div>
+          <p class="stat-cta" style="margin-top:4px;" data-en="View achievements →" data-es="Ver logros →">View achievements →</p>
+        </div>
+      </a>
 
     </div>
   </main>

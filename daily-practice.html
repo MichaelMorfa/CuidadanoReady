@@ -42,7 +42,8 @@
   .dp-item-type-label { display: inline-flex; align-items: center; gap: 6px; }
 
   /* Vocabulary item */
-  .dp-vocab-term { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; margin: 10px 0 2px; }
+  .dp-vocab-term-row { display: flex; align-items: center; gap: 10px; margin: 10px 0 2px; }
+  .dp-vocab-term { font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; margin: 0; }
   .dp-vocab-term-es { font-size: 0.95rem; color: var(--slate); margin: 0 0 18px; }
   .dp-vocab-reveal-btn { margin-top: 4px; }
   .dp-vocab-definition { margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--line); font-size: 0.95rem; line-height: 1.5; display: none; }
@@ -51,6 +52,7 @@
   /* Quiz item */
   .dp-quiz-question { font-size: 1.15rem; margin: 8px 0 20px; line-height: 1.4; }
   .dp-quiz-options { display: flex; flex-direction: column; gap: 10px; }
+  .dp-quiz-option-row { display: flex; align-items: center; gap: 8px; }
   .dp-quiz-option-btn {
     display: flex; align-items: center; gap: 12px; text-align: left; width: 100%;
     padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius-sm);
@@ -66,6 +68,14 @@
   }
   .dp-quiz-option-btn.correct .dp-quiz-option-letter { border-color: var(--forest); background: var(--forest); color: var(--paper); }
   .dp-quiz-option-btn.incorrect .dp-quiz-option-letter { border-color: var(--danger); background: var(--danger); color: var(--paper); }
+
+  /* Compact icon-only audio buttons, same treatment as the module quiz on
+     lesson.html (page-scoped CSS there too, so repeated here). */
+  .quiz-audio-btn { flex: none; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); background: var(--white); display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; line-height: 1; cursor: pointer; padding: 0; color: var(--forest); transition: background 0.12s ease, border-color 0.12s ease; vertical-align: middle; }
+  .quiz-audio-btn:hover { background: #F0F6F2; border-color: var(--forest); }
+  .quiz-audio-btn-pending { color: var(--slate); opacity: 0.5; cursor: default; background: none; border-color: transparent; }
+  .quiz-audio-btn-pending:hover { background: none; border-color: transparent; }
+  .dp-quiz-question .quiz-audio-btn, .dp-quiz-question .quiz-audio-btn-pending { margin-left: 4px; }
 
   /* Reading item */
   .dp-reading-sentence { font-family: var(--font-serif); font-size: 1.3rem; line-height: 1.5; margin: 12px 0 20px; }
@@ -114,6 +124,7 @@
         <h4 data-en="Overview" data-es="Resumen">Overview</h4>
         <a href="dashboard.html" data-en="Dashboard" data-es="Panel">Dashboard</a>
         <a href="progress.html" data-en="My Progress" data-es="Mi Progreso">My Progress</a>
+        <a href="achievements.html" data-en="Achievements" data-es="Logros">Achievements</a>
       </li>
       <li class="app-nav-group">
         <h4 data-en="Course" data-es="Curso">Course</h4>
