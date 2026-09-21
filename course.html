@@ -22,6 +22,24 @@
      stay a fixed size, the connecting lines grow to fill the gap. */
   #course-stamp-path { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
   #course-stamp-path .stamp-connector { flex: 1 1 auto; min-width: 12px; }
+
+  /* "Everything included" feature grid -- the practice system is the real
+     depth of the product (the 7-stage course itself is a short, focused
+     walkthrough of the application process by design), so this gets equal
+     billing to the stage-by-stage breakdown rather than being buried. */
+  .feature-tile { text-align: left; }
+  .feature-tile .feature-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; border-radius: 50%; margin-bottom: 14px;
+    background: #F0F6F2; color: var(--forest); flex-shrink: 0;
+  }
+  .feature-tile .feature-icon svg { width: 21px; height: 21px; }
+  .feature-tile h3 { font-size: 1.02rem; margin: 0 0 6px; }
+  .feature-tile p { margin: 0; }
+
+  .stat-strip { display: flex; flex-wrap: wrap; gap: 32px; margin: 28px 0 8px; }
+  .stat-strip .stat-num { font-family: var(--font-serif); font-weight: 700; font-size: 2rem; color: var(--forest); line-height: 1; }
+  .stat-strip .stat-lbl { font-size: 0.82rem; color: var(--slate); margin-top: 4px; }
 </style>
 <meta name="description" content="Seven stages, one clear path to citizenship. See everything the Ciudadano Ready course covers.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -95,7 +113,14 @@
   <div class="container">
     <span class="eyebrow" data-en="THE COURSE" data-es="EL CURSO">THE COURSE</span>
     <h1 data-en="Seven stages, one clear path to citizenship." data-es="Siete etapas, un camino claro hacia la ciudadanía.">Seven stages, one clear path to citizenship.</h1>
-    <p style="max-width:540px;" data-en="Here's everything the course covers. Lessons, videos, and practice quizzes unlock once you create your account." data-es="Esto es todo lo que cubre el curso. Las lecciones, videos y cuestionarios de práctica se desbloquean al crear tu cuenta.">Here's everything the course covers. Lessons, videos, and practice quizzes unlock once you create your account.</p>
+    <p style="max-width:540px;" data-en="A guided walkthrough of the entire naturalization process, plus a full bilingual practice system to get you ready for the civics test, the English test, and the interview itself." data-es="Una guía completa del proceso de naturalización, además de un sistema de práctica bilingüe completo para prepararte para el examen de civismo, el examen de inglés y la entrevista misma.">A guided walkthrough of the entire naturalization process, plus a full bilingual practice system to get you ready for the civics test, the English test, and the interview itself.</p>
+
+    <div class="stat-strip">
+      <div><div class="stat-num">100</div><div class="stat-lbl" data-en="official civics questions" data-es="preguntas oficiales de civismo">official civics questions</div></div>
+      <div><div class="stat-num">40</div><div class="stat-lbl" data-en="bonus U.S. history lessons" data-es="lecciones adicionales de historia de EE.&nbsp;UU.">bonus U.S. history lessons</div></div>
+      <div><div class="stat-num">2</div><div class="stat-lbl" data-en="languages, narrated throughout" data-es="idiomas, narrado en todo el curso">languages, narrated throughout</div></div>
+      <div><div class="stat-num">∞</div><div class="stat-lbl" data-en="practice attempts, no limits" data-es="intentos de práctica, sin límites">practice attempts, no limits</div></div>
+    </div>
 
     <div class="card card-pad" style="margin:28px 0;">
       <div class="stamp-path" id="course-stamp-path" style="row-gap:20px;">
@@ -113,6 +138,60 @@
         <div class="stamp-connector"></div>
         <div class="stamp-item"><div class="stamp-circle">7</div><span class="stamp-label" data-en="Oath Ceremony" data-es="Ceremonia de Juramentación">Oath Ceremony</span></div>
       </div>
+    </div>
+
+    <div style="margin:56px 0 32px;">
+      <span class="eyebrow" data-en="THE PRACTICE SYSTEM" data-es="EL SISTEMA DE PRÁCTICA">THE PRACTICE SYSTEM</span>
+      <h2 style="margin-bottom:10px;" data-en="Way more than seven lessons." data-es="Mucho más que siete lecciones.">Way more than seven lessons.</h2>
+      <p style="max-width:620px;" data-en="The 7-stage course below is a focused walkthrough of your actual application, start to finish, on purpose. This is where the real studying happens: unlimited practice, all of it narrated in English and Spanish." data-es="El curso de 7 etapas a continuación es una guía enfocada de tu solicitud real, de principio a fin, a propósito. Aquí es donde ocurre el verdadero estudio: práctica ilimitada, toda narrada en inglés y español.">The 7-stage course below is a focused walkthrough of your actual application, start to finish, on purpose. This is where the real studying happens: unlimited practice, all of it narrated in English and Spanish.</p>
+    </div>
+
+    <div class="grid grid-4">
+      <div class="card card-pad feature-tile">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg></div>
+        <h3 data-en="Audio, everywhere" data-es="Audio, en todas partes">Audio, everywhere</h3>
+        <p class="small" data-en="Every lesson, quiz question, flashcard, and vocabulary word is narrated in English and Spanish, so you can listen and follow along." data-es="Cada lección, pregunta de cuestionario, tarjeta de estudio y palabra de vocabulario está narrada en inglés y español, para que puedas escuchar y seguir el ritmo.">Every lesson, quiz question, flashcard, and vocabulary word is narrated in English and Spanish, so you can listen and follow along.</p>
+      </div>
+      <div class="card card-pad feature-tile">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="14" height="10" rx="2"/><path d="M7 4h14v10"/></svg></div>
+        <h3 data-en="All 100 civics questions" data-es="Las 100 preguntas de civismo">All 100 civics questions</h3>
+        <p class="small" data-en="Every official USCIS flashcard bank, with mastery tracked question by question until you've got them cold." data-es="Cada banco oficial de tarjetas de USCIS, con dominio rastreado pregunta por pregunta hasta que las domines por completo.">Every official USCIS flashcard bank, with mastery tracked question by question until you've got them cold.</p>
+      </div>
+      <div class="card card-pad feature-tile">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/><path d="M9 8h7M9 12h4"/></svg></div>
+        <h3 data-en="Reading &amp; writing practice" data-es="Práctica de lectura y escritura">Reading &amp; writing practice</h3>
+        <p class="small" data-en="Real audio playback of official test sentences, with a session review so you can see exactly what you got right." data-es="Reproducción de audio real de oraciones oficiales del examen, con una revisión de sesión para que veas exactamente qué respondiste bien.">Real audio playback of official test sentences, with a session review so you can see exactly what you got right.</p>
+      </div>
+      <div class="card card-pad feature-tile">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></div>
+        <h3 data-en="10 Minute English" data-es="10 Minutos de Inglés">10 Minute English</h3>
+        <p class="small" data-en="A quick daily practice game that builds your study streak and keeps your English sharp between lessons." data-es="Un juego rápido de práctica diaria que construye tu racha de estudio y mantiene tu inglés afilado entre lecciones.">A quick daily practice game that builds your study streak and keeps your English sharp between lessons.</p>
+      </div>
+      <div class="card card-pad feature-tile">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="10" height="16" rx="5"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4M9 22h6"/></svg></div>
+        <h3 data-en="Mock interview simulator" data-es="Simulador de entrevista">Mock interview simulator</h3>
+        <p class="small" data-en="Practice answering real interview-style questions, at your own pace, before the real thing." data-es="Practica respondiendo preguntas reales al estilo de la entrevista, a tu propio ritmo, antes de la entrevista real.">Practice answering real interview-style questions, at your own pace, before the real thing.</p>
+      </div>
+      <div class="card card-pad feature-tile">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v14H7l-3 3V4Z"/><path d="M8 9h8M8 13h5"/></svg></div>
+        <h3 data-en="40 bonus history lessons" data-es="40 lecciones adicionales de historia">40 bonus history lessons</h3>
+        <p class="small" data-en="&quot;Know Your Country&quot;: the story and context behind the civics questions, narrated bilingual, browse in any order." data-es="&quot;Conoce Tu País&quot;: la historia y el contexto detrás de las preguntas de civismo, narrado en ambos idiomas, explora en cualquier orden.">"Know Your Country": the story and context behind the civics questions, narrated bilingual, browse in any order.</p>
+      </div>
+      <div class="card card-pad feature-tile">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17h4l10-10a2 2 0 0 0-4-4L3 13v4Z"/><path d="M14 6l4 4"/><path d="M4 21h16"/></svg></div>
+        <h3 data-en="Your Citizenship Study Score" data-es="Tu Puntaje de Estudio de Ciudadanía">Your Citizenship Study Score</h3>
+        <p class="small" data-en="One clear number that tracks your readiness across every stage, quiz, and practice session." data-es="Un número claro que rastrea tu preparación en cada etapa, cuestionario y sesión de práctica.">One clear number that tracks your readiness across every stage, quiz, and practice session.</p>
+      </div>
+      <div class="card card-pad feature-tile">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M8.5 12.5 6 21l6-3 6 3-2.5-8.5"/></svg></div>
+        <h3 data-en="Achievements" data-es="Logros">Achievements</h3>
+        <p class="small" data-en="Earn medals as you study, from finishing your first lesson to mastering every question bank." data-es="Gana medallas mientras estudias, desde terminar tu primera lección hasta dominar cada banco de preguntas.">Earn medals as you study, from finishing your first lesson to mastering every question bank.</p>
+      </div>
+    </div>
+
+    <div style="margin:56px 0 28px;">
+      <span class="eyebrow" data-en="THE 7-STAGE ROADMAP" data-es="LA HOJA DE RUTA DE 7 ETAPAS">THE 7-STAGE ROADMAP</span>
+      <h2 style="margin-bottom:0;" data-en="Your actual application, explained stage by stage." data-es="Tu solicitud real, explicada etapa por etapa.">Your actual application, explained stage by stage.</h2>
     </div>
 
     <div class="grid grid-3">

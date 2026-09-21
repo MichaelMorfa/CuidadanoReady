@@ -4626,12 +4626,18 @@ function initNotificationsBell() {
     const willOpen = panel.hidden;
     panel.hidden = !willOpen;
     btn.setAttribute('aria-expanded', String(willOpen));
-    // Opening the dropdown means the member has now seen whatever's
-    // currently listed -- fade those items grey and drop the bell's red
-    // dot right away (cheap re-render from the cached items, no refetch).
+    // Opening the dropdown clears the red dot right away, but the items
+    // on screen right now should NOT fade grey yet -- that would grey out
+    // brand-new items on their very first viewing, before the member has
+    // even had a chance to read them once. So: mark them seen for NEXT
+    // time (persisted), but don't re-render this list -- it keeps
+    // whatever styling it already had from the last renderMemberNotifications()
+    // call. Only a later render (next page load, next langchange, etc.),
+    // now consulting the updated seen set, will actually fade them.
     if (willOpen && notifItemsCache.length) {
       markNotifKeysSeen(notifItemsCache.map((it) => it.key));
-      renderNotifList(notifItemsCache);
+      const dotEl = document.querySelector('#notif-bell-dot');
+      if (dotEl) dotEl.hidden = true;
     }
   });
   document.addEventListener('click', (e) => {
