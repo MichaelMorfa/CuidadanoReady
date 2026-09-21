@@ -4495,9 +4495,59 @@ const NOTIF_LABELS = {
   },
 };
 
-async function renderMemberNotifications() {
+// Per-item "seen" tracking for the bell dropdown, stored client-side
+// (localStorage, not per-account) since this is purely a "have I already
+// looked at this one" read/unread marker, not real notification state --
+// each item carries a stable `key` (e.g. 'streak', 'continue:<lessonId>',
+// 'achievement:<key>') so a new item earns its own unread state even while
+// older ones fade grey. Keys just accumulate; a stale key for an item that
+// no longer appears is harmless and never rendered again.
+const NOTIF_SEEN_STORAGE_KEY = 'ciudadanoready-notif-seen';
+let notifItemsCache = [];
+
+function getSeenNotifKeys() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(NOTIF_SEEN_STORAGE_KEY) || '[]'));
+  } catch (e) {
+    return new Set();
+  }
+}
+
+function markNotifKeysSeen(keys) {
+  try {
+    const seen = getSeenNotifKeys();
+    keys.forEach((k) => seen.add(k));
+    localStorage.setItem(NOTIF_SEEN_STORAGE_KEY, JSON.stringify([...seen]));
+  } catch (e) {
+    // Best-effort; a failed write just means items won't fade grey next time.
+  }
+}
+
+// Renders from an already-computed items array (no DB calls) -- used both
+// right after renderMemberNotifications() fetches fresh data, and again
+// when the dropdown is opened so previously-unseen items can fade to grey
+// immediately without a refetch.
+function renderNotifList(items) {
   const listEl = document.querySelector('#notif-bell-list');
   const dotEl = document.querySelector('#notif-bell-dot');
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const l = NOTIF_LABELS[lang] || NOTIF_LABELS.en;
+  const seenKeys = getSeenNotifKeys();
+  const hasUnseen = items.some((it) => !seenKeys.has(it.key));
+  if (dotEl) dotEl.hidden = !hasUnseen;
+  if (!listEl) return;
+  listEl.innerHTML = items.length
+    ? items.map((it) => `
+        <a class="notif-item${it.urgent ? ' urgent' : ''}${seenKeys.has(it.key) ? ' notif-seen' : ''}" href="${escapeHtml(it.href)}">
+          <p class="notif-item-title">${escapeHtml(it.title)}</p>
+          <p class="notif-item-body">${escapeHtml(it.body)}</p>
+        </a>
+      `).join('')
+    : `<p class="small muted" style="padding:14px 16px;">${escapeHtml(l.empty)}</p>`;
+}
+
+async function renderMemberNotifications() {
+  const listEl = document.querySelector('#notif-bell-list');
   if (!listEl) return;
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) return;
@@ -4514,10 +4564,10 @@ async function renderMemberNotifications() {
   const items = [];
 
   if (profile && profile.subscription_status === 'incomplete') {
-    items.push({ href: 'dashboard.html', title: l.billingTitle, body: l.billingBody, urgent: true });
+    items.push({ key: 'billing', href: 'dashboard.html', title: l.billingTitle, body: l.billingBody, urgent: true });
   } else {
     if (profile && !profile.email_verified_at) {
-      items.push({ href: 'dashboard.html', title: l.verifyTitle, body: l.verifyBody, urgent: true });
+      items.push({ key: 'verify', href: 'dashboard.html', title: l.verifyTitle, body: l.verifyBody, urgent: true });
     }
     const lessons = await fetchPublishedLessons();
     const { data: progressRows } = await supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId);
@@ -4526,17 +4576,18 @@ async function renderMemberNotifications() {
     if (currentLesson) {
       const isBrandNew = completedIds.size === 0;
       items.push({
+        key: 'continue:' + currentLesson.id,
         href: 'lesson.html?id=' + currentLesson.id,
         title: isBrandNew ? l.startTitle : l.continueTitle,
         body: isBrandNew ? l.startBody : localize(currentLesson, 'title'),
         urgent: false,
       });
     } else if ((lessons || []).length) {
-      items.push({ href: 'daily-practice.html', title: l.completeTitle, body: l.completeBody, urgent: false });
+      items.push({ key: 'complete', href: 'daily-practice.html', title: l.completeTitle, body: l.completeBody, urgent: false });
     }
     const streak = (profile && profile.streak_count) || 0;
     if (streak === 0) {
-      items.push({ href: 'daily-practice.html', title: l.streakTitle, body: l.streakBody, urgent: false });
+      items.push({ key: 'streak', href: 'daily-practice.html', title: l.streakTitle, body: l.streakBody, urgent: false });
     }
   }
 
@@ -4558,19 +4609,12 @@ async function renderMemberNotifications() {
       const def = achievementDefinitionsCache.find((d) => d.key === row.achievement_key);
       if (!def) return;
       const title = (lang === 'es' && def.title_es) ? def.title_es : def.title;
-      items.push({ href: 'achievements.html', title: l.achievementTitle, body: title, urgent: false });
+      items.push({ key: 'achievement:' + row.achievement_key, href: 'achievements.html', title: l.achievementTitle, body: title, urgent: false });
     });
   }
 
-  if (dotEl) dotEl.hidden = items.length === 0;
-  listEl.innerHTML = items.length
-    ? items.map((it) => `
-        <a class="notif-item${it.urgent ? ' urgent' : ''}" href="${escapeHtml(it.href)}">
-          <p class="notif-item-title">${escapeHtml(it.title)}</p>
-          <p class="notif-item-body">${escapeHtml(it.body)}</p>
-        </a>
-      `).join('')
-    : `<p class="small muted" style="padding:14px 16px;">${escapeHtml(l.empty)}</p>`;
+  notifItemsCache = items;
+  renderNotifList(items);
 }
 
 function initNotificationsBell() {
@@ -4582,6 +4626,13 @@ function initNotificationsBell() {
     const willOpen = panel.hidden;
     panel.hidden = !willOpen;
     btn.setAttribute('aria-expanded', String(willOpen));
+    // Opening the dropdown means the member has now seen whatever's
+    // currently listed -- fade those items grey and drop the bell's red
+    // dot right away (cheap re-render from the cached items, no refetch).
+    if (willOpen && notifItemsCache.length) {
+      markNotifKeysSeen(notifItemsCache.map((it) => it.key));
+      renderNotifList(notifItemsCache);
+    }
   });
   document.addEventListener('click', (e) => {
     if (!panel.hidden && !panel.contains(e.target) && e.target !== btn) {

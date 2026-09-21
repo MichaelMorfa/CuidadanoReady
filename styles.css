@@ -721,20 +721,28 @@ textarea { resize: vertical; min-height: 120px; }
 }
 .notif-bell-panel {
   position: absolute; top: calc(100% + 10px); right: 0; z-index: 30;
-  width: min(340px, 88vw); background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--radius); box-shadow: 0 10px 28px rgba(0,0,0,0.14); overflow: hidden;
+  width: min(280px, 88vw); max-height: 320px; overflow-y: auto;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: 0 10px 28px rgba(0,0,0,0.14);
 }
 .notif-bell-panel[hidden] { display: none; }
 .notif-bell-header {
-  font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase;
-  color: var(--slate); padding: 12px 16px; border-bottom: 1px solid var(--line);
+  font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--slate); padding: 9px 14px; border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; background: var(--surface);
 }
-.notif-item { display: block; padding: 12px 16px; border-bottom: 1px solid var(--line); text-decoration: none; color: inherit; }
+.notif-item { display: block; padding: 9px 14px; border-bottom: 1px solid var(--line); text-decoration: none; color: inherit; }
 .notif-item:last-child { border-bottom: none; }
 .notif-item:hover { background: var(--paper-dim); }
-.notif-item-title { font-weight: 600; font-size: 0.88rem; margin: 0 0 2px; }
-.notif-item-body { font-size: 0.8rem; color: var(--slate); margin: 0; }
+.notif-item-title { font-weight: 600; font-size: 0.82rem; margin: 0 0 2px; }
+.notif-item-body { font-size: 0.76rem; color: var(--slate); margin: 0; }
 .notif-item.urgent .notif-item-title { color: #B08A2E; }
+/* Already-viewed items (marked seen the last time the dropdown was opened)
+   fade to grey so a returning member can tell at a glance what's actually
+   new vs. what they've already read -- see markNotifKeysSeen() in member.js. */
+.notif-item.notif-seen { opacity: 0.55; }
+.notif-item.notif-seen .notif-item-title { font-weight: 500; color: var(--slate); }
+.notif-item.notif-seen.urgent .notif-item-title { color: var(--slate); }
 
 .app-nav a {
   display: flex;
