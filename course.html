@@ -7,21 +7,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <style>
-  .lock-badge {
-    position: absolute; top: 14px; right: 14px;
-    width: 30px; height: 30px; border-radius: 50%;
-    background: var(--white); border: 1px solid var(--line);
-    display:flex; align-items:center; justify-content:center;
-    color: var(--slate);
-  }
-  .lock-badge svg { width: 15px; height: 15px; }
-  .stage-card { position: relative; }
+  /* Page is centered end to end (hero copy + stat strip), except feature
+     cards, which stay left-aligned internally for readability even though
+     their grid sits in a centered page. */
+  .hero-intro { text-align: center; }
+  .hero-intro p { max-width: 620px; margin-left: auto; margin-right: auto; }
 
-  /* Stretch the stage-path connectors to fill the card instead of
-     bunching up on the left with empty space on the right, circles
-     stay a fixed size, the connecting lines grow to fill the gap. */
-  #course-stamp-path { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
-  #course-stamp-path .stamp-connector { flex: 1 1 auto; min-width: 12px; }
+  /* The feature grid intentionally breaks out wider than the rest of the
+     page's content column (which stays narrow for readability) -- this is
+     the page's actual sales pitch, so it gets more visual room to breathe
+     and reads as a distinct, richer showcase rather than another text block. */
+  .container-wide { max-width: 1320px; margin: 0 auto; padding: 0 24px; }
 
   /* "Everything included" feature grid -- the practice system is the real
      depth of the product (the 7-stage course itself is a short, focused
@@ -37,7 +33,7 @@
   .feature-tile h3 { font-size: 1.02rem; margin: 0 0 6px; }
   .feature-tile p { margin: 0; }
 
-  .stat-strip { display: flex; flex-wrap: wrap; gap: 32px; margin: 28px 0 8px; }
+  .stat-strip { display: flex; flex-wrap: wrap; justify-content: center; gap: 32px; margin: 24px 0 4px; text-align: center; }
   .stat-strip .stat-num { font-family: var(--font-serif); font-weight: 700; font-size: 2rem; color: var(--forest); line-height: 1; }
   .stat-strip .stat-lbl { font-size: 0.82rem; color: var(--slate); margin-top: 4px; }
 </style>
@@ -110,10 +106,10 @@
       </g>
     </svg>
   </div>
-  <div class="container">
-    <span class="eyebrow" data-en="THE COURSE" data-es="EL CURSO">THE COURSE</span>
-    <h1 data-en="Seven stages, one clear path to citizenship." data-es="Siete etapas, un camino claro hacia la ciudadanía.">Seven stages, one clear path to citizenship.</h1>
-    <p style="max-width:540px;" data-en="A guided walkthrough of the entire naturalization process, plus a full bilingual practice system to get you ready for the civics test, the English test, and the interview itself." data-es="Una guía completa del proceso de naturalización, además de un sistema de práctica bilingüe completo para prepararte para el examen de civismo, el examen de inglés y la entrevista misma.">A guided walkthrough of the entire naturalization process, plus a full bilingual practice system to get you ready for the civics test, the English test, and the interview itself.</p>
+  <div class="container hero-intro">
+    <span class="eyebrow" data-en="THE PRACTICE SYSTEM" data-es="EL SISTEMA DE PRÁCTICA">THE PRACTICE SYSTEM</span>
+    <h1 data-en="Way more than seven lessons." data-es="Mucho más que siete lecciones.">Way more than seven lessons.</h1>
+    <p data-en="The 7-stage course below is a focused walkthrough of your actual application, start to finish, on purpose. This is where the real studying happens: unlimited practice, all of it narrated in English and Spanish." data-es="El curso de 7 etapas a continuación es una guía enfocada de tu solicitud real, de principio a fin, a propósito. Aquí es donde ocurre el verdadero estudio: práctica ilimitada, toda narrada en inglés y español.">The 7-stage course below is a focused walkthrough of your actual application, start to finish, on purpose. This is where the real studying happens: unlimited practice, all of it narrated in English and Spanish.</p>
 
     <div class="stat-strip">
       <div><div class="stat-num">100</div><div class="stat-lbl" data-en="official civics questions" data-es="preguntas oficiales de civismo">official civics questions</div></div>
@@ -121,31 +117,9 @@
       <div><div class="stat-num">2</div><div class="stat-lbl" data-en="languages, narrated throughout" data-es="idiomas, narrado en todo el curso">languages, narrated throughout</div></div>
       <div><div class="stat-num">∞</div><div class="stat-lbl" data-en="practice attempts, no limits" data-es="intentos de práctica, sin límites">practice attempts, no limits</div></div>
     </div>
+  </div>
 
-    <div class="card card-pad" style="margin:28px 0;">
-      <div class="stamp-path" id="course-stamp-path" style="row-gap:20px;">
-        <div class="stamp-item"><div class="stamp-circle">1</div><span class="stamp-label" data-en="Welcome" data-es="Bienvenida">Welcome</span></div>
-        <div class="stamp-connector"></div>
-        <div class="stamp-item"><div class="stamp-circle">2</div><span class="stamp-label" data-en="Eligibility" data-es="Elegibilidad">Eligibility</span></div>
-        <div class="stamp-connector"></div>
-        <div class="stamp-item"><div class="stamp-circle">3</div><span class="stamp-label" data-en="N-400" data-es="N-400">N-400</span></div>
-        <div class="stamp-connector"></div>
-        <div class="stamp-item"><div class="stamp-circle">4</div><span class="stamp-label" data-en="Biometrics" data-es="Datos Biométricos">Biometrics</span></div>
-        <div class="stamp-connector"></div>
-        <div class="stamp-item"><div class="stamp-circle">5</div><span class="stamp-label" data-en="Interview &amp; Exam Prep" data-es="Preparación para la Entrevista">Interview &amp; Exam Prep</span></div>
-        <div class="stamp-connector"></div>
-        <div class="stamp-item"><div class="stamp-circle">6</div><span class="stamp-label" data-en="The Interview" data-es="La Entrevista">The Interview</span></div>
-        <div class="stamp-connector"></div>
-        <div class="stamp-item"><div class="stamp-circle">7</div><span class="stamp-label" data-en="Oath Ceremony" data-es="Ceremonia de Juramentación">Oath Ceremony</span></div>
-      </div>
-    </div>
-
-    <div style="margin:56px 0 32px;">
-      <span class="eyebrow" data-en="THE PRACTICE SYSTEM" data-es="EL SISTEMA DE PRÁCTICA">THE PRACTICE SYSTEM</span>
-      <h2 style="margin-bottom:10px;" data-en="Way more than seven lessons." data-es="Mucho más que siete lecciones.">Way more than seven lessons.</h2>
-      <p style="max-width:620px;" data-en="The 7-stage course below is a focused walkthrough of your actual application, start to finish, on purpose. This is where the real studying happens: unlimited practice, all of it narrated in English and Spanish." data-es="El curso de 7 etapas a continuación es una guía enfocada de tu solicitud real, de principio a fin, a propósito. Aquí es donde ocurre el verdadero estudio: práctica ilimitada, toda narrada en inglés y español.">The 7-stage course below is a focused walkthrough of your actual application, start to finish, on purpose. This is where the real studying happens: unlimited practice, all of it narrated in English and Spanish.</p>
-    </div>
-
+  <div class="container-wide" style="margin-top:32px;">
     <div class="grid grid-4">
       <div class="card card-pad feature-tile">
         <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v21"/></svg></div>
@@ -188,8 +162,10 @@
         <p class="small" data-en="One clear number that tracks your readiness across every stage, quiz, and practice session." data-es="Un número claro que rastrea tu preparación en cada etapa, cuestionario y sesión de práctica.">One clear number that tracks your readiness across every stage, quiz, and practice session.</p>
       </div>
     </div>
+  </div>
 
-    <div class="card card-pad text-center" style="margin-top:40px; border-color:var(--ocean);">
+  <div class="container">
+    <div class="card card-pad text-center" style="margin-top:36px; border-color:var(--ocean);">
       <span class="eyebrow" style="margin-bottom:6px;" data-en="READY TO START?" data-es="¿LISTO PARA EMPEZAR?">READY TO START?</span>
       <h2 style="margin-bottom:12px;" data-en="Your citizenship, one step closer, starting today." data-es="Tu ciudadanía, un paso más cerca, empezando hoy.">Your citizenship, one step closer, starting today.</h2>
       <a href="account.html" class="btn btn-primary" data-en="Sign Up to Unlock the Course" data-es="Regístrate para desbloquear el curso">Sign Up to Unlock the Course</a>
