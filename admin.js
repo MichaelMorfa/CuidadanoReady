@@ -408,6 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
       title_es: document.querySelector('#lesson-title-es').value || null,
       content_es: document.querySelector('#lesson-content-es').value || null,
       video_url: document.querySelector('#lesson-video').value || null,
+      video_url_es: document.querySelector('#lesson-video-es').value || null,
       no_video: document.querySelector('#lesson-no-video').checked,
       published: document.querySelector('#lesson-published').checked,
     };
@@ -441,6 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelector('#lesson-title-es').value = data.title_es || '';
       document.querySelector('#lesson-content-es').value = data.content_es || '';
       document.querySelector('#lesson-video').value = data.video_url || '';
+      document.querySelector('#lesson-video-es').value = data.video_url_es || '';
       document.querySelector('#lesson-no-video').checked = !!data.no_video;
       document.querySelector('#lesson-published').checked = !!data.published;
       document.querySelector('#lesson-submit').textContent = 'Save Changes';

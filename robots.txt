@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard.html
+Disallow: /lesson.html
+Disallow: /know-your-country.html
+Disallow: /mock-interview.html
+Disallow: /flashcards.html
+Disallow: /vocabulary.html
+Disallow: /practice-quiz.html
+Disallow: /progress.html
+Disallow: /reading-writing.html
+Disallow: /reading-writing-vocabulary.html
+Disallow: /settings.html
+Disallow: /documents.html
+Disallow: /daily-practice.html
+Disallow: /support.html
+Disallow: /account.html
+Disallow: /verify-email.html
+Disallow: /admin/
+
+Sitemap: https://ciudadanoready.com/sitemap.xml

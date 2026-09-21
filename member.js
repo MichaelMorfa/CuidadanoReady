@@ -312,7 +312,9 @@ function buildVideoEmbed(url) {
   if (yt) return `<iframe src="https://www.youtube.com/embed/${yt[1]}" allowfullscreen loading="lazy" title="Lesson video"></iframe>`;
   const vim = url.match(/vimeo\.com\/(\d+)/);
   if (vim) return `<iframe src="https://player.vimeo.com/video/${vim[1]}" allowfullscreen loading="lazy" title="Lesson video"></iframe>`;
-  return `<div style="width:100%;height:100%;background:var(--ink);display:flex;align-items:center;justify-content:center;"><a href="${escapeHtml(url)}" target="_blank" rel="noopener" style="color:#fff;font-family:var(--font-mono);font-size:0.85rem;">▶ Watch Video</a></div>`;
+  // Self-hosted file (Supabase Storage, etc.) -- play natively instead of
+  // just linking out, matching the mock-interview video player behavior.
+  return `<video controls playsinline preload="metadata" style="width:100%;height:100%;background:#000;" src="${escapeHtml(url)}"></video>`;
 }
 
 function shuffleArray(arr) {
@@ -517,7 +519,7 @@ async function computeWeightedProgress(userId, lessons, completedIds) {
 
   lessons.forEach((l) => {
     const contentWeight = Math.max((l.content || '').length, 1);
-    const videoWeight = l.video_url ? VIDEO_CHARS_EQUIVALENT : 0;
+    const videoWeight = (l.video_url || l.video_url_es) ? VIDEO_CHARS_EQUIVALENT : 0;
     totalWeight += contentWeight + videoWeight;
     if (completedIds.has(l.id)) doneWeight += contentWeight + videoWeight;
     modulesSeen.add(l.module_number);
@@ -988,9 +990,10 @@ function renderLessonPage() {
   if (showReading) {
     const videoWrap = document.querySelector('#lesson-video-wrap');
     const videoPlaceholder = document.querySelector('#lesson-video-placeholder');
-    if (lesson.video_url) {
+    const lessonVideoUrl = localize(lesson, 'video_url');
+    if (lessonVideoUrl) {
       videoWrap.style.display = 'block';
-      videoWrap.innerHTML = buildVideoEmbed(lesson.video_url);
+      videoWrap.innerHTML = buildVideoEmbed(lessonVideoUrl);
       videoPlaceholder.style.display = 'none';
     } else if (lesson.no_video) {
       // This lesson isn't getting a video at all (audio narration planned
