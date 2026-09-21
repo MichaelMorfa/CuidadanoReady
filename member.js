@@ -39,8 +39,8 @@ const MODULE_NAMES = {
 // attributes can't reach since they're built at render time, not
 // present in the static HTML.
 const DASHBOARD_LABELS = {
-  en: { stage: 'Stage', lesson: 'Lesson', of: 'of', complete: 'Course complete! 🎉', keepGoing: 'Keep it going!', startStreak: 'Complete a lesson to start your streak' },
-  es: { stage: 'Etapa', lesson: 'Lección', of: 'de', complete: '¡Curso completado! 🎉', keepGoing: '¡Sigue así!', startStreak: 'Completa una lección para comenzar tu racha' },
+  en: { stage: 'Stage', lesson: 'Lesson', of: 'of', complete: 'Course complete!', keepGoing: 'Keep it going!', startStreak: 'Complete a lesson to start your streak' },
+  es: { stage: 'Etapa', lesson: 'Lección', of: 'de', complete: '¡Curso completado!', keepGoing: '¡Sigue así!', startStreak: 'Completa una lección para comenzar tu racha' },
 };
 
 function moduleName(m) {
@@ -261,6 +261,22 @@ function firstAvailableLesson(lessons, completedIds) {
 // reader can announce rather than relying on the icon itself.
 const LOCK_ICON_SVG = '<svg aria-hidden="true" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>';
 
+// Site-wide line-art icon set (Feather-style, currentColor) swapped in for
+// emoji throughout the member area -- emoji read as informal/inconsistent
+// against the site's flat, editorial look, so every glyph-as-icon spot
+// below uses one of these instead.
+const ICON_SPEAKER_SVG = '<svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M18.5 5.5a9 9 0 0 1 0 13"></path></svg>';
+const ICON_SPEAKER_MUTED_SVG = '<svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>';
+const ICON_MOON_SVG = '<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
+const ICON_SUN_SVG = '<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+const ICON_BOOK_SVG = '<svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>';
+const ICON_LETTERS_SVG = '<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4"></path><path d="M4 12h8"></path><path d="M12 20V4"></path><circle cx="18" cy="15" r="3"></circle><path d="M21 18v-9"></path></svg>';
+const ICON_HELP_SVG = '<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+const ICON_FLAME_SVG = '<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>';
+const ICON_CHAT_SVG = '<svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
+const ICON_RIBBON_SVG = '<svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px; margin-left:6px;"><circle cx="12" cy="8" r="6"></circle><path d="m9 14-2 8 5-3 5 3-2-8"></path></svg>';
+const ICON_VIDEO_SVG = '<svg aria-hidden="true" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>';
+
 function renderModuleNav(selector, lessons, completedIds, expandLesson) {
   const nav = document.querySelector(selector);
   if (!nav) return;
@@ -443,7 +459,7 @@ const CHECKOUT_NOTICE_LABELS = {
   en: {
     success: {
       eyebrow: 'PAYMENT RECEIVED',
-      title: 'Welcome in! 🎉',
+      title: 'Welcome in!',
       body: "Your payment went through. It can take a few seconds to unlock. Refresh if the course doesn't appear right away.",
     },
     cancelled: {
@@ -455,7 +471,7 @@ const CHECKOUT_NOTICE_LABELS = {
   es: {
     success: {
       eyebrow: 'PAGO RECIBIDO',
-      title: '¡Bienvenido! 🎉',
+      title: '¡Bienvenido!',
       body: 'Tu pago se procesó correctamente. Puede tardar unos segundos en desbloquearse. Actualiza la página si el curso no aparece de inmediato.',
     },
     cancelled: {
@@ -488,7 +504,8 @@ function renderCheckoutNotice() {
   const cl = (CHECKOUT_NOTICE_LABELS[lang] || CHECKOUT_NOTICE_LABELS.en)[checkoutNoticeState];
   if (!cl) return;
   notice.style.display = 'block';
-  notice.innerHTML = `<span class="eyebrow">${escapeHtml(cl.eyebrow)}</span><h3 style="margin-top:6px;">${escapeHtml(cl.title)}</h3><p class="small" style="margin:0;">${escapeHtml(cl.body)}</p>`;
+  const titleIcon = checkoutNoticeState === 'success' ? ICON_RIBBON_SVG : '';
+  notice.innerHTML = `<span class="eyebrow">${escapeHtml(cl.eyebrow)}</span><h3 style="margin-top:6px;">${escapeHtml(cl.title)}${titleIcon}</h3><p class="small" style="margin:0;">${escapeHtml(cl.body)}</p>`;
 }
 
 // Progress % weighted by how much is actually in each module, instead of
@@ -560,10 +577,14 @@ function renderDashboard() {
     document.querySelector('#continue-lesson-meta').textContent = `${dl.stage} ${currentLesson.module_number}: ${moduleName(currentLesson.module_number)} · ${dl.lesson} ${idxInModule} ${dl.of} ${moduleLessons.length}`;
     document.querySelector('#continue-lesson-link').setAttribute('href', 'lesson.html?id=' + currentLesson.id);
     document.querySelector('#dashboard-continue-card').style.display = 'block';
+    const completeCard = document.querySelector('#dashboard-course-complete-card');
+    if (completeCard) completeCard.style.display = 'none';
   } else {
-    document.querySelector('#stat-current-stage').textContent = dl.complete;
+    document.querySelector('#stat-current-stage').innerHTML = `${escapeHtml(dl.complete)}${ICON_RIBBON_SVG}`;
     document.querySelector('#stat-current-lesson-count').textContent = '';
     document.querySelector('#dashboard-continue-card').style.display = 'none';
+    const completeCard = document.querySelector('#dashboard-course-complete-card');
+    if (completeCard) completeCard.style.display = 'block';
   }
 
   if (typeof streak === 'number') {
@@ -694,10 +715,10 @@ function quizAudioUrl(q, part) {
 function buildQuizAudioBtn(url, lang) {
   const label = lang === 'es' ? 'Escuchar' : 'Listen';
   if (url) {
-    return `<button type="button" class="quiz-audio-btn" data-quiz-play-audio="${escapeHtml(url)}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">🔊</button>`;
+    return `<button type="button" class="quiz-audio-btn" data-quiz-play-audio="${escapeHtml(url)}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}">${ICON_SPEAKER_SVG}</button>`;
   }
   const pendingLabel = lang === 'es' ? 'Audio próximamente' : 'Audio coming soon';
-  return `<span class="quiz-audio-btn quiz-audio-btn-pending" aria-hidden="true" title="${escapeHtml(pendingLabel)}">🔇</span>`;
+  return `<span class="quiz-audio-btn quiz-audio-btn-pending" aria-hidden="true" title="${escapeHtml(pendingLabel)}">${ICON_SPEAKER_MUTED_SVG}</span>`;
 }
 
 // ---- Module quiz (submit-and-grade, shown only on the last lesson of a
@@ -947,6 +968,199 @@ function showModuleQuizReview(quizWrap, moduleQuizQs, moduleNumber, userId, atte
 
 // ---- Lesson page --------------------------------------------------------
 // Cached so a language toggle can re-render instantly without refetching.
+// ---- Course lesson narration (pre-generated audio files) ----------------
+// Mirrors the Know Your Country audio bar (kycAudioState et al. above): one
+// shared <audio> element pointed at lessons.audio_url / audio_url_es for the
+// selected narration language. lesson.html is a normal multi-page nav (prev/
+// next links reload the page), so there's no cross-lesson reset to manage --
+// each page load starts this state fresh.
+const lessonAudioState = { lang: 'en', playing: false, paused: false };
+let lessonAudioEl = null;
+let lessonAudioSeeking = false;
+
+function formatLessonAudioTime(sec) {
+  if (!isFinite(sec) || sec < 0) sec = 0;
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function updateLessonAudioSeekUI() {
+  const seek = document.querySelector('#lesson-audio-seek');
+  const curEl = document.querySelector('#lesson-audio-current-time');
+  const durEl = document.querySelector('#lesson-audio-duration');
+  if (!seek) return;
+  const el = lessonAudioEl;
+  const duration = (el && isFinite(el.duration) && el.duration > 0) ? el.duration : 0;
+  const current = el ? el.currentTime : 0;
+  seek.disabled = !duration;
+  seek.max = duration || 0;
+  if (!lessonAudioSeeking) seek.value = current || 0;
+  if (curEl) curEl.textContent = formatLessonAudioTime(current);
+  if (durEl) durEl.textContent = formatLessonAudioTime(duration);
+}
+
+function getLessonAudioEl() {
+  if (!lessonAudioEl) {
+    lessonAudioEl = document.createElement('audio');
+    lessonAudioEl.id = 'lesson-audio-player';
+    lessonAudioEl.preload = 'none';
+    lessonAudioEl.style.display = 'none';
+    document.body.appendChild(lessonAudioEl);
+    lessonAudioEl.addEventListener('ended', () => { lessonAudioState.playing = false; lessonAudioState.paused = false; updateLessonAudioUI(); });
+    lessonAudioEl.addEventListener('error', () => { lessonAudioState.playing = false; lessonAudioState.paused = false; updateLessonAudioUI(); });
+    lessonAudioEl.addEventListener('loadedmetadata', updateLessonAudioSeekUI);
+    lessonAudioEl.addEventListener('timeupdate', updateLessonAudioSeekUI);
+  }
+  return lessonAudioEl;
+}
+
+function currentLessonAudioUrl() {
+  if (!lessonCache || !lessonCache.lesson) return null;
+  const lesson = lessonCache.lesson;
+  return lessonAudioState.lang === 'es' ? (lesson.audio_url_es || null) : (lesson.audio_url || null);
+}
+
+function updateLessonAudioUI() {
+  const bar = document.querySelector('#lesson-audio-bar');
+  if (!bar) return;
+  const hasAnyAudio = !!(lessonCache && lessonCache.lesson && (lessonCache.lesson.audio_url || lessonCache.lesson.audio_url_es));
+  if (!hasAnyAudio) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  bar.querySelectorAll('[data-audio-lang]').forEach((btn) => {
+    btn.classList.toggle('active', btn.getAttribute('data-audio-lang') === lessonAudioState.lang);
+  });
+  const icon = document.querySelector('#lesson-audio-play-icon');
+  const label = document.querySelector('#lesson-audio-play-label');
+  const stopBtn = document.querySelector('#lesson-audio-stop-btn');
+  const status = document.querySelector('#lesson-audio-status');
+  const playBtn = document.querySelector('#lesson-audio-play-btn');
+  const hasAudio = !!currentLessonAudioUrl();
+
+  if (playBtn) playBtn.disabled = !hasAudio;
+  updateLessonAudioSeekUI();
+
+  if (!hasAudio) {
+    icon.textContent = '▶';
+    label.textContent = lang === 'es' ? 'Escuchar' : 'Listen';
+    stopBtn.style.display = 'none';
+    status.textContent = lang === 'es' ? 'Audio no disponible en este idioma' : 'Audio not available in this language';
+    status.classList.remove('speaking');
+  } else if (lessonAudioState.playing && !lessonAudioState.paused) {
+    icon.textContent = '⏸';
+    label.textContent = lang === 'es' ? 'Pausar' : 'Pause';
+    stopBtn.style.display = 'inline-flex';
+    status.textContent = lang === 'es' ? 'Reproduciendo…' : 'Playing…';
+    status.classList.add('speaking');
+  } else if (lessonAudioState.playing && lessonAudioState.paused) {
+    icon.textContent = '▶';
+    label.textContent = lang === 'es' ? 'Reanudar' : 'Resume';
+    stopBtn.style.display = 'inline-flex';
+    status.textContent = lang === 'es' ? 'Pausado' : 'Paused';
+    status.classList.remove('speaking');
+  } else {
+    icon.textContent = '▶';
+    label.textContent = lang === 'es' ? 'Escuchar' : 'Listen';
+    stopBtn.style.display = 'none';
+    status.textContent = '';
+    status.classList.remove('speaking');
+  }
+}
+
+function stopLessonAudio() {
+  if (!lessonAudioEl) return;
+  lessonAudioEl.pause();
+  lessonAudioEl.currentTime = 0;
+  lessonAudioState.playing = false;
+  lessonAudioState.paused = false;
+  updateLessonAudioUI();
+}
+
+function seekLessonAudio(seconds) {
+  const el = getLessonAudioEl();
+  if (!isFinite(el.duration) || el.duration <= 0) return;
+  el.currentTime = Math.max(0, Math.min(seconds, el.duration));
+  updateLessonAudioSeekUI();
+}
+
+function speakLessonAudio() {
+  const url = currentLessonAudioUrl();
+  if (!url) { updateLessonAudioUI(); return; }
+  const el = getLessonAudioEl();
+  if (el.src !== url) el.src = url;
+  lessonAudioState.playing = true;
+  lessonAudioState.paused = false;
+  el.play().catch(() => {
+    lessonAudioState.playing = false;
+    lessonAudioState.paused = false;
+    updateLessonAudioUI();
+  });
+  updateLessonAudioUI();
+}
+
+function toggleLessonAudioPlayPause() {
+  const el = getLessonAudioEl();
+  if (!lessonAudioState.playing) {
+    speakLessonAudio();
+  } else if (lessonAudioState.paused) {
+    el.play();
+    lessonAudioState.paused = false;
+    updateLessonAudioUI();
+  } else {
+    el.pause();
+    lessonAudioState.paused = true;
+    updateLessonAudioUI();
+  }
+}
+
+function setLessonAudioLang(lang) {
+  if (lessonAudioState.lang === lang) return;
+  const wasPlaying = lessonAudioState.playing && !lessonAudioState.paused;
+  stopLessonAudio();
+  if (!wasPlaying && lessonAudioEl) lessonAudioEl.removeAttribute('src'); // reset seek bar/duration to 0:00 until they press play again
+  lessonAudioState.lang = lang;
+  updateLessonAudioUI();
+  if (wasPlaying) speakLessonAudio();
+}
+
+// Wires the play/pause/stop buttons, seek bar, and EN/ES toggle once per
+// page load (lesson.html always fully reloads on prev/next, so there's no
+// need to re-bind these on every renderLessonPage() call).
+function initLessonAudioControls() {
+  const playBtn = document.querySelector('#lesson-audio-play-btn');
+  const stopBtn = document.querySelector('#lesson-audio-stop-btn');
+  if (playBtn) playBtn.addEventListener('click', toggleLessonAudioPlayPause);
+  if (stopBtn) stopBtn.addEventListener('click', stopLessonAudio);
+
+  const seekInput = document.querySelector('#lesson-audio-seek');
+  if (seekInput) {
+    const beginDrag = () => { lessonAudioSeeking = true; };
+    const endDrag = () => { lessonAudioSeeking = false; seekLessonAudio(parseFloat(seekInput.value) || 0); };
+    seekInput.addEventListener('pointerdown', beginDrag);
+    seekInput.addEventListener('pointerup', endDrag);
+    seekInput.addEventListener('touchstart', beginDrag, { passive: true });
+    seekInput.addEventListener('touchend', endDrag);
+    seekInput.addEventListener('input', () => {
+      lessonAudioSeeking = true;
+      seekLessonAudio(parseFloat(seekInput.value) || 0);
+      const curEl = document.querySelector('#lesson-audio-current-time');
+      if (curEl) curEl.textContent = formatLessonAudioTime(parseFloat(seekInput.value) || 0);
+    });
+    seekInput.addEventListener('change', endDrag);
+  }
+
+  document.querySelectorAll('#lesson-audio-bar [data-audio-lang]').forEach((btn) => {
+    btn.addEventListener('click', () => setLessonAudioLang(btn.getAttribute('data-audio-lang')));
+  });
+
+  // Stop narration if the visitor navigates away; some browsers keep an
+  // <audio> element playing across a same-tab navigation otherwise.
+  window.addEventListener('beforeunload', stopLessonAudio);
+  window.addEventListener('pagehide', stopLessonAudio);
+}
+
 let lessonCache = null;
 
 function renderLessonPage() {
@@ -988,6 +1202,8 @@ function renderLessonPage() {
   readingView.style.display = showReading ? 'block' : 'none';
 
   if (showReading) {
+    updateLessonAudioUI();
+
     const videoWrap = document.querySelector('#lesson-video-wrap');
     const videoPlaceholder = document.querySelector('#lesson-video-placeholder');
     const lessonVideoUrl = localize(lesson, 'video_url');
@@ -995,17 +1211,13 @@ function renderLessonPage() {
       videoWrap.style.display = 'block';
       videoWrap.innerHTML = buildVideoEmbed(lessonVideoUrl);
       videoPlaceholder.style.display = 'none';
-    } else if (lesson.no_video) {
-      // This lesson isn't getting a video at all (audio narration planned
-      // instead), so skip the "coming soon" placeholder entirely rather
-      // than promising something that isn't coming.
+    } else {
+      // No video for this lesson yet (whether marked no_video or simply
+      // not recorded yet) -- skip the "coming soon" placeholder entirely
+      // rather than promising something with no committed date, pre-launch.
       videoWrap.style.display = 'none';
       videoWrap.innerHTML = '';
       videoPlaceholder.style.display = 'none';
-    } else {
-      videoWrap.style.display = 'none';
-      videoWrap.innerHTML = '';
-      videoPlaceholder.style.display = 'flex';
     }
   }
 
@@ -1189,6 +1401,8 @@ async function initLessonPage() {
   }
 
   lessonCache = { lessons, lesson, completedIds, moduleQuizQs, moduleQuizAttempts, isLastLessonOfModule, userId, quizViewActive: false };
+  lessonAudioState.lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  initLessonAudioControls();
   renderLessonPage();
 }
 
@@ -1834,7 +2048,7 @@ function renderMockVideo(videoUrl) {
   const isPlaceholder = !videoUrl || videoUrl.indexOf('/placeholder') === 0;
   if (isPlaceholder) {
     wrap.innerHTML = `<div class="mi-video-placeholder">
-      <div class="mi-video-icon" aria-hidden="true">🎥</div>
+      <div class="mi-video-icon" aria-hidden="true">${ICON_VIDEO_SVG}</div>
       <div class="mi-video-label">${escapeHtml(l.videoLabel)}</div>
       <div class="mi-video-sublabel">${escapeHtml(l.videoSublabel)}</div>
     </div>`;
@@ -2122,6 +2336,47 @@ function renderMockInterviewStatic() {
 }
 window.addEventListener('ciudadanoready:langchange', renderMockInterviewStatic);
 
+// Feature gate: Mock Interview is fully built (see the functions below) but
+// held back at launch pending more question content and video coverage.
+// Flip to true to re-enable the real interview flow site-wide, no other
+// changes needed, everything downstream stays intact.
+const MOCK_INTERVIEW_LAUNCHED = false;
+
+const MOCK_INTERVIEW_TEASER_LABELS = {
+  en: {
+    eyebrow: 'COMING SOON',
+    title: "We're building this out.",
+    body: "Mock Interview will walk you through a simulated citizenship interview, one question at a time, each set up with a short video just like a real USCIS officer would ask it. You'll answer in your own words, get instant review, and finish with a summary of how you did.",
+    body2: "It's still in progress and isn't ready yet, so it's hidden for now. Everything else in your course is ready to go.",
+    cta: 'Back to Dashboard',
+  },
+  es: {
+    eyebrow: 'PRÓXIMAMENTE',
+    title: 'Lo estamos construyendo.',
+    body: 'Entrevista Simulada te guiará a través de una entrevista de ciudadanía simulada, una pregunta a la vez, cada una presentada con un video corto tal como lo preguntaría un oficial real de USCIS. Responderás con tus propias palabras, obtendrás retroalimentación al instante, y terminarás con un resumen de cómo te fue.',
+    body2: 'Todavía está en desarrollo y aún no está listo, así que por ahora está oculto. Todo lo demás en tu curso está listo para usar.',
+    cta: 'Volver al Panel',
+  },
+};
+
+function renderMockInterviewTeaser() {
+  const introView = document.querySelector('#mi-intro-view');
+  if (!introView) return;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const l = MOCK_INTERVIEW_TEASER_LABELS[lang] || MOCK_INTERVIEW_TEASER_LABELS.en;
+  introView.innerHTML = `
+    <span class="eyebrow">${escapeHtml(l.eyebrow)}</span>
+    <h2 style="margin-top:4px;">${escapeHtml(l.title)}</h2>
+    <div class="card mi-intro-card mi-stage" style="margin:0;">
+      <p>${escapeHtml(l.body)}</p>
+      <p class="small muted" style="margin-top:14px;">${escapeHtml(l.body2)}</p>
+      <div style="text-align:center; margin-top:26px;">
+        <a href="dashboard.html" class="btn btn-primary">${escapeHtml(l.cta)}</a>
+      </div>
+    </div>
+  `;
+}
+
 async function initMockInterviewPage() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) return;
@@ -2135,6 +2390,15 @@ async function initMockInterviewPage() {
   const hasAccess = profile && ['active', 'trial', 'comp'].includes(profile.subscription_status);
   if (!hasAccess) {
     window.location.href = 'dashboard.html';
+    return;
+  }
+
+  if (!MOCK_INTERVIEW_LAUNCHED) {
+    renderMockInterviewTeaser();
+    window.addEventListener('ciudadanoready:langchange', renderMockInterviewTeaser);
+    const lessons0 = await fetchPublishedLessons();
+    const { data: progressRows0 } = await supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId);
+    renderModuleNav('#mi-page-module-nav', lessons0 || [], new Set((progressRows0 || []).map((p) => p.lesson_id)), null);
     return;
   }
 
@@ -2250,7 +2514,7 @@ async function initSettingsPage() {
 
   const { data: profile } = await supabaseClient
     .from('profiles')
-    .select('full_name, email, plan, subscription_status')
+    .select('full_name, email, plan, subscription_status, referral_code')
     .eq('id', userId)
     .single();
 
@@ -2302,6 +2566,30 @@ async function initSettingsPage() {
   }
   const manageBillingBtn = document.querySelector('#settings-manage-billing-btn');
   if (manageBillingBtn) manageBillingBtn.onclick = () => window.openBillingPortal(manageBillingBtn);
+
+  const referralInput = document.querySelector('#settings-referral-code');
+  const referralCopyBtn = document.querySelector('#settings-referral-copy-btn');
+  const referralCode = profile && profile.referral_code;
+  if (referralInput) referralInput.value = referralCode || '–';
+  if (referralCopyBtn && referralCode) {
+    referralCopyBtn.addEventListener('click', async () => {
+      const link = `${window.location.origin}/account.html?ref=${encodeURIComponent(referralCode)}`;
+      const msg = document.querySelector('#settings-referral-msg');
+      try {
+        await navigator.clipboard.writeText(link);
+        if (msg) {
+          const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+          msg.textContent = lang === 'es' ? 'Enlace copiado.' : 'Link copied.';
+          msg.className = 'settings-msg success';
+        }
+      } catch (e) {
+        if (msg) {
+          msg.textContent = link;
+          msg.className = 'settings-msg success';
+        }
+      }
+    });
+  }
 
   // Sidebar module nav, same as every other member page.
   const lessons = await fetchPublishedLessons();
@@ -2544,12 +2832,14 @@ async function initProgressPage() {
     return;
   }
 
-  const [lessons, { data: progressRows }, { data: moduleQuizRows }, { data: practiceAttemptsRaw }, { data: flashcardRows }] = await Promise.all([
+  const [lessons, { data: progressRows }, { data: moduleQuizRows }, { data: practiceAttemptsRaw }, { data: flashcardRows }, { data: dailyPracticeRows }, { data: kycRows }] = await Promise.all([
     fetchPublishedLessons(),
     supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId),
     supabaseClient.from('module_quiz_attempts').select('module_number, score, total').eq('user_id', userId),
     supabaseClient.from('practice_quiz_attempts').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
     supabaseClient.from('flashcards').select('test_type').eq('published', true),
+    supabaseClient.from('daily_practice_log').select('id').eq('user_id', userId),
+    supabaseClient.from('country_lesson_progress').select('lesson_number').eq('user_id', userId),
   ]);
 
   const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
@@ -2614,18 +2904,124 @@ async function initProgressPage() {
     practiceAvgPct * 0.20
   );
 
+  // "Passed" threshold matches the gating logic elsewhere in the app
+  // (module completion requires a passing quiz score) -- 70%.
+  const quizPassedCount = bestPcts.filter((p) => p >= 70).length;
+
   progressCache = {
     lessons: lessons || [],
     completedIds,
     courseCompletionPct,
     moduleQuizAvg,
     moduleQuizCount,
+    quizPassedCount,
     streak: (profile && profile.streak_count) || 0,
     flashcardBanks,
     practiceAttempts: practiceAttemptsDesc,
     readinessScore,
+    dailyPracticeCount: (dailyPracticeRows || []).length,
+    kycCompletedCount: (kycRows || []).length,
   };
   renderProgressPage();
+  checkAndAwardAchievements(userId, progressCache);
+}
+
+// ---- Achievements / medals ------------------------------------------------
+// Catalog lives in achievement_definitions (admin-managed, seeded with 18
+// achievements spanning easy -> very hard). Earning is evaluated here,
+// client-side, against stats renderProgressPage's caller already fetched
+// (progressCache) -- no separate "achievement engine" table triggers to
+// keep in sync. Newly-met criteria are upserted into user_achievements;
+// RLS only allows a user to insert their own rows for a key that already
+// exists in the catalog, so this can't be used to grant arbitrary badges.
+const ACHIEVEMENT_ICON_FLAG_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>';
+const ACHIEVEMENT_ICON_CHECK_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg>';
+const ACHIEVEMENT_ICON_MEDAL_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="6"></circle><path d="m9 14-2 8 5-3 5 3-2-8"></path></svg>';
+const ACHIEVEMENT_ICONS = {
+  flag: ACHIEVEMENT_ICON_FLAG_SVG,
+  book: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>',
+  letters: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V4"></path><path d="M4 12h8"></path><path d="M12 20V4"></path><circle cx="18" cy="15" r="3"></circle><path d="M21 18v-9"></path></svg>',
+  check: ACHIEVEMENT_ICON_CHECK_SVG,
+  flame: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>',
+  ribbon: ACHIEVEMENT_ICON_MEDAL_SVG,
+  medal: ACHIEVEMENT_ICON_MEDAL_SVG,
+};
+const ACHIEVEMENT_TIER_LABELS = {
+  easy: { en: 'Easy', es: 'Fácil' },
+  medium: { en: 'Medium', es: 'Medio' },
+  hard: { en: 'Hard', es: 'Difícil' },
+  very_hard: { en: 'Very Hard', es: 'Muy Difícil' },
+};
+
+let achievementDefinitionsCache = null;
+
+function evaluateAchievements(cache) {
+  return {
+    first_lesson: cache.completedIds.size >= 1,
+    first_daily_practice: cache.dailyPracticeCount >= 1,
+    first_flashcard_session: cache.practiceAttempts.length >= 1,
+    first_quiz_passed: cache.quizPassedCount >= 1,
+    streak_3: cache.streak >= 3,
+    streak_7: cache.streak >= 7,
+    halfway_course: cache.courseCompletionPct >= 50,
+    all_quizzes_passed: cache.quizPassedCount >= 7,
+    vocab_25: cache.flashcardBanks.some((b) => b.correct >= 25),
+    kyc_5: cache.kycCompletedCount >= 5,
+    daily_practice_5: cache.dailyPracticeCount >= 5,
+    course_complete: cache.courseCompletionPct >= 100,
+    streak_30: cache.streak >= 30,
+    flashcard_bank_mastered: cache.flashcardBanks.some((b) => b.total > 0 && b.correct >= b.total),
+    score_75: cache.readinessScore >= 75,
+    kyc_all: cache.kycCompletedCount >= 40,
+    score_100: cache.readinessScore >= 100,
+    streak_100: cache.streak >= 100,
+  };
+}
+
+async function checkAndAwardAchievements(userId, cache) {
+  if (!achievementDefinitionsCache) {
+    const { data } = await supabaseClient.from('achievement_definitions').select('*').order('sort_order');
+    achievementDefinitionsCache = data || [];
+  }
+  const { data: earnedRows } = await supabaseClient.from('user_achievements').select('achievement_key').eq('user_id', userId);
+  const earnedKeys = new Set((earnedRows || []).map((r) => r.achievement_key));
+
+  const met = evaluateAchievements(cache);
+  const newlyEarned = achievementDefinitionsCache
+    .map((d) => d.key)
+    .filter((key) => met[key] && !earnedKeys.has(key));
+
+  if (newlyEarned.length) {
+    const { error } = await supabaseClient
+      .from('user_achievements')
+      .insert(newlyEarned.map((key) => ({ user_id: userId, achievement_key: key })));
+    if (!error) newlyEarned.forEach((key) => earnedKeys.add(key));
+  }
+
+  renderAchievements(achievementDefinitionsCache, earnedKeys, newlyEarned);
+}
+
+function renderAchievements(definitions, earnedKeys, newlyEarned) {
+  const gridEl = document.querySelector('#achievements-grid');
+  if (!gridEl) return;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const countEl = document.querySelector('#achievements-count');
+  if (countEl) countEl.textContent = `${earnedKeys.size} / ${definitions.length}`;
+
+  gridEl.innerHTML = definitions.map((d) => {
+    const earned = earnedKeys.has(d.key);
+    const isNew = newlyEarned && newlyEarned.includes(d.key);
+    const tierLabel = (ACHIEVEMENT_TIER_LABELS[d.tier] || ACHIEVEMENT_TIER_LABELS.easy)[lang] || d.tier;
+    const icon = ACHIEVEMENT_ICONS[d.icon_key] || ACHIEVEMENT_ICONS.medal;
+    return `
+      <div class="achievement-tile tier-${d.tier}${earned ? ' earned' : ' locked'}${isNew ? ' just-earned' : ''}">
+        <span class="achievement-icon" aria-hidden="true">${icon}</span>
+        <h4>${escapeHtml(lang === 'es' && d.title_es ? d.title_es : d.title)}</h4>
+        <p>${escapeHtml(lang === 'es' && d.description_es ? d.description_es : d.description)}</p>
+        <span class="achievement-tier-tag">${escapeHtml(tierLabel)}</span>
+      </div>
+    `;
+  }).join('');
 }
 
 // ==========================================================================
@@ -3103,9 +3499,9 @@ function playRwAudio(url) {
 // this can be reused anywhere without wiring a fresh listener per card.
 function buildRwAudioControl(audioUrl) {
   if (audioUrl) {
-    return `<button type="button" class="btn btn-ghost rw-audio-btn" data-rw-play-audio="${escapeHtml(audioUrl)}">🔊 <span data-en="Play Audio" data-es="Reproducir Audio">Play Audio</span></button>`;
+    return `<button type="button" class="btn btn-ghost rw-audio-btn" data-rw-play-audio="${escapeHtml(audioUrl)}">${ICON_SPEAKER_SVG} <span data-en="Play Audio" data-es="Reproducir Audio">Play Audio</span></button>`;
   }
-  return `<span class="rw-audio-pending">🔇 <span data-en="Audio coming soon" data-es="Audio próximamente">Audio coming soon</span></span>`;
+  return `<span class="rw-audio-pending">${ICON_SPEAKER_MUTED_SVG} <span data-en="Audio coming soon" data-es="Audio próximamente">Audio coming soon</span></span>`;
 }
 
 let readingPracticeCache = null; // { items, order, pos }
@@ -3357,7 +3753,23 @@ async function fetchOfficialDocuments() {
 // "PDF" badge, which read as an unstyled placeholder rather than a
 // deliberate icon.
 const DOC_FILE_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>';
+const DOC_BOOK_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>';
+const DOC_PENCIL_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"></path></svg>';
+const DOC_PASSPORT_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"></rect><circle cx="12" cy="10" r="3"></circle><path d="M8 17c0-2 1.8-3 4-3s4 1 4 3"></path></svg>';
 const DOC_CHEVRON_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>';
+
+// No stored "category" column on official_documents, so the card's icon,
+// accent color, and badge label are derived from the title text. Falls
+// back to the plain file icon/"REFERENCE" badge for anything that doesn't
+// match a known pattern, so a future uncategorized upload still renders
+// cleanly rather than erroring.
+function docCategoryFor(title) {
+  const t = (title || '').toLowerCase();
+  if (t.includes('writing')) return { icon: DOC_PENCIL_ICON_SVG, iconClass: 'cat-ocean', badgeClass: 'badge-ocean', en: 'WRITING', es: 'ESCRITURA' };
+  if (t.includes('reading')) return { icon: DOC_BOOK_ICON_SVG, iconClass: 'cat-ocean', badgeClass: 'badge-ocean', en: 'READING', es: 'LECTURA' };
+  if (t.includes('pocket guide') || t.includes('guide')) return { icon: DOC_PASSPORT_ICON_SVG, iconClass: 'cat-slate', badgeClass: '', en: 'GUIDE', es: 'GUÍA' };
+  return { icon: DOC_FILE_ICON_SVG, iconClass: '', badgeClass: '', en: 'REFERENCE', es: 'REFERENCIA' };
+}
 
 function renderDocumentsList() {
   const listEl = document.querySelector('#doc-list');
@@ -3372,16 +3784,20 @@ function renderDocumentsList() {
     listEl.innerHTML = '<p class="empty-state">No documents available yet.</p>';
     return;
   }
-  listEl.innerHTML = officialDocumentsCache.map((d) => `
+  listEl.innerHTML = officialDocumentsCache.map((d) => {
+    const cat = docCategoryFor(localize(d, 'title'));
+    return `
     <button class="card doc-card" data-doc-open="${d.id}">
-      <span class="doc-card-icon" aria-hidden="true">${DOC_FILE_ICON_SVG}</span>
+      <span class="doc-card-icon ${cat.iconClass}" aria-hidden="true">${cat.icon}</span>
       <span class="doc-card-body">
+        <span class="badge ${cat.badgeClass} doc-card-badge">${lang === 'es' ? cat.es : cat.en}</span>
         <h3>${escapeHtml(localize(d, 'title'))}</h3>
         ${d.description ? `<p class="small muted">${escapeHtml(localize(d, 'description'))}</p>` : ''}
       </span>
       <span class="doc-card-arrow">${DOC_CHEVRON_SVG}</span>
     </button>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function openDocument(id) {
@@ -3670,7 +4086,7 @@ function renderDailyPracticeItem() {
   document.querySelector('#dp-next-btn').disabled = true;
 
   if (item.type === 'vocab') {
-    typeLabelEl.textContent = lang === 'es' ? '🔤 VOCABULARIO' : '🔤 VOCABULARY';
+    typeLabelEl.innerHTML = `${ICON_LETTERS_SVG} ${lang === 'es' ? 'VOCABULARIO' : 'VOCABULARY'}`;
     const w = item.data;
     bodyEl.innerHTML = `
       <div class="dp-vocab-term">${escapeHtml(w.term)}</div>
@@ -3679,7 +4095,7 @@ function renderDailyPracticeItem() {
       <div class="dp-vocab-definition" id="dp-vocab-definition">${escapeHtml(vocabDefinition(w))}</div>
     `;
   } else if (item.type === 'quiz') {
-    typeLabelEl.textContent = lang === 'es' ? '❓ CÍVICA' : '❓ CIVICS';
+    typeLabelEl.innerHTML = `${ICON_HELP_SVG} ${lang === 'es' ? 'CÍVICA' : 'CIVICS'}`;
     const q = item.data;
     const choices = dpQuizChoices(q);
     bodyEl.innerHTML = `
@@ -3694,7 +4110,7 @@ function renderDailyPracticeItem() {
       </div>
     `;
   } else {
-    typeLabelEl.textContent = lang === 'es' ? '📖 LECTURA' : '📖 READING';
+    typeLabelEl.innerHTML = `${ICON_BOOK_SVG} ${lang === 'es' ? 'LECTURA' : 'READING'}`;
     const r = item.data;
     bodyEl.innerHTML = `
       <div class="dp-reading-sentence">${escapeHtml(r.sentence_text)}</div>
@@ -3731,7 +4147,7 @@ async function finishDailyPracticeSession() {
   document.querySelector('#dp-summary-streak-value').textContent = streak;
   document.querySelector('#dp-summary-streak-label').textContent = lang === 'es'
     ? (streak === 1 ? 'día de racha' : 'días de racha')
-    : (streak === 1 ? 'day streak' : 'day streak');
+    : (streak === 1 ? 'day streak' : 'days streak');
   document.querySelector('#dp-stat-items').textContent = items.length;
   document.querySelector('#dp-stat-correct').textContent = correctCount + '/' + quizCount;
 
@@ -3844,8 +4260,111 @@ async function initDailyPracticePage() {
   });
 }
 
+// ---- Notifications bell ("what's next" guidance) --------------------------
+// Runs on every member-area page (the bell markup is in every topbar --
+// see styles.css .notif-bell-*). Independent of each page's own init
+// function on purpose: a member should see the same "what's next" answer
+// no matter which page they're currently on, not just from the dashboard.
+const NOTIF_LABELS = {
+  en: {
+    verifyTitle: 'Verify your email', verifyBody: 'Check your inbox to confirm your address.',
+    billingTitle: 'Finish signing up', billingBody: 'Complete payment to unlock your full course.',
+    continueTitle: 'Continue your course', streakTitle: 'Keep your streak alive',
+    streakBody: 'Do a quick 10 Minute English session today.',
+    startTitle: 'Welcome! Start here', startBody: "Begin Module 1 to start your citizenship prep.",
+    completeTitle: 'Course complete, keep practicing', completeBody: 'Try Flashcards or 10 Minute English to stay sharp.',
+    empty: "You're all caught up.",
+  },
+  es: {
+    verifyTitle: 'Verifica tu correo electrónico', verifyBody: 'Revisa tu bandeja de entrada para confirmar tu dirección.',
+    billingTitle: 'Termina de registrarte', billingBody: 'Completa el pago para desbloquear tu curso completo.',
+    continueTitle: 'Continúa tu curso', streakTitle: 'Mantén viva tu racha',
+    streakBody: 'Haz una sesión rápida de 10 Minutos de Inglés hoy.',
+    startTitle: '¡Bienvenido! Comienza aquí', startBody: 'Comienza el Módulo 1 para iniciar tu preparación de ciudadanía.',
+    completeTitle: 'Curso completo, sigue practicando', completeBody: 'Prueba Tarjetas de Estudio o 10 Minutos de Inglés para mantenerte al día.',
+    empty: 'Estás al día.',
+  },
+};
+
+async function renderMemberNotifications() {
+  const listEl = document.querySelector('#notif-bell-list');
+  const dotEl = document.querySelector('#notif-bell-dot');
+  if (!listEl) return;
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  const userId = session.user.id;
+  const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
+  const l = NOTIF_LABELS[lang] || NOTIF_LABELS.en;
+
+  const { data: profile } = await supabaseClient
+    .from('profiles')
+    .select('subscription_status, email_verified_at, streak_count')
+    .eq('id', userId)
+    .single();
+
+  const items = [];
+
+  if (profile && profile.subscription_status === 'incomplete') {
+    items.push({ href: 'dashboard.html', title: l.billingTitle, body: l.billingBody, urgent: true });
+  } else {
+    if (profile && !profile.email_verified_at) {
+      items.push({ href: 'dashboard.html', title: l.verifyTitle, body: l.verifyBody, urgent: true });
+    }
+    const lessons = await fetchPublishedLessons();
+    const { data: progressRows } = await supabaseClient.from('lesson_progress').select('lesson_id').eq('user_id', userId);
+    const completedIds = new Set((progressRows || []).map((p) => p.lesson_id));
+    const currentLesson = (lessons || []).find((ln) => !completedIds.has(ln.id));
+    if (currentLesson) {
+      const isBrandNew = completedIds.size === 0;
+      items.push({
+        href: 'lesson.html?id=' + currentLesson.id,
+        title: isBrandNew ? l.startTitle : l.continueTitle,
+        body: isBrandNew ? l.startBody : localize(currentLesson, 'title'),
+        urgent: false,
+      });
+    } else if ((lessons || []).length) {
+      items.push({ href: 'daily-practice.html', title: l.completeTitle, body: l.completeBody, urgent: false });
+    }
+    const streak = (profile && profile.streak_count) || 0;
+    if (streak === 0) {
+      items.push({ href: 'daily-practice.html', title: l.streakTitle, body: l.streakBody, urgent: false });
+    }
+  }
+
+  if (dotEl) dotEl.hidden = items.length === 0;
+  listEl.innerHTML = items.length
+    ? items.map((it) => `
+        <a class="notif-item${it.urgent ? ' urgent' : ''}" href="${escapeHtml(it.href)}">
+          <p class="notif-item-title">${escapeHtml(it.title)}</p>
+          <p class="notif-item-body">${escapeHtml(it.body)}</p>
+        </a>
+      `).join('')
+    : `<p class="small muted" style="padding:14px 16px;">${escapeHtml(l.empty)}</p>`;
+}
+
+function initNotificationsBell() {
+  const btn = document.querySelector('#notif-bell-btn');
+  const panel = document.querySelector('#notif-bell-panel');
+  if (!btn || !panel) return;
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const willOpen = panel.hidden;
+    panel.hidden = !willOpen;
+    btn.setAttribute('aria-expanded', String(willOpen));
+  });
+  document.addEventListener('click', (e) => {
+    if (!panel.hidden && !panel.contains(e.target) && e.target !== btn) {
+      panel.hidden = true;
+      btn.setAttribute('aria-expanded', 'false');
+    }
+  });
+  renderMemberNotifications();
+  window.addEventListener('ciudadanoready:langchange', renderMemberNotifications);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof supabaseClient === 'undefined') return;
+  initNotificationsBell();
   if (document.body.hasAttribute('data-dashboard-page')) initDashboard();
   if (document.body.hasAttribute('data-lesson-page')) initLessonPage();
   if (document.body.hasAttribute('data-flashcards-page')) initFlashcardsPage();
@@ -3891,7 +4410,17 @@ window.addEventListener('ciudadanoready:langchange', () => {
   if (document.body.hasAttribute('data-kyc-page') && kycCache) {
     if (kycCache.currentLessonNumber != null) renderKycReading(); else renderKycPicker();
   }
-  if (document.body.hasAttribute('data-progress-page')) renderProgressPage();
+  if (document.body.hasAttribute('data-progress-page')) {
+    renderProgressPage();
+    if (achievementDefinitionsCache) {
+      supabaseClient.auth.getSession().then(({ data: { session } }) => {
+        if (!session) return;
+        supabaseClient.from('user_achievements').select('achievement_key').eq('user_id', session.user.id).then(({ data }) => {
+          renderAchievements(achievementDefinitionsCache, new Set((data || []).map((r) => r.achievement_key)));
+        });
+      });
+    }
+  }
   if (document.body.hasAttribute('data-rw-page')) {
     // Reading/writing sentences are English-only by design (it's a literacy
     // test), and the Play Audio / Audio coming soon labels already use

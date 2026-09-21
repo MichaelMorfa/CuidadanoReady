@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (faqErr) {
         faqListEl.innerHTML = `<p class="empty-state">Could not load queries: ${escapeHtml(faqErr.message)}</p>`;
       } else if (!recentUnmatched || !recentUnmatched.length) {
-        faqListEl.innerHTML = '<p class="empty-state">No unanswered questions. 🎉</p>';
+        faqListEl.innerHTML = '<p class="empty-state">No unanswered questions.</p>';
       } else {
         faqListEl.innerHTML = recentUnmatched.map((q) => `
           <div style="padding:10px 0; border-top:1px solid var(--line);">
@@ -183,8 +183,8 @@ document.addEventListener('DOMContentLoaded', () => {
       errorsListEl.innerHTML = `<p class="empty-state">Could not load errors: ${escapeHtml(errorsErr.message)}</p>`;
     } else if (!recentErrors || !recentErrors.length) {
       errorsListEl.innerHTML = showResolved
-        ? '<p class="empty-state">No errors reported. 🎉</p>'
-        : '<p class="empty-state">No unresolved errors. 🎉</p>';
+        ? '<p class="empty-state">No errors reported.</p>'
+        : '<p class="empty-state">No unresolved errors.</p>';
     } else {
       errorsListEl.innerHTML = recentErrors.map((e) => `
         <div style="padding:10px 0; border-top:1px solid var(--line); opacity:${e.resolved ? '0.6' : '1'};">
@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tbody = document.querySelector('#users-tbody');
     const { data, error } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
     if (error) {
-      tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Could not load users: ${escapeHtml(error.message)}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Could not load users: ${escapeHtml(error.message)}</td></tr>`;
       return;
     }
     allUsers = data || [];
@@ -240,10 +240,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const countEl = document.querySelector('#user-count');
     if (countEl) countEl.textContent = `${users.length} user${users.length === 1 ? '' : 's'}`;
     if (!users.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No users yet.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No users yet.</td></tr>';
       return;
     }
-    tbody.innerHTML = users.map((u) => `
+    // Referred-by lookup: referred_by_code is free text entered at signup
+    // (see the "just track it" referral system), so resolve it against
+    // whoever currently owns that code and fall back to showing the raw
+    // code itself if no match (typo, or the referrer's code changed).
+    const byCode = {};
+    users.forEach((u) => { if (u.referral_code) byCode[u.referral_code] = u; });
+    tbody.innerHTML = users.map((u) => {
+      const referrer = u.referred_by_code ? byCode[u.referred_by_code] : null;
+      const referredByLabel = !u.referred_by_code ? '' : (referrer ? (referrer.full_name || referrer.email || u.referred_by_code) : u.referred_by_code);
+      return `
       <tr data-user-row="${u.id}">
         <td><strong>${escapeHtml(u.full_name || '(no name)')}</strong><br><span class="small muted">${escapeHtml(u.email || '')}</span></td>
         <td>
@@ -263,6 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </select>
         </td>
         <td><span class="badge ${u.role === 'admin' ? 'badge-ocean' : ''}">${escapeHtml(u.role || 'student')}</span></td>
+        <td class="small">${referredByLabel ? escapeHtml(referredByLabel) : '<span class="muted">–</span>'}</td>
         <td class="small">${formatDate(u.created_at)}</td>
         <td>
           <div class="flex gap-8 items-center">
@@ -273,7 +283,8 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </td>
       </tr>
-    `).join('');
+    `;
+    }).join('');
   }
 
   document.querySelector('#user-search')?.addEventListener('input', (e) => {

@@ -31,6 +31,45 @@
   .video-placeholder .video-placeholder-icon { font-size:1.3rem; flex-shrink:0; }
   .video-placeholder p { margin:0; font-size:0.88rem; }
 
+  /* ---- Lesson narration bar (mirrors .kyc-audio-bar on know-your-country.html) ---- */
+  .lesson-audio-bar {
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 14px 18px; margin-bottom: 20px;
+    border: 1px solid var(--line); border-radius: var(--radius); background: var(--white);
+  }
+  .lesson-audio-controls-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .lesson-audio-play-btn { display: inline-flex; align-items: center; gap: 8px; }
+  .lesson-audio-lang-toggle { display: inline-flex; align-items: center; gap: 6px; border-left: 1px solid var(--line); padding-left: 16px; }
+  .lesson-audio-lang-toggle .small.muted { margin-right: 2px; }
+  .lesson-audio-lang-btn {
+    font-family: var(--font-mono); font-size: 0.72rem; padding: 3px 9px; border-radius: 20px;
+    border: 1px solid var(--line); background: var(--white); color: var(--slate); cursor: pointer;
+  }
+  .lesson-audio-lang-btn.active { background: var(--forest); border-color: var(--forest); color: var(--paper); }
+  .lesson-audio-status { font-size: 0.82rem; color: var(--slate); margin-left: auto; }
+  .lesson-audio-status.speaking { color: var(--forest); font-weight: 600; }
+  .lesson-audio-seek-row { display: flex; align-items: center; gap: 10px; }
+  .lesson-audio-time { font-family: var(--font-mono); font-size: 0.72rem; color: var(--slate); min-width: 34px; text-align: center; flex-shrink: 0; }
+  .lesson-audio-seek {
+    flex: 1; margin: 0; height: 5px; border-radius: 3px; background: var(--line);
+    outline: none; cursor: pointer; -webkit-appearance: none; appearance: none;
+  }
+  .lesson-audio-seek:focus-visible { box-shadow: 0 0 0 3px rgba(28,127,184,0.35); }
+  .lesson-audio-seek::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%;
+    background: var(--forest); cursor: pointer; border: 2px solid var(--white); box-shadow: 0 0 0 1px var(--line);
+  }
+  .lesson-audio-seek::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%; background: var(--forest); cursor: pointer;
+    border: 2px solid var(--white); box-shadow: 0 0 0 1px var(--line);
+  }
+  .lesson-audio-seek:disabled { opacity: 0.4; cursor: not-allowed; }
+  @media (max-width: 560px) {
+    .lesson-audio-controls-row { flex-direction: column; align-items: flex-start; }
+    .lesson-audio-lang-toggle { border-left: none; padding-left: 0; border-top: 1px solid var(--line); padding-top: 12px; width: 100%; }
+    .lesson-audio-status { margin-left: 0; }
+  }
+
   /* Module quiz (submit-and-grade, gates lesson completion on the final
      lesson of each module), distinct from the older instant-feedback
      .quiz-option buttons used elsewhere so the two don't share click
@@ -51,7 +90,7 @@
      click-through). The row itself owns the hover/spacing; the label
      inside no longer needs its own hover background. */
   .module-quiz-option-row { display:flex; align-items:center; gap:2px; }
-  .quiz-audio-btn { flex:none; width:26px; height:26px; border-radius:50%; border:1px solid var(--line); background: var(--white); display:flex; align-items:center; justify-content:center; font-size:0.8rem; line-height:1; cursor:pointer; padding:0; color: var(--forest); transition: background 0.12s ease, border-color 0.12s ease; }
+  .quiz-audio-btn { flex:none; width:26px; height:26px; border-radius:50%; border:1px solid var(--line); background: var(--white); display:inline-flex; align-items:center; justify-content:center; font-size:0.8rem; line-height:1; cursor:pointer; padding:0; color: var(--forest); transition: background 0.12s ease, border-color 0.12s ease; }
   .quiz-audio-btn:hover { background: #F0F6F2; border-color: var(--forest); }
   .quiz-audio-btn-pending { color: var(--slate); opacity:0.5; cursor:default; background:none; border-color: transparent; }
   .quiz-audio-btn-pending:hover { background:none; border-color:transparent; }
@@ -132,7 +171,7 @@
     <ul class="app-nav">
       <li class="app-nav-group">
         <h4 data-en="Overview" data-es="Resumen">Overview</h4>
-        <a href="dashboard.html" data-en="Continue Learning" data-es="Continuar Aprendiendo">Continue Learning</a>
+        <a href="dashboard.html" data-en="Dashboard" data-es="Panel">Dashboard</a>
         <a href="progress.html" data-en="My Progress" data-es="Mi Progreso">My Progress</a>
       </li>
       <li class="app-nav-group">
@@ -142,17 +181,17 @@
         </ul>
       </li>
       <li class="app-nav-group">
+        <h4 data-en="Background" data-es="Contexto">Background</h4>
+        <a href="know-your-country.html" data-en="Know Your Country" data-es="Conoce Tu País">Know Your Country</a>
+        <a href="vocabulary.html" data-en="Vocabulary" data-es="Vocabulario">Vocabulary</a>
+        <a href="documents.html" data-en="Documents" data-es="Documentos">Documents</a>
+      </li>
+      <li class="app-nav-group">
         <h4 data-en="Practice" data-es="Práctica">Practice</h4>
         <a href="daily-practice.html" data-en="10 Minute English" data-es="10 Minutos de Inglés">10 Minute English</a>
         <a href="flashcards.html" data-en="Flashcards" data-es="Tarjetas de Estudio">Flashcards</a>
-        <a href="mock-interview.html" data-en="Mock Interview" data-es="Entrevista Simulada">Mock Interview</a>
+        <a href="mock-interview.html" data-en="Mock Interview" data-es="Entrevista Simulada">Mock Interview<span class="app-nav-soon-tag" data-en="Soon" data-es="Pronto">Soon</span></a>
         <a href="reading-writing.html" data-en="Reading &amp; Writing" data-es="Lectura y Escritura">Reading &amp; Writing</a>
-      </li>
-      <li class="app-nav-group">
-        <h4 data-en="Background" data-es="Contexto">Background</h4>
-        <a href="know-your-country.html" data-en="Know Your Country" data-es="Conoce Tu País">Know Your Country</a>
-        <a href="documents.html" data-en="Documents" data-es="Documentos">Documents</a>
-        <a href="vocabulary.html" data-en="Vocabulary" data-es="Vocabulario">Vocabulary</a>
       </li>
       <li class="app-nav-group">
         <h4 data-en="More" data-es="Más">More</h4>
@@ -175,7 +214,17 @@
         <div class="lang-toggle">
           <button data-lang-btn="en" class="active">EN</button>
           <button data-lang-btn="es">ES</button>
-        </div>        <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link" data-en="Log Out" data-es="Cerrar Sesión">Log Out</a>
+        </div>        <div class="notif-bell-wrap">
+          <button class="notif-bell-btn" id="notif-bell-btn" aria-label="Notifications" aria-expanded="false" aria-controls="notif-bell-panel">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span class="notif-bell-dot" id="notif-bell-dot" hidden></span>
+          </button>
+          <div class="notif-bell-panel" id="notif-bell-panel" hidden>
+            <div class="notif-bell-header" data-en="What's Next" data-es="Qué Sigue">What's Next</div>
+            <div id="notif-bell-list"><p class="small muted" style="padding:14px 16px;">Loading…</p></div>
+          </div>
+        </div>
+        <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link" data-en="Log Out" data-es="Cerrar Sesión">Log Out</a>
       </div>
     </div>
 
@@ -196,11 +245,29 @@
         <h1 id="lesson-title-h1">–</h1>
 
         <div id="lesson-reading-view">
-          <div class="video-embed" id="lesson-video-wrap" style="display:none;"></div>
-          <div class="video-placeholder" id="lesson-video-placeholder" style="display:none;">
-            <span class="video-placeholder-icon">🎥</span>
-            <p data-en="Video for this lesson is coming soon." data-es="El video de esta lección estará disponible pronto.">Video for this lesson is coming soon.</p>
+          <div class="lesson-audio-bar" id="lesson-audio-bar" style="display:none;">
+            <div class="lesson-audio-controls-row">
+              <button class="btn btn-primary btn-sm lesson-audio-play-btn" id="lesson-audio-play-btn">
+                <span id="lesson-audio-play-icon">▶</span>
+                <span id="lesson-audio-play-label" data-en="Listen" data-es="Escuchar">Listen</span>
+              </button>
+              <button class="btn btn-ghost btn-sm" id="lesson-audio-stop-btn" style="display:none;" data-en="Stop" data-es="Detener">Stop</button>
+              <div class="lesson-audio-lang-toggle">
+                <span class="small muted" data-en="Narration:" data-es="Narración:">Narration:</span>
+                <button class="lesson-audio-lang-btn" data-audio-lang="en">EN</button>
+                <button class="lesson-audio-lang-btn" data-audio-lang="es">ES</button>
+              </div>
+              <span class="lesson-audio-status small" id="lesson-audio-status"></span>
+            </div>
+            <div class="lesson-audio-seek-row">
+              <span class="lesson-audio-time" id="lesson-audio-current-time">0:00</span>
+              <input type="range" class="lesson-audio-seek" id="lesson-audio-seek" min="0" max="0" step="0.1" value="0" disabled>
+              <span class="lesson-audio-time" id="lesson-audio-duration">0:00</span>
+            </div>
           </div>
+
+          <div class="video-embed" id="lesson-video-wrap" style="display:none;"></div>
+          <div class="video-placeholder" id="lesson-video-placeholder" style="display:none;"></div>
 
           <div class="card card-pad" style="margin-bottom:28px;">
             <div id="lesson-content"></div>

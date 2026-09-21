@@ -71,6 +71,36 @@
   .ph-history-row { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-top:1px solid var(--line); font-size:0.9rem; }
   .ph-history-row:first-of-type { border-top:none; padding-top:0; }
   .ph-history-meta { font-size:0.8rem; color: var(--slate); }
+
+  /* Most of this page is a read-out of numbers with nowhere to act on them,
+     which was the actual complaint ("make most of that clickable"). These
+     cards become real links to wherever that stat is earned/improved,
+     styled to still read as plain cards (not blue link text). */
+  a.progress-clickable-card { display:block; color:inherit; text-decoration:none; }
+  a.progress-clickable-card:hover { border-color: var(--forest); }
+  .progress-clickable-card .stat-cta { font-size:0.78rem; font-weight:600; color: var(--forest); margin-top:10px; }
+
+  .doc-section-heading { display: flex; align-items: baseline; justify-content: space-between; margin: 0 0 14px; flex-wrap: wrap; gap: 8px; }
+  .doc-section-heading h2 { margin: 0; font-size: 1.15rem; }
+
+  /* Achievements grid: earned tiles are full-color on a tinted card,
+     locked ones are flattened to greyscale-ish outline so the earned ones
+     visibly stand out without needing separate "locked" iconography. */
+  .achievements-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+  .achievement-tile { border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 16px; text-align: center; background: var(--surface); }
+  .achievement-tile .achievement-icon { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 50%; margin-bottom: 10px; }
+  .achievement-tile h4 { margin: 0 0 4px; font-size: 0.9rem; }
+  .achievement-tile p { margin: 0; font-size: 0.76rem; color: var(--slate); line-height: 1.4; }
+  .achievement-tile .achievement-tier-tag { display: inline-block; margin-top: 10px; font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--slate); }
+  .achievement-tile.locked { opacity: 0.45; }
+  .achievement-tile.locked .achievement-icon { background: var(--paper-dim); color: var(--slate); }
+  .achievement-tile.earned .achievement-icon { background: #F0F6F2; color: var(--forest); }
+  .achievement-tile.earned.tier-hard .achievement-icon, .achievement-tile.earned.tier-very_hard .achievement-icon { background: #FBF6EC; color: #B08A2E; }
+  .achievement-tile.earned { border-color: var(--forest); }
+  .achievement-tile.earned.tier-hard, .achievement-tile.earned.tier-very_hard { border-color: #B08A2E; }
+  .achievement-tile.just-earned { animation: achievement-pop 0.4s ease; }
+  @keyframes achievement-pop { 0% { transform: scale(0.9); } 60% { transform: scale(1.04); } 100% { transform: scale(1); } }
+  @media (prefers-reduced-motion: reduce) { .achievement-tile.just-earned { animation: none; } }
 </style>
 <meta name="description" content="Track your Ciudadano Ready course progress, quiz scores, and study performance.">
 <meta name="robots" content="noindex">
@@ -88,7 +118,7 @@
     <ul class="app-nav">
       <li class="app-nav-group">
         <h4 data-en="Overview" data-es="Resumen">Overview</h4>
-        <a href="dashboard.html" data-en="Continue Learning" data-es="Continuar Aprendiendo">Continue Learning</a>
+        <a href="dashboard.html" data-en="Dashboard" data-es="Panel">Dashboard</a>
         <a href="progress.html" class="active" data-en="My Progress" data-es="Mi Progreso">My Progress</a>
       </li>
       <li class="app-nav-group">
@@ -98,17 +128,17 @@
         </ul>
       </li>
       <li class="app-nav-group">
+        <h4 data-en="Background" data-es="Contexto">Background</h4>
+        <a href="know-your-country.html" data-en="Know Your Country" data-es="Conoce Tu País">Know Your Country</a>
+        <a href="vocabulary.html" data-en="Vocabulary" data-es="Vocabulario">Vocabulary</a>
+        <a href="documents.html" data-en="Documents" data-es="Documentos">Documents</a>
+      </li>
+      <li class="app-nav-group">
         <h4 data-en="Practice" data-es="Práctica">Practice</h4>
         <a href="daily-practice.html" data-en="10 Minute English" data-es="10 Minutos de Inglés">10 Minute English</a>
         <a href="flashcards.html" data-en="Flashcards" data-es="Tarjetas de Estudio">Flashcards</a>
-        <a href="mock-interview.html" data-en="Mock Interview" data-es="Entrevista Simulada">Mock Interview</a>
+        <a href="mock-interview.html" data-en="Mock Interview" data-es="Entrevista Simulada">Mock Interview<span class="app-nav-soon-tag" data-en="Soon" data-es="Pronto">Soon</span></a>
         <a href="reading-writing.html" data-en="Reading &amp; Writing" data-es="Lectura y Escritura">Reading &amp; Writing</a>
-      </li>
-      <li class="app-nav-group">
-        <h4 data-en="Background" data-es="Contexto">Background</h4>
-        <a href="know-your-country.html" data-en="Know Your Country" data-es="Conoce Tu País">Know Your Country</a>
-        <a href="documents.html" data-en="Documents" data-es="Documentos">Documents</a>
-        <a href="vocabulary.html" data-en="Vocabulary" data-es="Vocabulario">Vocabulary</a>
       </li>
       <li class="app-nav-group">
         <h4 data-en="More" data-es="Más">More</h4>
@@ -131,6 +161,16 @@
         <div class="lang-toggle">
           <button data-lang-btn="en" class="active">EN</button>
           <button data-lang-btn="es">ES</button>
+        </div>
+        <div class="notif-bell-wrap">
+          <button class="notif-bell-btn" id="notif-bell-btn" aria-label="Notifications" aria-expanded="false" aria-controls="notif-bell-panel">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span class="notif-bell-dot" id="notif-bell-dot" hidden></span>
+          </button>
+          <div class="notif-bell-panel" id="notif-bell-panel" hidden>
+            <div class="notif-bell-header" data-en="What's Next" data-es="Qué Sigue">What's Next</div>
+            <div id="notif-bell-list"><p class="small muted" style="padding:14px 16px;">Loading…</p></div>
+          </div>
         </div>
         <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link" data-en="Log Out" data-es="Cerrar Sesión">Log Out</a>
       </div>
@@ -156,39 +196,51 @@
       </div>
 
       <div class="grid grid-3" style="margin-bottom:28px; gap:20px;">
-        <div class="card progress-stat-card">
+        <a href="dashboard.html" class="card progress-stat-card progress-clickable-card">
           <span class="eyebrow" data-en="COURSE COMPLETION" data-es="CURSO COMPLETADO">COURSE COMPLETION</span>
           <div class="stat-value" id="stat-course-pct">0%</div>
           <div class="progress-bar" style="margin-bottom:8px;"><div class="progress-bar-fill" id="stat-course-bar" style="width:0%;"></div></div>
           <p class="stat-sub" id="stat-course-sub"></p>
-        </div>
-        <div class="card progress-stat-card">
+          <p class="stat-cta" data-en="Continue the course →" data-es="Continuar el curso →">Continue the course →</p>
+        </a>
+        <a href="dashboard.html" class="card progress-stat-card progress-clickable-card">
           <span class="eyebrow" data-en="MODULE QUIZ AVERAGE" data-es="PROMEDIO DE CUESTIONARIOS">MODULE QUIZ AVERAGE</span>
           <div class="stat-value" id="stat-quiz-avg">–</div>
           <p class="stat-sub" id="stat-quiz-sub"></p>
-        </div>
-        <div class="card progress-stat-card">
+          <p class="stat-cta" data-en="Retake a module quiz →" data-es="Repetir un cuestionario →">Retake a module quiz →</p>
+        </a>
+        <a href="daily-practice.html" class="card progress-stat-card progress-clickable-card">
           <span class="eyebrow" data-en="STUDY STREAK" data-es="RACHA DE ESTUDIO">STUDY STREAK</span>
           <div class="stat-value" id="stat-streak">0 <span style="font-size:1rem; font-weight:500;" data-en="days" data-es="días">days</span></div>
           <p class="stat-sub" id="stat-streak-sub" data-en="Complete a lesson to start your streak" data-es="Completa una lección para comenzar tu racha">Complete a lesson to start your streak</p>
-        </div>
+          <p class="stat-cta" data-en="Do today's practice →" data-es="Hacer la práctica de hoy →">Do today's practice →</p>
+        </a>
       </div>
 
       <div class="grid grid-2" style="gap:20px;">
-        <div class="card card-pad">
+        <a href="flashcards.html" class="card card-pad progress-clickable-card">
           <h3 data-en="Flashcard Mastery" data-es="Dominio de Tarjetas de Estudio">Flashcard Mastery</h3>
           <p class="small muted" style="margin-bottom:14px;" data-en="Questions you've answered correctly in Practice Interview sessions, out of each official question bank." data-es="Preguntas que has respondido correctamente en las sesiones de Entrevista de Práctica, del total de cada banco oficial de preguntas.">Questions you've answered correctly in Practice Interview sessions, out of each official question bank.</p>
           <div id="flashcard-mastery-rows">
             <p class="small muted">Loading…</p>
           </div>
-        </div>
+          <p class="stat-cta" data-en="Study flashcards →" data-es="Estudiar tarjetas →">Study flashcards →</p>
+        </a>
 
-        <div class="card card-pad">
+        <a href="practice-quiz.html" class="card card-pad progress-clickable-card">
           <h3 data-en="Practice Interview History" data-es="Historial de Entrevista de Práctica">Practice Interview History</h3>
           <p class="small muted" style="margin-bottom:14px;" id="ph-summary">Loading…</p>
           <div id="ph-history-rows"></div>
-          <a href="practice-quiz.html" class="btn btn-ghost btn-sm" style="margin-top:16px;" data-en="Take a Practice Interview →" data-es="Tomar una Entrevista de Práctica →">Take a Practice Interview →</a>
-        </div>
+          <span class="btn btn-ghost btn-sm" style="margin-top:16px;" data-en="Take a Practice Interview →" data-es="Tomar una Entrevista de Práctica →">Take a Practice Interview →</span>
+        </a>
+      </div>
+
+      <div class="doc-section-heading" style="margin-top:32px;">
+        <h2 data-en="Achievements" data-es="Logros">Achievements</h2>
+        <span class="small muted" id="achievements-count">0 / 0</span>
+      </div>
+      <div class="achievements-grid" id="achievements-grid">
+        <p class="small muted">Loading…</p>
       </div>
 
     </div>

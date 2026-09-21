@@ -3,6 +3,11 @@
    Language toggle, mobile nav, accordion, quiz interactions.
    ========================================================================== */
 
+// ---- Sophisticated icon constants (replace emoji site-wide) -------------
+const ICON_SUN_SVG = '<svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+const ICON_MOON_SVG = '<svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
+const ICON_CHAT_SVG = '<svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>';
+
 // ---- Reduced-motion-aware scrolling -------------------------------------
 // CSS transitions already respect prefers-reduced-motion via the media
 // query in styles.css, but the handful of places that trigger a JS-driven
@@ -144,7 +149,7 @@ function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
   try { localStorage.setItem('ciudadanoready-theme', theme); } catch (e) {}
   document.querySelectorAll('.theme-toggle-btn').forEach((btn) => {
-    btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+    btn.innerHTML = theme === 'dark' ? ICON_SUN_SVG : ICON_MOON_SVG;
     btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
   });
   document.querySelectorAll('[data-theme-radio]').forEach((input) => {
@@ -603,15 +608,24 @@ function goToStep(stepNumber) {
 // ---- Signup (real Supabase auth account, then real Stripe Checkout) ----
 document.addEventListener('DOMContentLoaded', () => {
   // Pre-select whichever plan the visitor clicked on the homepage/pricing
-  // section (?plan=monthly or ?plan=2year), if they landed here that way.
+  // section (?plan=2year), if they landed here that way. Only one plan
+  // exists currently, but this stays generic in case a second plan returns.
   const planOptions = document.querySelectorAll('.plan-option');
   if (planOptions.length) {
     const requestedPlan = new URLSearchParams(window.location.search).get('plan');
-    if (requestedPlan === 'monthly' || requestedPlan === '2year') {
+    if (requestedPlan === '2year') {
       planOptions.forEach((p) => {
         p.classList.toggle('selected', p.getAttribute('data-plan') === requestedPlan);
       });
     }
+  }
+
+  // Pre-fill the referral code field from a shared link, e.g.
+  // account.html?ref=RJXK482 (see the "Refer a Friend" card in Settings).
+  const referralFieldEl = document.querySelector('#signup-referral');
+  if (referralFieldEl) {
+    const refFromUrl = new URLSearchParams(window.location.search).get('ref');
+    if (refFromUrl) referralFieldEl.value = refFromUrl.toUpperCase();
   }
 
   const signupForm = document.querySelector('#signup-form');
@@ -627,8 +641,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const name = document.querySelector('#signup-name').value;
     const email = document.querySelector('#signup-email').value;
     const password = document.querySelector('#signup-password').value;
+    const referralInput = document.querySelector('#signup-referral');
+    const referralCode = referralInput ? referralInput.value.trim() : '';
     const selectedPlan = document.querySelector('.plan-option.selected');
-    const plan = selectedPlan ? selectedPlan.getAttribute('data-plan') : 'monthly';
+    const plan = selectedPlan ? selectedPlan.getAttribute('data-plan') : '2year';
 
     btn.disabled = true;
     btn.textContent = 'Creating your account…';
@@ -642,7 +658,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // still exists and recoverably shows a "finish signing up" banner on
     // next login instead of being lost.
     const { data: createData, error: createError } = await supabaseClient.functions.invoke('create-account', {
-      body: { full_name: name, email: email, password: password, plan: plan },
+      body: { full_name: name, email: email, password: password, plan: plan, referral_code: referralCode || null },
     });
 
     if (createError || !createData || !createData.ok) {
@@ -826,7 +842,7 @@ function initFaqBotWidget() {
   bubble.id = 'faq-bot-bubble';
   bubble.type = 'button';
   bubble.setAttribute('aria-label', 'Chat with CiudadanoReady');
-  bubble.textContent = '💬';
+  bubble.innerHTML = ICON_CHAT_SVG;
 
   const panel = document.createElement('div');
   panel.id = 'faq-bot-panel';

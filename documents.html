@@ -24,7 +24,12 @@
   .doc-card:hover { border-color: var(--forest); border-left-color: var(--forest); transform: translateX(2px); }
   .doc-card-icon { flex: none; width: 44px; height: 44px; border-radius: 10px; background: #F3F8F5; color: var(--forest); display: flex; align-items: center; justify-content: center; }
   .doc-card-icon svg { width: 20px; height: 20px; }
+  /* Light per-category tint so the list isn't a wall of identical green
+     squares once there's more than one or two documents. */
+  .doc-card-icon.cat-ocean { background: #EAF3F8; color: var(--ocean); }
+  .doc-card-icon.cat-slate { background: #F1F1EE; color: var(--slate); }
   .doc-card-body { flex: 1; min-width: 0; }
+  .doc-card-badge { margin-bottom: 6px; }
   .doc-card-body h3 { margin: 0 0 4px; font-size: 1.05rem; }
   .doc-card-body p { margin: 0; }
   .doc-card-arrow { flex: none; color: var(--slate); opacity: 0.6; transition: transform 0.15s ease; }
@@ -65,7 +70,7 @@
     <ul class="app-nav">
       <li class="app-nav-group">
         <h4 data-en="Overview" data-es="Resumen">Overview</h4>
-        <a href="dashboard.html" data-en="Continue Learning" data-es="Continuar Aprendiendo">Continue Learning</a>
+        <a href="dashboard.html" data-en="Dashboard" data-es="Panel">Dashboard</a>
         <a href="progress.html" data-en="My Progress" data-es="Mi Progreso">My Progress</a>
       </li>
       <li class="app-nav-group">
@@ -75,17 +80,17 @@
         </ul>
       </li>
       <li class="app-nav-group">
+        <h4 data-en="Background" data-es="Contexto">Background</h4>
+        <a href="know-your-country.html" data-en="Know Your Country" data-es="Conoce Tu País">Know Your Country</a>
+        <a href="vocabulary.html" data-en="Vocabulary" data-es="Vocabulario">Vocabulary</a>
+        <a href="documents.html" class="active" data-en="Documents" data-es="Documentos">Documents</a>
+      </li>
+      <li class="app-nav-group">
         <h4 data-en="Practice" data-es="Práctica">Practice</h4>
         <a href="daily-practice.html" data-en="10 Minute English" data-es="10 Minutos de Inglés">10 Minute English</a>
         <a href="flashcards.html" data-en="Flashcards" data-es="Tarjetas de Estudio">Flashcards</a>
-        <a href="mock-interview.html" data-en="Mock Interview" data-es="Entrevista Simulada">Mock Interview</a>
+        <a href="mock-interview.html" data-en="Mock Interview" data-es="Entrevista Simulada">Mock Interview<span class="app-nav-soon-tag" data-en="Soon" data-es="Pronto">Soon</span></a>
         <a href="reading-writing.html" data-en="Reading &amp; Writing" data-es="Lectura y Escritura">Reading &amp; Writing</a>
-      </li>
-      <li class="app-nav-group">
-        <h4 data-en="Background" data-es="Contexto">Background</h4>
-        <a href="know-your-country.html" data-en="Know Your Country" data-es="Conoce Tu País">Know Your Country</a>
-        <a href="documents.html" class="active" data-en="Documents" data-es="Documentos">Documents</a>
-        <a href="vocabulary.html" data-en="Vocabulary" data-es="Vocabulario">Vocabulary</a>
       </li>
       <li class="app-nav-group">
         <h4 data-en="More" data-es="Más">More</h4>
@@ -108,7 +113,17 @@
         <div class="lang-toggle">
           <button data-lang-btn="en" class="active">EN</button>
           <button data-lang-btn="es">ES</button>
-        </div>        <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link" data-en="Log Out" data-es="Cerrar Sesión">Log Out</a>
+        </div>        <div class="notif-bell-wrap">
+          <button class="notif-bell-btn" id="notif-bell-btn" aria-label="Notifications" aria-expanded="false" aria-controls="notif-bell-panel">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span class="notif-bell-dot" id="notif-bell-dot" hidden></span>
+          </button>
+          <div class="notif-bell-panel" id="notif-bell-panel" hidden>
+            <div class="notif-bell-header" data-en="What's Next" data-es="Qué Sigue">What's Next</div>
+            <div id="notif-bell-list"><p class="small muted" style="padding:14px 16px;">Loading…</p></div>
+          </div>
+        </div>
+        <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link" data-en="Log Out" data-es="Cerrar Sesión">Log Out</a>
       </div>
     </div>
 

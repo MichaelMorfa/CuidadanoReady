@@ -52,6 +52,20 @@
   .daily-practice-card { background: #F3F8F5; border-color: var(--forest); }
   .daily-practice-card.done { background: var(--white); border-color: var(--line); }
   .daily-practice-card .btn-ghost { border-color: var(--forest); color: var(--forest); }
+
+  /* Shown in place of "Continue Learning" once every lesson is done.
+     Deliberately not a plain success-green card: the message is "well done,
+     but this isn't the finish line," so it borrows the same warm amber the
+     site already uses for cautionary notices (disclaimers, incorrect-answer
+     states) rather than looking like a simple checkmark/celebration card. */
+  .course-complete-card { background: #FBF6EC; border-color: #B08A2E; }
+  [data-theme="dark"] .course-complete-card { background: rgba(176,138,46,0.1); }
+
+  /* Turns the top-left stat card into a real entry point to the My Progress
+     page (previously only reachable from the sidebar). */
+  a.stat-card-link { display:block; color:inherit; text-decoration:none; }
+  a.stat-card-link:hover { border-color: var(--forest); }
+  a.stat-card-link .stat-cta { font-size:0.76rem; font-weight:600; color: var(--forest); margin-top:8px; }
 </style>
 <meta name="description" content="Your Ciudadano Ready member dashboard.">
 <meta name="robots" content="noindex">
@@ -79,7 +93,7 @@
     <ul class="app-nav">
       <li class="app-nav-group">
         <h4 data-en="Overview" data-es="Resumen">Overview</h4>
-        <a href="dashboard.html" class="active" data-en="Continue Learning" data-es="Continuar Aprendiendo">Continue Learning</a>
+        <a href="dashboard.html" class="active" data-en="Dashboard" data-es="Panel">Dashboard</a>
         <a href="progress.html" data-en="My Progress" data-es="Mi Progreso">My Progress</a>
       </li>
       <li class="app-nav-group">
@@ -89,17 +103,17 @@
         </ul>
       </li>
       <li class="app-nav-group">
+        <h4 data-en="Background" data-es="Contexto">Background</h4>
+        <a href="know-your-country.html" data-en="Know Your Country" data-es="Conoce Tu País">Know Your Country</a>
+        <a href="vocabulary.html" data-en="Vocabulary" data-es="Vocabulario">Vocabulary</a>
+        <a href="documents.html" data-en="Documents" data-es="Documentos">Documents</a>
+      </li>
+      <li class="app-nav-group">
         <h4 data-en="Practice" data-es="Práctica">Practice</h4>
         <a href="daily-practice.html" data-en="10 Minute English" data-es="10 Minutos de Inglés">10 Minute English</a>
         <a href="flashcards.html" data-en="Flashcards" data-es="Tarjetas de Estudio">Flashcards</a>
-        <a href="mock-interview.html" data-en="Mock Interview" data-es="Entrevista Simulada">Mock Interview</a>
+        <a href="mock-interview.html" data-en="Mock Interview" data-es="Entrevista Simulada">Mock Interview<span class="app-nav-soon-tag" data-en="Soon" data-es="Pronto">Soon</span></a>
         <a href="reading-writing.html" data-en="Reading &amp; Writing" data-es="Lectura y Escritura">Reading &amp; Writing</a>
-      </li>
-      <li class="app-nav-group">
-        <h4 data-en="Background" data-es="Contexto">Background</h4>
-        <a href="know-your-country.html" data-en="Know Your Country" data-es="Conoce Tu País">Know Your Country</a>
-        <a href="documents.html" data-en="Documents" data-es="Documentos">Documents</a>
-        <a href="vocabulary.html" data-en="Vocabulary" data-es="Vocabulario">Vocabulary</a>
       </li>
       <li class="app-nav-group">
         <h4 data-en="More" data-es="Más">More</h4>
@@ -122,7 +136,17 @@
         <div class="lang-toggle">
           <button data-lang-btn="en" class="active">EN</button>
           <button data-lang-btn="es">ES</button>
-        </div>        <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link" data-en="Log Out" data-es="Cerrar Sesión">Log Out</a>
+        </div>        <div class="notif-bell-wrap">
+          <button class="notif-bell-btn" id="notif-bell-btn" aria-label="Notifications" aria-expanded="false" aria-controls="notif-bell-panel">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span class="notif-bell-dot" id="notif-bell-dot" hidden></span>
+          </button>
+          <div class="notif-bell-panel" id="notif-bell-panel" hidden>
+            <div class="notif-bell-header" data-en="What's Next" data-es="Qué Sigue">What's Next</div>
+            <div id="notif-bell-list"><p class="small muted" style="padding:14px 16px;">Loading…</p></div>
+          </div>
+        </div>
+        <a href="index.html" class="btn btn-ghost btn-sm" id="logout-link" data-en="Log Out" data-es="Cerrar Sesión">Log Out</a>
       </div>
     </div>
 
@@ -147,7 +171,6 @@
           <p class="small" id="billing-banner-message" style="max-width:440px; margin:0 auto 20px;">Your account is set up, but you haven't completed payment yet. Choose a plan to unlock the full course.</p>
           <div id="billing-banner-plan-buttons" class="flex gap-16 justify-center" style="flex-wrap:wrap;">
             <button class="btn btn-primary" id="billing-choose-2year">2-Year Plan – $199.99</button>
-            <button class="btn btn-ghost" id="billing-choose-monthly">Monthly – $19.99/mo</button>
           </div>
           <button class="btn btn-ghost btn-sm" id="billing-manage-link" style="display:none; margin-top:16px;">Manage Billing</button>
         </div>
@@ -163,7 +186,7 @@
 
       <div id="dashboard-main-content" style="display:none;">
         <div class="grid grid-3" style="margin-bottom:28px;">
-          <div class="card stat-card"><span class="eyebrow" data-en="OVERALL PROGRESS" data-es="PROGRESO GENERAL">OVERALL PROGRESS</span><div class="stat-value" id="stat-progress-pct">0%</div><div class="progress-bar" style="margin-top:10px;"><div class="progress-bar-fill" id="stat-progress-bar" style="width:0%;"></div></div></div>
+          <a href="progress.html" class="card stat-card stat-card-link"><span class="eyebrow" data-en="COURSE PROGRESS" data-es="PROGRESO DEL CURSO">COURSE PROGRESS</span><div class="stat-value" id="stat-progress-pct">0%</div><div class="progress-bar" style="margin-top:10px;"><div class="progress-bar-fill" id="stat-progress-bar" style="width:0%;"></div></div><p class="stat-cta" data-en="See My Progress →" data-es="Ver Mi Progreso →">See My Progress →</p></a>
           <div class="card stat-card"><span class="eyebrow" data-en="CURRENT STAGE" data-es="ETAPA ACTUAL">CURRENT STAGE</span><div class="stat-value" style="font-size:1.4rem;" id="stat-current-stage">–</div><span class="stat-delta" id="stat-current-lesson-count"></span></div>
           <div class="card stat-card"><span class="eyebrow" data-en="PRACTICE STREAK" data-es="RACHA DE PRÁCTICA">PRACTICE STREAK</span><div class="stat-value" id="stat-streak">0 days</div><span class="stat-delta" id="stat-streak-note" data-en="Complete a lesson to start your streak" data-es="Completa una lección para comenzar tu racha">Complete a lesson to start your streak</span></div>
         </div>
@@ -176,6 +199,17 @@
               <p class="small" style="margin:0;" id="continue-lesson-meta"></p>
             </div>
             <a href="#" class="btn btn-primary" id="continue-lesson-link" data-en="Resume Lesson →" data-es="Reanudar Lección →">Resume Lesson →</a>
+          </div>
+        </div>
+
+        <div class="card card-pad course-complete-card" style="margin-bottom:28px; display:none;" id="dashboard-course-complete-card">
+          <span class="eyebrow" data-en="COURSE COMPLETE" data-es="CURSO COMPLETADO">COURSE COMPLETE</span>
+          <h3 style="margin:6px 0 8px;" data-en="You've finished the course. Nice work." data-es="Terminaste el curso. Bien hecho.">You've finished the course. Nice work.</h3>
+          <p class="small" style="margin:0 0 4px; max-width:640px;" data-en="Finishing the course means you've learned the material, but it's not the same as being ready to sit in front of a USCIS officer. This course is the introduction to the full Ciudadano Ready package, built to get you truly interview-ready." data-es="Terminar el curso significa que aprendiste el material, pero no es lo mismo que estar listo para sentarte frente a un oficial de USCIS. Este curso es la introducción al paquete completo de Ciudadano Ready, creado para dejarte verdaderamente listo para tu entrevista.">Finishing the course means you've learned the material, but it's not the same as being ready to sit in front of a USCIS officer. This course is the introduction to the full Ciudadano Ready package, built to get you truly interview-ready.</p>
+          <p class="small muted" style="margin:0;" data-en="Keep your Citizenship Study Score climbing with flashcards, 10 Minute English, and Reading & Writing practice below." data-es="Sigue subiendo tu Puntaje de Preparación para la Ciudadanía con las tarjetas de estudio, 10 Minutos de Inglés, y la práctica de Lectura y Escritura abajo.">Keep your Citizenship Study Score climbing with flashcards, 10 Minute English, and Reading & Writing practice below.</p>
+          <div class="flex gap-16" style="margin-top:20px; flex-wrap:wrap;">
+            <a href="progress.html" class="btn btn-primary" data-en="See My Progress" data-es="Ver Mi Progreso">See My Progress</a>
+            <a href="daily-practice.html" class="btn btn-ghost" data-en="Keep Practicing" data-es="Seguir Practicando">Keep Practicing</a>
           </div>
         </div>
 
