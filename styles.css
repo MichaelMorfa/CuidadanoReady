@@ -415,8 +415,8 @@ a.stamp-circle:hover, a.stamp-circle:focus-visible { transform: scale(1.08); box
    card instead of bunching up on the left — circles stay a fixed size,
    the connectors grow to fill whatever space is left. Used by the
    homepage hero roadmap. */
-#hero-stamp-path { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
-#hero-stamp-path .stamp-connector { flex: 1 1 auto; min-width: 12px; }
+#hero-stamp-path { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; align-items: flex-start; }
+#hero-stamp-path .stamp-connector { flex: 1 1 auto; min-width: 12px; margin-top: 22px; }
 
 /* On desktop, give the roadmap card more of the hero row so all 7 steps
    fit without the horizontal scroll above being needed. The 50/50 split
@@ -430,9 +430,9 @@ a.stamp-circle:hover, a.stamp-circle:focus-visible { transform: scale(1.08); box
 @media (min-width: 1024px) {
   .hero .grid-2 { grid-template-columns: 1fr 1.6fr; }
   #hero-stamp-path .stamp-circle { width: 38px; height: 38px; font-size: 0.78rem; }
-  #hero-stamp-path .stamp-item { width: 62px; }
+  #hero-stamp-path .stamp-item { width: 74px; }
   #hero-stamp-path .stamp-label { font-size: 0.66rem; white-space: normal; line-height: 1.25; }
-  #hero-stamp-path .stamp-connector { min-width: 8px; }
+  #hero-stamp-path .stamp-connector { min-width: 8px; margin-top: 19px; }
 }
 
 /* --------------------------------------------------------------------

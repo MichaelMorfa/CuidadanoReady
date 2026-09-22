@@ -42,7 +42,11 @@ function pass(msg) {
 
 function walk(dir, exts, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name.startsWith('.') || entry.name === 'node_modules' || entry.name === 'scripts') continue;
+    // email-templates/ holds Supabase Auth email templates (Go template
+    // syntax like {{ .ConfirmationURL }}, pasted manually into the Supabase
+    // dashboard) -- these are never deployed as site pages/routes, so the
+    // link/asset and bilingual checks below don't apply to them.
+    if (entry.name.startsWith('.') || entry.name === 'node_modules' || entry.name === 'scripts' || entry.name === 'email-templates') continue;
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) walk(full, exts, out);
     else if (exts.includes(path.extname(entry.name))) out.push(full);
