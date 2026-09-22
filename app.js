@@ -183,7 +183,7 @@ window.startCheckoutRedirect = async function startCheckoutRedirect(plan, button
       body: { plan: plan },
     });
     if (error || !data || !data.url) {
-      throw new Error((data && data.error) || (error && error.message) || 'Could not start checkout.');
+      throw new Error((data && data.error) || await getEdgeFunctionErrorMessage(error, 'Could not start checkout.'));
     }
     window.location.href = data.url;
   } catch (err) {
@@ -205,7 +205,7 @@ window.openBillingPortal = async function openBillingPortal(buttonEl) {
   try {
     const { data, error } = await supabaseClient.functions.invoke('create-billing-portal-session', {});
     if (error || !data || !data.url) {
-      throw new Error((data && data.error) || (error && error.message) || 'Could not open billing portal.');
+      throw new Error((data && data.error) || await getEdgeFunctionErrorMessage(error, 'Could not open billing portal.'));
     }
     window.location.href = data.url;
   } catch (err) {
@@ -665,7 +665,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.disabled = false;
       btn.textContent = original;
       if (errorEl) {
-        errorEl.textContent = (createData && createData.error) || (createError && createError.message) || 'Something went wrong creating your account.';
+        errorEl.textContent = (createData && createData.error) || await getEdgeFunctionErrorMessage(createError, 'Something went wrong creating your account. Please try again.');
         errorEl.style.display = 'block';
       }
       return;

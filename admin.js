@@ -1788,7 +1788,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const { data, error } = await supabaseClient.functions.invoke('admin-list-charges', { body: { user_id: userId } });
     if (error || !data || !data.ok) {
-      listEl.innerHTML = `<p class="empty-state">Could not load charges: ${escapeHtml((data && data.error) || (error && error.message) || 'Unknown error')}</p>`;
+      const msg = (data && data.error) || await getEdgeFunctionErrorMessage(error, 'Unknown error');
+      listEl.innerHTML = `<p class="empty-state">Could not load charges: ${escapeHtml(msg)}</p>`;
       return;
     }
     if (!data.charges.length) {
@@ -1868,7 +1869,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (error || !data || !data.ok) {
         if (errorEl) {
-          errorEl.textContent = 'Refund failed: ' + ((data && data.error) || (error && error.message) || 'Unknown error');
+          errorEl.textContent = 'Refund failed: ' + ((data && data.error) || await getEdgeFunctionErrorMessage(error, 'Unknown error'));
           errorEl.style.display = 'block';
         }
         return;
