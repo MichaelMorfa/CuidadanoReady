@@ -1877,7 +1877,7 @@ async function initPracticeQuizPage() {
   });
 }
 
-// ---- Mock Interview (video-based interview simulation, placeholder content) --
+// ---- Mock Interview (video-based interview simulation) ----------------------
 // Each question is designed to eventually pair with a short video clip the
 // founder records personally (video_url). Until real clips exist, video_url
 // stays pointed at a placeholder path and the UI shows a clean placeholder
@@ -1887,34 +1887,42 @@ async function initPracticeQuizPage() {
 // themselves against correct_answer; open-ended ones can't be graded by a
 // script (same as a real interview, where a person, not a program, judges a
 // spoken answer), so the member self-assesses after reading the explanation.
-// This pass is front-end only, in-memory session state, no Supabase writes;
-// see the TODO inside finishMockInterview() for where an attempts-table
-// insert would go once real content ships.
+// Explanations are educational only: they explain why a question is asked or
+// how it relates to general, publicly published naturalization requirements.
+// They never tell a member what their own answer means for their eligibility
+// or the legal consequences of their personal circumstances -- for anything
+// case-specific, the copy points the member to a licensed immigration
+// attorney instead. This pass is front-end only, in-memory session state, no
+// Supabase writes; see the TODO inside finishMockInterview() for where an
+// attempts-table insert would go once real content ships. This array is only
+// a fallback in case the mock_interview_questions table fetch fails; the
+// live content (kept in sync with this fallback) lives in that table and is
+// editable from the admin panel.
 const MOCK_INTERVIEW_QUESTIONS = [
   {
     id: 1, type: 'open_ended',
-    question: 'Placeholder interview question 1: Tell me about yourself and why you want to become a U.S. citizen.',
-    question_es: 'Pregunta de entrevista de ejemplo 1: Cuénteme sobre usted y por qué quiere convertirse en ciudadano estadounidense.',
+    question: 'Tell me about yourself and why you want to become a U.S. citizen.',
+    question_es: 'Cuénteme sobre usted y por qué quiere convertirse en ciudadano estadounidense.',
     video_url: '/placeholder-video.mp4',
     options: [],
     correct_answer: null,
-    explanation: "Placeholder explanation: there's no single \"correct\" answer here. The officer is listening for a clear, honest, personal response.",
-    explanation_es: 'Explicación de ejemplo: no hay una única respuesta "correcta" aquí. El oficial busca una respuesta clara, honesta y personal.',
+    explanation: "There's no single scripted answer here. The officer is listening for a clear, honest, and personal response — this is good practice for speaking about your own background and motivations in English.",
+    explanation_es: 'No hay una única respuesta guionada aquí. El oficial busca una respuesta clara, honesta y personal; es una buena práctica para hablar de tu propia trayectoria y motivaciones en inglés.',
   },
   {
-    id: 2, type: 'yes_no',
-    question: 'Placeholder interview question 2: Have you ever been arrested or convicted of a crime?',
-    question_es: '¿Alguna vez ha sido arrestado o condenado por un delito? (pregunta de entrevista de ejemplo 2)',
+    id: 2, type: 'open_ended',
+    question: 'Have you ever been arrested or convicted of a crime?',
+    question_es: '¿Alguna vez ha sido arrestado o condenado por un delito?',
     video_url: '/placeholder-video.mp4',
     options: [],
-    correct_answer: 'no',
-    explanation: 'Placeholder explanation: this is a real N-400 background question. Answer truthfully; a "yes" doesn\'t automatically disqualify you, but it must be disclosed.',
-    explanation_es: 'Explicación de ejemplo: esta es una pregunta real de antecedentes del N-400. Responda con la verdad; un "sí" no lo descalifica automáticamente, pero debe declararse.',
+    correct_answer: null,
+    explanation: "This is one of the background questions that appears on the actual Form N-400. Practice answering honestly and clearly; USCIS reviews each applicant's full circumstances individually, so if this question applies to you, you should discuss it with a licensed immigration attorney before your interview.",
+    explanation_es: 'Esta es una de las preguntas de antecedentes que aparece en el Formulario N-400 real. Practica respondiendo con honestidad y claridad; USCIS evalúa la situación de cada solicitante de forma individual, así que si esta pregunta aplica a tu caso, deberías hablarlo con un abogado de inmigración con licencia antes de tu entrevista.',
   },
   {
     id: 3, type: 'multiple_choice',
-    question: 'Placeholder interview question 3: What is the supreme law of the land?',
-    question_es: 'Pregunta de entrevista de ejemplo 3: ¿Cuál es la ley suprema del país?',
+    question: 'What is the supreme law of the land?',
+    question_es: '¿Cuál es la ley suprema del país?',
     video_url: '/placeholder-video.mp4',
     options: [
       { value: 'a', en: 'The Declaration of Independence', es: 'La Declaración de Independencia' },
@@ -1923,33 +1931,33 @@ const MOCK_INTERVIEW_QUESTIONS = [
       { value: 'd', en: 'The Federalist Papers', es: 'Los Documentos Federalistas' },
     ],
     correct_answer: 'b',
-    explanation: 'Placeholder explanation: a real 2025/2008 civics test question, taken from the official USCIS question bank.',
-    explanation_es: 'Explicación de ejemplo: una pregunta real del examen cívico 2025/2008, tomada del banco oficial de preguntas de USCIS.',
+    explanation: 'This is one of the official civics test questions from the USCIS question bank.',
+    explanation_es: 'Esta es una de las preguntas oficiales del examen cívico del banco de preguntas de USCIS.',
   },
   {
     id: 4, type: 'open_ended',
-    question: 'Placeholder interview question 4: Describe your current job or how you support yourself financially.',
-    question_es: 'Pregunta de entrevista de ejemplo 4: Describa su trabajo actual o cómo se mantiene económicamente.',
+    question: 'Describe your current job or how you support yourself financially.',
+    question_es: 'Describa su trabajo actual o cómo se mantiene económicamente.',
     video_url: '/placeholder-video.mp4',
     options: [],
     correct_answer: null,
-    explanation: "Placeholder explanation: keep this factual and consistent with what's on your N-400. Officers often cross-check this against your application.",
-    explanation_es: 'Explicación de ejemplo: mantenga esto factual y consistente con lo que aparece en su N-400. Los oficiales suelen verificar esto con su solicitud.',
+    explanation: "Keep your answer factual and consistent with what's on your N-400. Interview officers often ask about the information you've provided on your application, so this is good practice for describing your circumstances clearly in English.",
+    explanation_es: 'Mantén tu respuesta factual y consistente con lo que indicaste en tu N-400. Los oficiales de entrevista suelen preguntar sobre la información que diste en tu solicitud, así que es una buena práctica para describir tu situación con claridad en inglés.',
   },
   {
     id: 5, type: 'yes_no',
-    question: 'Placeholder interview question 5: Are you willing to take the full Oath of Allegiance to the United States?',
-    question_es: 'Pregunta de entrevista de ejemplo 5: ¿Está dispuesto a prestar el Juramento de Lealtad completo a los Estados Unidos?',
+    question: 'Are you willing to take the full Oath of Allegiance to the United States?',
+    question_es: '¿Está dispuesto a prestar el Juramento de Lealtad completo a los Estados Unidos?',
     video_url: '/placeholder-video.mp4',
     options: [],
     correct_answer: 'yes',
-    explanation: 'Placeholder explanation: asked directly at the real interview, and again at the oath ceremony itself.',
-    explanation_es: 'Explicación de ejemplo: se pregunta directamente en la entrevista real, y de nuevo en la ceremonia de juramentación.',
+    explanation: 'This is asked directly at the naturalization interview, and again at the oath ceremony itself.',
+    explanation_es: 'Esto se pregunta directamente en la entrevista de naturalización, y de nuevo en la ceremonia de juramentación.',
   },
   {
     id: 6, type: 'multiple_choice',
-    question: 'Placeholder interview question 6: How many amendments does the Constitution have?',
-    question_es: 'Pregunta de entrevista de ejemplo 6: ¿Cuántas enmiendas tiene la Constitución?',
+    question: 'How many amendments does the Constitution have?',
+    question_es: '¿Cuántas enmiendas tiene la Constitución?',
     video_url: '/placeholder-video.mp4',
     options: [
       { value: 'a', en: '17', es: '17' },
@@ -1958,33 +1966,33 @@ const MOCK_INTERVIEW_QUESTIONS = [
       { value: 'd', en: '30', es: '30' },
     ],
     correct_answer: 'c',
-    explanation: "Placeholder explanation: another real civics test question, worth memorizing exactly since it's a specific number.",
-    explanation_es: 'Explicación de ejemplo: otra pregunta real del examen cívico, vale la pena memorizarla con exactitud porque es un número específico.',
+    explanation: "This is one of the official civics test questions; it's worth memorizing the exact number since it's asked as a specific fact.",
+    explanation_es: 'Esta es una de las preguntas oficiales del examen cívico; vale la pena memorizar el número exacto porque se pregunta como un dato específico.',
   },
   {
     id: 7, type: 'open_ended',
-    question: 'Placeholder interview question 7: Have you traveled outside the United States since becoming a permanent resident? Tell me about your trips.',
-    question_es: 'Pregunta de entrevista de ejemplo 7: ¿Ha viajado fuera de los Estados Unidos desde que se convirtió en residente permanente? Cuénteme sobre sus viajes.',
+    question: 'Have you traveled outside the United States since becoming a permanent resident? Tell me about your trips.',
+    question_es: '¿Ha viajado fuera de los Estados Unidos desde que se convirtió en residente permanente? Cuénteme sobre sus viajes.',
     video_url: '/placeholder-video.mp4',
     options: [],
     correct_answer: null,
-    explanation: 'Placeholder explanation: have your dates ready. This ties directly to your continuous residence and physical presence eligibility.',
-    explanation_es: 'Explicación de ejemplo: tenga sus fechas listas. Esto se relaciona directamente con su elegibilidad de residencia continua y presencia física.',
+    explanation: 'Practice describing your travel history clearly, with approximate dates. Officers ask this because continuous residence and physical presence are both general naturalization requirements; if your travel history is complicated, a licensed immigration attorney can help you understand how it may relate to your situation.',
+    explanation_es: 'Practica describir tu historial de viajes con claridad, incluyendo fechas aproximadas. Los oficiales preguntan esto porque la residencia continua y la presencia física son requisitos generales de la naturalización; si tu historial de viajes es complicado, un abogado de inmigración con licencia puede ayudarte a entender cómo podría relacionarse con tu situación.',
   },
   {
-    id: 8, type: 'yes_no',
-    question: 'Placeholder interview question 8: Have you registered with the Selective Service, if required?',
-    question_es: 'Pregunta de entrevista de ejemplo 8: ¿Se ha registrado en el Servicio Selectivo, si se le requiere?',
+    id: 8, type: 'open_ended',
+    question: 'Have you registered with the Selective Service, if required?',
+    question_es: '¿Se ha registrado en el Servicio Selectivo, si se le requiere?',
     video_url: '/placeholder-video.mp4',
     options: [],
-    correct_answer: 'yes',
-    explanation: 'Placeholder explanation: applies to most men who lived in the U.S. as permanent residents between ages 18 and 26.',
-    explanation_es: 'Explicación de ejemplo: aplica a la mayoría de los hombres que vivieron en EE. UU. como residentes permanentes entre los 18 y los 26 años.',
+    correct_answer: null,
+    explanation: 'This generally applies to men who lived in the U.S. as permanent residents between ages 18 and 26.',
+    explanation_es: 'Esto generalmente aplica a los hombres que vivieron en EE. UU. como residentes permanentes entre los 18 y los 26 años.',
   },
   {
     id: 9, type: 'multiple_choice',
-    question: 'Placeholder interview question 9: What do we call the first ten amendments to the Constitution?',
-    question_es: 'Pregunta de entrevista de ejemplo 9: ¿Cómo llamamos a las primeras diez enmiendas de la Constitución?',
+    question: 'What do we call the first ten amendments to the Constitution?',
+    question_es: '¿Cómo llamamos a las primeras diez enmiendas de la Constitución?',
     video_url: '/placeholder-video.mp4',
     options: [
       { value: 'a', en: 'The Preamble', es: 'El Preámbulo' },
@@ -1993,18 +2001,18 @@ const MOCK_INTERVIEW_QUESTIONS = [
       { value: 'd', en: 'The Emancipation Proclamation', es: 'La Proclamación de Emancipación' },
     ],
     correct_answer: 'b',
-    explanation: 'Placeholder explanation: a frequently asked civics test question.',
-    explanation_es: 'Explicación de ejemplo: una pregunta frecuente del examen cívico.',
+    explanation: 'This is a frequently asked civics test question.',
+    explanation_es: 'Esta es una pregunta frecuente del examen cívico.',
   },
   {
     id: 10, type: 'open_ended',
-    question: "Placeholder interview question 10: Is there anything else you'd like to add before we conclude?",
-    question_es: 'Pregunta de entrevista de ejemplo 10: ¿Hay algo más que le gustaría agregar antes de concluir?',
+    question: "Is there anything else you'd like to add before we conclude?",
+    question_es: '¿Hay algo más que le gustaría agregar antes de concluir?',
     video_url: '/placeholder-video.mp4',
     options: [],
     correct_answer: null,
-    explanation: 'Placeholder explanation: a closing question. Real officers often end this way to give you a final chance to speak.',
-    explanation_es: 'Explicación de ejemplo: una pregunta de cierre. Los oficiales reales a menudo terminan así para darle una última oportunidad de hablar.',
+    explanation: 'This is a closing question. Real interview officers often end this way to give applicants a final chance to speak.',
+    explanation_es: 'Esta es una pregunta de cierre. Los oficiales de entrevista reales a menudo terminan así para dar a los solicitantes una última oportunidad de hablar.',
   },
 ];
 
@@ -2671,8 +2679,8 @@ async function initSettingsPage() {
         showSettingsMsg(msg, lang === 'es' ? 'Las contraseñas nuevas no coinciden.' : 'New passwords do not match.', true);
         return;
       }
-      if (newPw.length < 6) {
-        showSettingsMsg(msg, lang === 'es' ? 'La contraseña debe tener al menos 6 caracteres.' : 'Password must be at least 6 characters.', true);
+      if (!/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(newPw)) {
+        showSettingsMsg(msg, lang === 'es' ? 'La contraseña debe tener al menos 8 caracteres e incluir letras y números.' : 'Password must be at least 8 characters and include both letters and numbers.', true);
         return;
       }
 

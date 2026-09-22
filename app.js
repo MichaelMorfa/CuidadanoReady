@@ -628,6 +628,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (refFromUrl) referralFieldEl.value = refFromUrl.toUpperCase();
   }
 
+  // Landed back here from a completed Stripe Checkout (success_url) --
+  // show the "check your email" step. This is purely cosmetic: the actual
+  // account creation already happened server-side in the Stripe webhook,
+  // verified against Stripe's signed event, never triggered by this page
+  // load itself.
+  if (new URLSearchParams(window.location.search).get('paid') === 'success' && typeof goToStep === 'function') {
+    goToStep(3);
+  }
+
   const signupForm = document.querySelector('#signup-form');
   if (!signupForm || typeof supabaseClient === 'undefined') return;
 
@@ -640,59 +649,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const name = document.querySelector('#signup-name').value;
     const email = document.querySelector('#signup-email').value;
-    const password = document.querySelector('#signup-password').value;
     const referralInput = document.querySelector('#signup-referral');
     const referralCode = referralInput ? referralInput.value.trim() : '';
     const selectedPlan = document.querySelector('.plan-option.selected');
     const plan = selectedPlan ? selectedPlan.getAttribute('data-plan') : '2year';
 
     btn.disabled = true;
-    btn.textContent = 'Creating your account…';
-
-    // The real Supabase account is created right here, password hashed by
-    // Supabase immediately, no plaintext holding table involved, then we
-    // sign in to get a working session, then reuse the same
-    // create-checkout-session function the dashboard billing banner uses.
-    // subscription_status stays 'incomplete' until the webhook confirms
-    // payment, so if anything below fails after this step, the account
-    // still exists and recoverably shows a "finish signing up" banner on
-    // next login instead of being lost.
-    const { data: createData, error: createError } = await supabaseClient.functions.invoke('create-account', {
-      body: { full_name: name, email: email, password: password, plan: plan, referral_code: referralCode || null },
-    });
-
-    if (createError || !createData || !createData.ok) {
-      btn.disabled = false;
-      btn.textContent = original;
-      if (errorEl) {
-        errorEl.textContent = (createData && createData.error) || await getEdgeFunctionErrorMessage(createError, 'Something went wrong creating your account. Please try again.');
-        errorEl.style.display = 'block';
-      }
-      return;
-    }
-
     btn.textContent = 'Redirecting to secure checkout…';
 
-    const { error: signInError } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (signInError) {
-      btn.disabled = false;
-      btn.textContent = original;
-      if (errorEl) {
-        errorEl.textContent = 'Your account was created, but we could not sign you in automatically. Please log in to finish payment.';
-        errorEl.style.display = 'block';
-      }
-      return;
-    }
-
-    const { data, error } = await supabaseClient.functions.invoke('create-checkout-session', {
-      body: { plan: plan },
+    // Pay-first, and no password is ever collected or stored here. Nothing
+    // is written to our database before payment succeeds --
+    // create-pending-checkout-session only validates the details (including
+    // the "email already in use" check) and creates the Stripe Checkout
+    // session, carrying name/email/plan/referral in the session's own
+    // metadata. stripe-webhook creates the real account the instant a
+    // verified payment comes back, then emails a one-time link so the
+    // customer sets their own password -- Supabase Auth is the only place
+    // that password is ever handled.
+    const { data, error } = await supabaseClient.functions.invoke('create-pending-checkout-session', {
+      body: { full_name: name, email: email, plan: plan, referral_code: referralCode || null },
     });
 
     if (error || !data || !data.url) {
       btn.disabled = false;
       btn.textContent = original;
       if (errorEl) {
-        errorEl.textContent = 'Your account was created. Log in any time to finish payment and start your course.';
+        errorEl.textContent = (data && data.error) || await getEdgeFunctionErrorMessage(error, 'Something went wrong starting checkout. Please try again.');
         errorEl.style.display = 'block';
       }
       return;

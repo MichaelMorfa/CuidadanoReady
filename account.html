@@ -68,7 +68,7 @@
   <!-- STEP 1: Plan selection -->
   <div data-step="1">
     <h2 class="text-center" data-en="Choose your plan" data-es="Elige tu plan">Choose your plan</h2>
-    <p class="text-center" data-en="You'll create your account here, then complete payment securely with Stripe." data-es="Crearás tu cuenta aquí y luego completarás el pago de forma segura con Stripe.">You'll create your account here, then complete payment securely with Stripe.</p>
+    <p class="text-center" data-en="Enter your details, then complete payment securely with Stripe. Your account is created the moment payment goes through." data-es="Ingresa tus datos y luego completa el pago de forma segura con Stripe. Tu cuenta se crea en el momento en que se confirma el pago.">Enter your details, then complete payment securely with Stripe. Your account is created the moment payment goes through.</p>
 
     <label class="plan-option selected" data-plan="2year">
       <input type="radio" name="plan" checked>
@@ -87,17 +87,14 @@
 
   <!-- STEP 2: Account details -->
   <div data-step="2" style="display:none;">
-    <h2 class="text-center" data-en="Create your account" data-es="Crea tu cuenta">Create your account</h2>
-    <p class="text-center small muted" data-en="Next you'll be sent to Stripe's secure checkout to complete payment." data-es="A continuación irás al pago seguro de Stripe para completar tu compra.">Next you'll be sent to Stripe's secure checkout to complete payment.</p>
+    <h2 class="text-center" data-en="Your account details" data-es="Los datos de tu cuenta">Your account details</h2>
+    <p class="text-center small muted" data-en="Next you'll be sent to Stripe's secure checkout. Nothing is created until your payment succeeds." data-es="A continuación irás al pago seguro de Stripe. No se crea nada hasta que tu pago se confirme.">Next you'll be sent to Stripe's secure checkout. Nothing is created until your payment succeeds.</p>
     <form id="signup-form">
       <label for="signup-name" data-en="Full Name" data-es="Nombre completo">Full Name</label>
       <input type="text" id="signup-name" placeholder="Jane Doe" required>
 
       <label for="signup-email">Email</label>
       <input type="email" id="signup-email" placeholder="jane@example.com" required>
-
-      <label for="signup-password" data-en="Password" data-es="Contraseña">Password</label>
-      <input type="password" id="signup-password" placeholder="At least 6 characters" minlength="6" required>
 
       <label for="signup-referral" data-en="Referral Code (optional)" data-es="Código de Referido (opcional)">Referral Code (optional)</label>
       <input type="text" id="signup-referral" placeholder="e.g. RJXK482" maxlength="32" style="text-transform:uppercase;">
@@ -109,19 +106,25 @@
 
       <p id="signup-error" class="small" style="color: var(--danger); display:none;"></p>
 
-      <div class="flex justify-between" style="margin-top:12px;">
+      <div class="small muted" style="margin-top:16px; padding-top:14px; border-top:1px solid var(--line);">
+        <div style="font-weight:600; color:var(--ink);" data-en="$199.99 one-time payment • 24 months of access • No recurring charges" data-es="$199.99 pago único • 24 meses de acceso • Sin cargos recurrentes">$199.99 one-time payment • 24 months of access • No recurring charges</div>
+        <div style="margin-top:6px;"><span data-en="Due to the immediate delivery of digital course content, purchases are non-refundable." data-es="Debido a la entrega inmediata del contenido digital del curso, las compras no son reembolsables.">Due to the immediate delivery of digital course content, purchases are non-refundable.</span> <a href="terms.html" target="_blank" data-en="See Terms." data-es="Ver Términos.">See Terms.</a></div>
+      </div>
+
+      <div class="flex justify-between items-center" style="margin-top:16px;">
         <button type="button" class="btn btn-ghost" onclick="goToStep(1)" data-en="← Back" data-es="← Atrás">← Back</button>
         <button type="submit" class="btn btn-primary" id="signup-submit" data-en="Continue to Payment" data-es="Continuar al pago">Continue to Payment</button>
       </div>
+      <p class="small muted text-center" style="margin-top:10px;" data-en="Secure payment powered by Stripe." data-es="Pago seguro procesado por Stripe.">Secure payment powered by Stripe.</p>
     </form>
   </div>
 
-  <!-- STEP 3: Confirm email (only shown when email confirmation is required) -->
+  <!-- STEP 3: Payment received, set-password email sent -->
   <div data-step="3" style="display:none;" class="text-center">
     <div class="success-check">✓</div>
-    <h2 data-en="Almost there!" data-es="¡Ya casi!">Almost there!</h2>
-    <p id="signup-success-message" data-en="Your account is set up. Check your email to confirm your address, then log in to complete payment and start Stage 1: Eligibility." data-es="Tu cuenta está lista. Revisa tu correo para confirmar tu dirección, luego inicia sesión para completar el pago y comenzar la Etapa 1: Elegibilidad.">Your account is set up. Check your email to confirm your address, then log in to complete payment and start Stage 1: Eligibility.</p>
-    <a href="login.html" class="btn" style="background:var(--forest); color:var(--paper);" data-en="Go to Login →" data-es="Ir a iniciar sesión →">Go to Login →</a>
+    <h2 data-en="Payment received!" data-es="¡Pago recibido!">Payment received!</h2>
+    <p data-en="We've emailed you a secure link to set your password and access your course. Check your inbox (and spam folder, just in case)." data-es="Te enviamos un correo con un enlace seguro para crear tu contraseña y acceder a tu curso. Revisa tu bandeja de entrada (y la carpeta de spam, por si acaso).">We've emailed you a secure link to set your password and access your course. Check your inbox (and spam folder, just in case).</p>
+    <a href="login.html" class="btn btn-ghost" data-en="Already set your password? Log In →" data-es="¿Ya creaste tu contraseña? Iniciar sesión →">Already set your password? Log In →</a>
   </div>
 </div>
 
