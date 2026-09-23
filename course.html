@@ -23,19 +23,22 @@
      depth of the product (the 7-stage course itself is a short, focused
      walkthrough of the application process by design), so this gets equal
      billing to the stage-by-stage breakdown rather than being buried. */
-  .feature-tile { text-align: left; }
+  .feature-tile { text-align: left; padding: 18px !important; }
   .feature-tile .feature-icon {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 44px; height: 44px; border-radius: 50%; margin-bottom: 14px;
+    width: 34px; height: 34px; border-radius: 50%; margin-bottom: 10px;
     background: #F0F6F2; color: var(--forest); flex-shrink: 0;
   }
-  .feature-tile .feature-icon svg { width: 21px; height: 21px; }
-  .feature-tile h3 { font-size: 1.02rem; margin: 0 0 6px; }
-  .feature-tile p { margin: 0; }
+  .feature-tile .feature-icon svg { width: 17px; height: 17px; }
+  .feature-tile h3 { font-size: 0.94rem; margin: 0 0 4px; }
+  .feature-tile p { margin: 0; font-size: 0.82rem; line-height: 1.45; }
+  .grid.feature-grid { gap: 14px; }
 
   .stat-strip { display: flex; flex-wrap: wrap; justify-content: center; gap: 32px; margin: 24px 0 4px; text-align: center; }
   .stat-strip .stat-num { font-family: var(--font-serif); font-weight: 700; font-size: 2rem; color: var(--forest); line-height: 1; }
   .stat-strip .stat-lbl { font-size: 0.82rem; color: var(--slate); margin-top: 4px; }
+
+  .hero-cta-inline { margin-top: 20px; }
 </style>
 <meta name="description" content="Seven stages, one clear path to citizenship. See everything the Ciudadano Ready course covers.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -120,10 +123,14 @@
       <div><div class="stat-num">2</div><div class="stat-lbl" data-en="languages, narrated throughout" data-es="idiomas, narrado en todo el curso">languages, narrated throughout</div></div>
       <div><div class="stat-num">∞</div><div class="stat-lbl" data-en="practice attempts, no limits" data-es="intentos de práctica, sin límites">practice attempts, no limits</div></div>
     </div>
+
+    <div class="hero-cta-inline">
+      <a href="account.html" class="btn btn-primary" data-en="Get Started — $199.99" data-es="Comenzar — $199.99">Get Started — $199.99</a>
+    </div>
   </div>
 
-  <div class="container-wide" style="margin-top:32px;">
-    <div class="grid grid-4">
+  <div class="container-wide" style="margin-top:24px;">
+    <div class="grid grid-4 feature-grid">
       <div class="card card-pad feature-tile">
         <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v21"/></svg></div>
         <h3 data-en="The 7-stage roadmap" data-es="La hoja de ruta de 7 etapas">The 7-stage roadmap</h3>
@@ -168,9 +175,9 @@
   </div>
 
   <div class="container">
-    <div class="card card-pad text-center" style="margin-top:36px; border-color:var(--ocean);">
+    <div class="card card-pad text-center" style="margin-top:24px; padding:24px; border-color:var(--ocean);">
       <span class="eyebrow" style="margin-bottom:6px;" data-en="READY TO START?" data-es="¿LISTO PARA EMPEZAR?">READY TO START?</span>
-      <h2 style="margin-bottom:12px;" data-en="Your citizenship, one step closer, starting today." data-es="Tu ciudadanía, un paso más cerca, empezando hoy.">Your citizenship, one step closer, starting today.</h2>
+      <h2 style="margin-bottom:12px; font-size:1.3rem;" data-en="Your citizenship, one step closer, starting today." data-es="Tu ciudadanía, un paso más cerca, empezando hoy.">Your citizenship, one step closer, starting today.</h2>
       <a href="account.html" class="btn btn-primary" data-en="Get Started to Unlock the Course" data-es="Comienza para desbloquear el curso">Get Started to Unlock the Course</a>
     </div>
   </div>
