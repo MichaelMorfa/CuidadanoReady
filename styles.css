@@ -187,13 +187,14 @@ img { max-width: 100%; display: block; }
   color: var(--paper);
   padding: 88px 0;
 }
-.section-navy .eyebrow { color: var(--ocean-deep); }
-[data-theme="dark"] .section-navy .eyebrow { color: var(--ocean); }
-.section-navy h2, .section-navy h3 { color: var(--paper); }
-.section-navy p { color: #B7BCC4; }
-.section-navy .small.muted { color: #9CA3AF; }
-.section-navy .pricing-checklist li { color: var(--paper); }
-.section-navy .pricing-checklist .check-mark { color: #6FCF9E; }
+/* Text-color overrides below apply only to content sitting directly on the
+   navy background (via .section-navy-text), never to the white pricing
+   card floating on top of it -- the card supplies its own dark-on-light
+   contrast and must not inherit these. */
+.section-navy .section-navy-text .eyebrow { color: var(--ocean-deep); }
+[data-theme="dark"] .section-navy .section-navy-text .eyebrow { color: var(--ocean); }
+.section-navy .section-navy-text h2, .section-navy .section-navy-text h3 { color: var(--paper); }
+.section-navy .section-navy-text p { color: #B7BCC4; }
 .section-teal-wash {
   background: color-mix(in srgb, var(--ocean) 7%, var(--paper));
 }
@@ -465,8 +466,9 @@ a.stamp-circle:hover, a.stamp-circle:focus-visible { transform: scale(1.08); box
 .card-pad { padding: 28px; }
 
 .card-featured {
+  background: color-mix(in srgb, var(--ocean) 4%, var(--paper));
   border-color: var(--ocean);
-  box-shadow: 0 0 0 2px var(--ocean), var(--shadow-card);
+  box-shadow: 0 0 0 2px var(--ocean), 0 12px 32px rgba(0,0,0,0.28);
 }
 
 .card-blurred {
@@ -1269,11 +1271,20 @@ tr:last-child td { border-bottom: none; }
 /* Pricing checklist */
 .pricing-checklist { list-style: none; margin: 16px 0 0; padding: 0; }
 .pricing-checklist li {
-  display: flex; align-items: flex-start; gap: 10px;
-  padding: 6px 0; font-size: 0.92rem; color: var(--ink);
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; margin-bottom: 4px;
+  font-size: 0.92rem; font-weight: 500; color: var(--ink);
+  background: rgba(47,107,79,0.07);
+  border-radius: var(--radius-sm);
 }
 .pricing-checklist .check-mark {
-  flex-shrink: 0; color: var(--forest); font-weight: 700; margin-top: 1px;
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--forest);
+  color: var(--paper);
+  font-size: 0.7rem; font-weight: 700;
 }
 
 /* FAQ preview */
