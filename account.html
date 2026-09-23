@@ -7,19 +7,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <style>
-  .flow-wrap { max-width: 960px; margin: 0 auto; padding: 56px 24px 80px; }
-  .checkout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
-  @media (max-width: 760px) {
-    .checkout-grid { grid-template-columns: 1fr; }
+  .flow-wrap { max-width: 620px; margin: 0 auto; padding: 56px 24px 80px; }
+  #signup-password-hint { margin-top: -8px; margin-bottom: 12px; }
+  #payment-section {
+    display: none;
+    margin-top: 32px;
+    padding-top: 28px;
+    border-top: 1px solid var(--line);
   }
-  .checkout-col-right { border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; min-height: 420px; background: var(--paper-dim); }
-  .checkout-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height: 372px; color: var(--slate); gap: 10px; }
-  .checkout-placeholder svg { opacity: 0.5; }
+  #checkout-mount { min-height: 60px; }
   .success-check {
     width:64px; height:64px; border-radius:50%; background: var(--forest); color:var(--paper);
     display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin: 0 auto 20px;
   }
-  #signup-password-hint { margin-top: -8px; margin-bottom: 12px; }
 </style>
 <meta name="description" content="Create your Ciudadano Ready account and start your citizenship test prep.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -66,44 +66,43 @@
     <h2 class="text-center" data-en="Create your account" data-es="Crea tu cuenta">Create your account</h2>
     <p class="text-center small muted" data-en="Enter your details, then complete payment securely with Stripe. Your account is created the moment your payment goes through." data-es="Ingresa tus datos y luego completa el pago de forma segura con Stripe. Tu cuenta se crea en el momento en que se confirma tu pago.">Enter your details, then complete payment securely with Stripe. Your account is created the moment your payment goes through.</p>
 
-    <div class="checkout-grid" style="margin-top: 28px;">
-      <div class="checkout-col-left">
-        <form id="signup-form" novalidate>
-          <label for="signup-email">Email</label>
-          <input type="email" id="signup-email" placeholder="jane@example.com" required>
+    <form id="signup-form" novalidate style="margin-top: 28px;">
+      <label for="signup-email">Email</label>
+      <input type="email" id="signup-email" placeholder="jane@example.com" required>
 
-          <label for="signup-password" data-en="Password" data-es="Contraseña">Password</label>
-          <input type="password" id="signup-password" placeholder="••••••••" minlength="8" required>
-          <div id="signup-password-hint" class="small muted" data-en="At least 8 characters, with a letter and a number." data-es="Al menos 8 caracteres, con una letra y un número.">At least 8 characters, with a letter and a number.</div>
+      <label for="signup-password" data-en="Password" data-es="Contraseña">Password</label>
+      <input type="password" id="signup-password" placeholder="••••••••" minlength="8" required>
+      <div id="signup-password-hint" class="small muted" data-en="At least 8 characters, with a letter and a number." data-es="Al menos 8 caracteres, con una letra y un número.">At least 8 characters, with a letter and a number.</div>
 
-          <label for="signup-referral" data-en="Referral Code (optional)" data-es="Código de Referido (opcional)">Referral Code (optional)</label>
-          <input type="text" id="signup-referral" placeholder="e.g. RJXK482" maxlength="32" style="text-transform:uppercase;">
+      <label for="signup-referral" data-en="Referral Code (optional)" data-es="Código de Referido (opcional)">Referral Code (optional)</label>
+      <input type="text" id="signup-referral" placeholder="e.g. RJXK482" maxlength="32" style="text-transform:uppercase;">
 
-          <label class="flex gap-8 items-center" style="font-weight:400; margin-top:6px;">
-            <input type="checkbox" id="signup-terms" style="width:auto; margin:0;" required>
-            <span class="small">I agree to the <a href="terms.html" target="_blank">Terms of Service</a> and <a href="privacy-policy.html" target="_blank">Privacy Policy</a>.</span>
-          </label>
+      <label class="flex gap-8 items-center" style="font-weight:400; margin-top:6px;">
+        <input type="checkbox" id="signup-terms" style="width:auto; margin:0;" required>
+        <span class="small">I agree to the <a href="terms.html" target="_blank">Terms of Service</a> and <a href="privacy-policy.html" target="_blank">Privacy Policy</a>.</span>
+      </label>
 
-          <p id="signup-error" class="small" style="color: var(--danger); display:none;"></p>
+      <p id="signup-error" class="small" style="color: var(--danger); display:none;"></p>
 
-          <div class="small muted" style="margin-top:16px; padding-top:14px; border-top:1px solid var(--line);">
-            <div style="font-weight:600; color:var(--ink);" data-en="$199.99 one-time payment • 24 months of access • No recurring charges" data-es="$199.99 pago único • 24 meses de acceso • Sin cargos recurrentes">$199.99 one-time payment • 24 months of access • No recurring charges</div>
-            <div style="margin-top:6px;"><span data-en="Due to the immediate delivery of digital course content, purchases are non-refundable." data-es="Debido a la entrega inmediata del contenido digital del curso, las compras no son reembolsables.">Due to the immediate delivery of digital course content, purchases are non-refundable.</span> <a href="terms.html" target="_blank" data-en="See Terms." data-es="Ver Términos.">See Terms.</a></div>
-          </div>
-          <p class="small muted text-center" style="margin-top:14px;" data-en="Secure payment powered by Stripe." data-es="Pago seguro procesado por Stripe.">Secure payment powered by Stripe.</p>
-        </form>
+      <div class="small muted" style="margin-top:16px; padding-top:14px; border-top:1px solid var(--line);">
+        <div style="font-weight:600; color:var(--ink);" data-en="$199.99 one-time payment • 24 months of access • No recurring charges" data-es="$199.99 pago único • 24 meses de acceso • Sin cargos recurrentes">$199.99 one-time payment • 24 months of access • No recurring charges</div>
+        <div style="margin-top:6px;"><span data-en="Due to the immediate delivery of digital course content, purchases are non-refundable." data-es="Debido a la entrega inmediata del contenido digital del curso, las compras no son reembolsables.">Due to the immediate delivery of digital course content, purchases are non-refundable.</span> <a href="terms.html" target="_blank" data-en="See Terms." data-es="Ver Términos.">See Terms.</a></div>
       </div>
 
-      <div class="checkout-col-right">
-        <div id="checkout-placeholder" class="checkout-placeholder">
-          <p data-en="Enter your email and password to continue to secure payment." data-es="Ingresa tu correo y contraseña para continuar al pago seguro.">Enter your email and password to continue to secure payment.</p>
-        </div>
-        <div id="checkout-mount" style="display:none;"></div>
-        <p id="finishing-message" class="text-center small muted" style="display:none; margin-top:14px;" data-en="Finishing setup…" data-es="Terminando de configurar…">Finishing setup…</p>
-        <div id="finishing-retry" style="display:none; text-align:center; margin-top:10px;">
-          <p id="finishing-error" class="small" style="color: var(--danger);"></p>
-          <button type="button" class="btn btn-primary" id="finishing-retry-btn" data-en="Try Again" data-es="Intentar de nuevo">Try Again</button>
-        </div>
+      <button type="submit" class="btn btn-primary btn-block" id="signup-continue" style="margin-top:20px;" data-en="Continue to Payment" data-es="Continuar al pago">Continue to Payment</button>
+      <p class="small muted text-center" style="margin-top:10px;" data-en="Secure payment powered by Stripe." data-es="Pago seguro procesado por Stripe.">Secure payment powered by Stripe.</p>
+    </form>
+
+    <div id="payment-section">
+      <div class="flex justify-between items-center">
+        <h3 data-en="Payment" data-es="Pago">Payment</h3>
+        <button type="button" class="btn btn-ghost small" id="edit-details-btn" data-en="← Edit details" data-es="← Editar datos">← Edit details</button>
+      </div>
+      <div id="checkout-mount"></div>
+      <p id="finishing-message" class="text-center small muted" style="display:none; margin-top:14px;" data-en="Finishing setup…" data-es="Terminando de configurar…">Finishing setup…</p>
+      <div id="finishing-retry" style="display:none; text-align:center; margin-top:10px;">
+        <p id="finishing-error" class="small" style="color: var(--danger);"></p>
+        <button type="button" class="btn btn-primary" id="finishing-retry-btn" data-en="Try Again" data-es="Intentar de nuevo">Try Again</button>
       </div>
     </div>
   </div>

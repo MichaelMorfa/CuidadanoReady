@@ -632,7 +632,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const passwordInput = document.querySelector('#signup-password');
   const termsInput = document.querySelector('#signup-terms');
   const errorEl = document.querySelector('#signup-error');
-  const placeholderEl = document.querySelector('#checkout-placeholder');
+  const continueBtn = document.querySelector('#signup-continue');
+  const paymentSection = document.querySelector('#payment-section');
+  const editDetailsBtn = document.querySelector('#edit-details-btn');
   const mountEl = document.querySelector('#checkout-mount');
   const finishingMessageEl = document.querySelector('#finishing-message');
   const finishingRetryEl = document.querySelector('#finishing-retry');
@@ -656,13 +658,35 @@ document.addEventListener('DOMContentLoaded', () => {
     if (errorEl) errorEl.style.display = 'none';
   }
 
-  function formIsReadyForCheckout() {
-    return isValidEmail(emailInput.value) && isStrongEnough(passwordInput.value) && termsInput.checked;
+  function setFormFieldsDisabled(disabled) {
+    [emailInput, passwordInput, termsInput, document.querySelector('#signup-referral')].forEach((el) => {
+      if (el) el.disabled = disabled;
+    });
   }
 
-  async function mountCheckoutIfReady() {
-    if (checkoutMounted || !formIsReadyForCheckout()) return;
+  // Explicit, user-triggered step: fired only when "Continue to Payment" is
+  // clicked, not automatically as fields become valid. Validates locally
+  // first (with visible inline errors), then creates the Checkout Session
+  // and mounts payment full-width below, scrolling smoothly into view.
+  async function startCheckout() {
     clearError();
+
+    if (!isValidEmail(emailInput.value)) {
+      showError('Please enter a valid email address.');
+      return;
+    }
+    if (!isStrongEnough(passwordInput.value)) {
+      showError('Password must be at least 8 characters and include a letter and a number.');
+      return;
+    }
+    if (!termsInput.checked) {
+      showError('Please agree to the Terms of Service and Privacy Policy to continue.');
+      return;
+    }
+
+    const original = continueBtn.textContent;
+    continueBtn.disabled = true;
+    continueBtn.textContent = 'Loading secure payment…';
 
     const referralInput = document.querySelector('#signup-referral');
     const referralCode = referralInput ? referralInput.value.trim() : '';
@@ -673,6 +697,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (error || !data || !data.client_secret) {
+      continueBtn.disabled = false;
+      continueBtn.textContent = original;
       showError((data && data.error) || await getEdgeFunctionErrorMessage(error, 'Something went wrong starting checkout. Please try again.'));
       return;
     }
@@ -681,22 +707,42 @@ document.addEventListener('DOMContentLoaded', () => {
     // payment, and only in this local variable.
     pendingPassword = passwordInput.value;
     checkoutMounted = true;
+    setFormFieldsDisabled(true);
+    continueBtn.style.display = 'none';
 
     embeddedCheckout = await stripe.initEmbeddedCheckout({
       clientSecret: data.client_secret,
       onComplete: handleCheckoutComplete,
     });
 
-    if (placeholderEl) placeholderEl.style.display = 'none';
-    if (mountEl) {
-      mountEl.style.display = 'block';
-      embeddedCheckout.mount('#checkout-mount');
-    }
+    if (paymentSection) paymentSection.style.display = 'block';
+    embeddedCheckout.mount('#checkout-mount');
 
     // Extract the session id from the client_secret (format
     // "<session_id>_secret_<...>") so we can independently confirm payment
     // afterward without trusting anything the browser itself decided.
     currentSessionId = data.client_secret.split('_secret_')[0];
+
+    if (paymentSection) paymentSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Lets the customer back out of payment to fix a typo in their email or
+  // password before paying -- destroys the mounted checkout and re-enables
+  // the form rather than leaving a stale session around.
+  if (editDetailsBtn) {
+    editDetailsBtn.addEventListener('click', () => {
+      if (embeddedCheckout && embeddedCheckout.destroy) embeddedCheckout.destroy();
+      embeddedCheckout = null;
+      checkoutMounted = false;
+      pendingPassword = null;
+      currentSessionId = null;
+      if (paymentSection) paymentSection.style.display = 'none';
+      if (mountEl) mountEl.innerHTML = '';
+      setFormFieldsDisabled(false);
+      continueBtn.style.display = '';
+      continueBtn.disabled = false;
+      continueBtn.textContent = 'Continue to Payment';
+    });
   }
 
   async function handleCheckoutComplete() {
@@ -754,24 +800,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Mount checkout the moment all three fields become valid -- no separate
-  // "continue" click needed, since there's nothing left to validate once
-  // the fields themselves are valid.
   [emailInput, passwordInput].forEach((el) => {
-    el.addEventListener('blur', mountCheckoutIfReady);
     el.addEventListener('input', () => {
-      if (checkoutMounted) return; // don't re-trigger once payment is mounted
+      if (checkoutMounted) return;
       clearError();
     });
   });
-  termsInput.addEventListener('change', mountCheckoutIfReady);
 
   signupForm.addEventListener('submit', (event) => {
-    // The embedded Stripe form submits itself; this page's own form has no
-    // submit button of its own left -- this handler only exists to stop a
-    // stray Enter keypress from doing a full navigation.
     event.preventDefault();
-    mountCheckoutIfReady();
+    startCheckout();
   });
 });
 
