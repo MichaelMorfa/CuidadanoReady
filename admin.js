@@ -233,6 +233,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     allUsers = data || [];
     renderUsers(allUsers);
+    loadReferralSummary();
+  }
+
+  // Aggregate view of referral_code usage (see get_referral_summary RPC),
+  // separate from the per-row "Referred By" column below -- this answers
+  // "how many signups came from each code" at a glance, including named
+  // partner codes like MFV (Mi Familia Vota) that aren't tied to a user.
+  async function loadReferralSummary() {
+    const tbody = document.querySelector('#referral-summary-tbody');
+    if (!tbody) return;
+    const { data, error } = await supabaseClient.rpc('get_referral_summary');
+    if (error) {
+      tbody.innerHTML = `<tr><td colspan="3" class="empty-state">Could not load referral summary: ${escapeHtml(error.message)}</td></tr>`;
+      return;
+    }
+    if (!data || !data.length) {
+      tbody.innerHTML = '<tr><td colspan="3" class="empty-state">No referrals recorded yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.map((r) => `
+      <tr>
+        <td><strong>${escapeHtml(r.code)}</strong></td>
+        <td class="small">${escapeHtml(r.display_name || '')}</td>
+        <td>${r.signup_count}</td>
+      </tr>
+    `).join('');
   }
 
   function renderUsers(users) {

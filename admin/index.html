@@ -125,6 +125,16 @@
 
       <!-- ================= USERS ================= -->
       <section class="admin-panel" data-panel="users">
+        <div class="card card-pad" style="margin-bottom:20px;">
+          <span class="eyebrow">REFERRAL SUMMARY</span>
+          <p class="small muted" style="margin:4px 0 14px;">How many signups used each referral code, most-used first. Codes can be a partner organization's official code (e.g. MFV for Mi Familia Vota) or a user's personal referral code.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Code</th><th>Referrer</th><th>Signups</th></tr></thead>
+              <tbody id="referral-summary-tbody"><tr><td colspan="3" class="empty-state">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
         <div class="search-row">
           <input type="text" id="user-search" aria-label="Search users by name or email" placeholder="Search by name or email…">
           <span class="small muted" id="user-count"></span>
