@@ -659,7 +659,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function setFormFieldsDisabled(disabled) {
-    [emailInput, passwordInput, termsInput, document.querySelector('#signup-referral')].forEach((el) => {
+    [
+      emailInput,
+      passwordInput,
+      termsInput,
+      document.querySelector('#signup-first-name'),
+      document.querySelector('#signup-last-name'),
+      document.querySelector('#signup-phone'),
+      document.querySelector('#signup-referral'),
+    ].forEach((el) => {
       if (el) el.disabled = disabled;
     });
   }
@@ -671,6 +679,17 @@ document.addEventListener('DOMContentLoaded', () => {
   async function startCheckout() {
     clearError();
 
+    const firstNameInput = document.querySelector('#signup-first-name');
+    const lastNameInput = document.querySelector('#signup-last-name');
+    const phoneInput = document.querySelector('#signup-phone');
+    const firstName = firstNameInput ? firstNameInput.value.trim() : '';
+    const lastName = lastNameInput ? lastNameInput.value.trim() : '';
+    const phone = phoneInput ? phoneInput.value.trim() : '';
+
+    if (!firstName || !lastName) {
+      showError('Please enter your first and last name.');
+      return;
+    }
     if (!isValidEmail(emailInput.value)) {
       showError('Please enter a valid email address.');
       return;
@@ -691,9 +710,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const referralInput = document.querySelector('#signup-referral');
     const referralCode = referralInput ? referralInput.value.trim() : '';
     const email = emailInput.value.trim().toLowerCase();
+    const fullName = `${firstName} ${lastName}`.trim();
 
     const { data, error } = await supabaseClient.functions.invoke('create-pending-checkout-session', {
-      body: { email, plan: '2year', referral_code: referralCode || null },
+      body: { email, plan: '2year', referral_code: referralCode || null, full_name: fullName, phone: phone || null },
     });
 
     if (error || !data || !data.client_secret) {

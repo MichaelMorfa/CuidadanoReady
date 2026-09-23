@@ -67,11 +67,25 @@
     <p class="text-center small muted" data-en="Enter your details, then complete payment securely with Stripe. Your account is created the moment your payment goes through." data-es="Ingresa tus datos y luego completa el pago de forma segura con Stripe. Tu cuenta se crea en el momento en que se confirma tu pago.">Enter your details, then complete payment securely with Stripe. Your account is created the moment your payment goes through.</p>
 
     <form id="signup-form" novalidate style="margin-top: 28px;">
+      <div class="flex gap-16" style="flex-wrap: wrap;">
+        <div style="flex: 1 1 200px;">
+          <label for="signup-first-name" data-en="First Name" data-es="Nombre">First Name</label>
+          <input type="text" id="signup-first-name" placeholder="Jane" autocomplete="given-name" required>
+        </div>
+        <div style="flex: 1 1 200px;">
+          <label for="signup-last-name" data-en="Last Name" data-es="Apellido">Last Name</label>
+          <input type="text" id="signup-last-name" placeholder="Doe" autocomplete="family-name" required>
+        </div>
+      </div>
+
       <label for="signup-email">Email</label>
-      <input type="email" id="signup-email" placeholder="jane@example.com" required>
+      <input type="email" id="signup-email" placeholder="jane@example.com" autocomplete="email" required>
+
+      <label for="signup-phone" data-en="Phone Number (optional)" data-es="Número de Teléfono (opcional)">Phone Number (optional)</label>
+      <input type="tel" id="signup-phone" placeholder="(555) 123-4567" autocomplete="tel">
 
       <label for="signup-password" data-en="Password" data-es="Contraseña">Password</label>
-      <input type="password" id="signup-password" placeholder="••••••••" minlength="8" required>
+      <input type="password" id="signup-password" placeholder="••••••••" minlength="8" autocomplete="new-password" required>
       <div id="signup-password-hint" class="small muted" data-en="At least 8 characters, with a letter and a number." data-es="Al menos 8 caracteres, con una letra y un número.">At least 8 characters, with a letter and a number.</div>
 
       <label for="signup-referral" data-en="Referral Code (optional)" data-es="Código de Referido (opcional)">Referral Code (optional)</label>

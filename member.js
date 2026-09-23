@@ -384,9 +384,15 @@ const BILLING_BANNER_LABELS = {
       title: 'One step left: choose a plan',
       message: "Your account is set up, but you haven't completed payment yet. Choose a plan to unlock the full course.",
     },
+    expired: {
+      eyebrow: 'ACCESS ENDED',
+      title: 'Your 2-year access has ended',
+      message: 'Renew to keep studying and pick up right where you left off. Your progress is saved.',
+    },
     yearly: '2-Year Plan – $199.99',
     monthly: 'Monthly – $19.99/mo',
     manage: 'Manage Billing',
+    renew: 'Renew My Access',
   },
   es: {
     past_due: {
@@ -404,9 +410,15 @@ const BILLING_BANNER_LABELS = {
       title: 'Un paso más: elige un plan',
       message: 'Tu cuenta ya está creada, pero aún no completaste el pago. Elige un plan para desbloquear el curso completo.',
     },
+    expired: {
+      eyebrow: 'ACCESO FINALIZADO',
+      title: 'Tu acceso de 2 años ha finalizado',
+      message: 'Renueva para seguir estudiando y continuar justo donde lo dejaste. Tu progreso está guardado.',
+    },
     yearly: 'Plan de 2 Años – $199.99',
     monthly: 'Mensual – $19.99/mes',
     manage: 'Administrar Facturación',
+    renew: 'Renovar mi Acceso',
   },
 };
 
@@ -430,12 +442,12 @@ function showBillingBanner(status) {
 
   const lang = window.getCurrentLang ? window.getCurrentLang() : 'en';
   const bl = BILLING_BANNER_LABELS[lang] || BILLING_BANNER_LABELS.en;
-  const copy = (status === 'past_due' || status === 'canceled') ? bl[status] : bl.default;
+  const copy = (status === 'past_due' || status === 'canceled' || status === 'expired') ? bl[status] : bl.default;
   eyebrow.textContent = copy.eyebrow;
   title.textContent = copy.title;
   message.textContent = copy.message;
 
-  if (status === 'past_due') {
+  if (status === 'past_due' || status === 'expired') {
     planButtons.style.display = 'none';
     manageBtn.style.display = 'inline-flex';
   } else {
@@ -447,7 +459,18 @@ function showBillingBanner(status) {
   const yearlyBtn = document.querySelector('#billing-choose-2year');
   if (monthlyBtn) { monthlyBtn.textContent = bl.monthly; monthlyBtn.onclick = () => window.startCheckoutRedirect('monthly', monthlyBtn); }
   if (yearlyBtn) { yearlyBtn.textContent = bl.yearly; yearlyBtn.onclick = () => window.startCheckoutRedirect('2year', yearlyBtn); }
-  if (manageBtn) { manageBtn.textContent = bl.manage; manageBtn.onclick = () => window.openBillingPortal(manageBtn); }
+  if (manageBtn) {
+    if (status === 'expired') {
+      // Expired accounts get a straight-through renewal link rather than
+      // the Stripe billing portal (there's no active subscription to
+      // "manage" -- the 2-year plan is a one-time purchase).
+      manageBtn.textContent = bl.renew;
+      manageBtn.onclick = () => { window.location.href = 'renew.html'; };
+    } else {
+      manageBtn.textContent = bl.manage;
+      manageBtn.onclick = () => window.openBillingPortal(manageBtn);
+    }
+  }
 }
 
 // Re-renders the billing banner in place (used on langchange) without
