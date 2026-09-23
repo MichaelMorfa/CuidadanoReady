@@ -320,9 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!email) return;
       resetBtn.disabled = true;
       resetBtn.textContent = 'Sending…';
-      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-        redirectTo: 'https://ciudadanoready.com/reset-password.html',
-      });
+      const { error } = await supabaseClient.rpc('request_password_reset', { p_email: email });
       resetBtn.disabled = false;
       resetBtn.textContent = error ? 'Failed' : 'Sent ✓';
       setTimeout(() => { resetBtn.textContent = 'Reset PW'; }, 2500);
