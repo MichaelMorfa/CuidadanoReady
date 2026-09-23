@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finish Setting Up Your Account | Ciudadano Ready</title>
+<meta name="robots" content="noindex">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .setpw-wrap { max-width: 420px; margin: 0 auto; padding: 64px 24px 100px; }
+</style>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav">
+    <a href="index.html" class="logo">Ciudadano<span class="dot">Ready</span></a>
+    <div class="nav-right"></div>
+  </nav>
+</header>
+
+<div class="setpw-wrap">
+  <div class="stamp-circle" id="setpw-icon" style="width:64px; height:64px; font-size:1.3rem; margin:0 auto 20px; border-width:3px; border-color:var(--forest); color:var(--forest);">✓</div>
+  <h2 class="text-center" id="setpw-title">Payment received!</h2>
+  <p class="text-center small muted" id="setpw-subtitle">Choose a password below to finish setting up your account -- you won't be charged again.</p>
+
+  <form id="setpw-form" class="card card-pad" style="margin-top:24px;">
+    <label for="setpw-password">Password</label>
+    <input type="password" id="setpw-password" placeholder="At least 8 characters, letters and numbers" minlength="8" required>
+
+    <label for="setpw-confirm">Confirm Password</label>
+    <input type="password" id="setpw-confirm" placeholder="Re-enter your password" minlength="8" required>
+
+    <p id="setpw-error" class="small" style="color: var(--danger); display:none;"></p>
+
+    <button type="submit" class="btn btn-primary btn-block" id="setpw-submit" style="margin-top:8px;">Finish Setting Up My Account</button>
+  </form>
+
+  <!-- Friendly, non-error outcome: the fast path (or an earlier use of this
+       same link) already finished setting the account up. This is expected
+       behavior, not a failure -- just point them at login. -->
+  <div id="setpw-already" class="card card-pad text-center" style="display:none; margin-top:24px;">
+    <div class="stamp-circle" style="width:64px; height:64px; font-size:1.3rem; margin:0 auto 16px; border-width:3px; border-color:var(--forest); color:var(--forest);">✓</div>
+    <h2>Your account is already set up</h2>
+    <p class="small">Looks like you already finished setting up your account. Go ahead and log in below.</p>
+    <a href="login.html" class="btn btn-primary" style="margin-top:12px;">Log In →</a>
+  </div>
+
+  <div id="setpw-invalid" class="card card-pad text-center" style="display:none; margin-top:24px;">
+    <div class="stamp-circle" style="width:64px; height:64px; font-size:1.3rem; margin:0 auto 16px; border-width:3px; border-color:var(--danger); color:var(--danger);">✕</div>
+    <h2 id="setpw-invalid-title">This link is invalid or has expired</h2>
+    <p class="small" id="setpw-invalid-message">Please contact <a href="mailto:info@ciudadanoready.com">info@ciudadanoready.com</a> and we'll send you a new one.</p>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-disclaimer">
+      <strong>Legal disclaimer:</strong> Ciudadano Ready is an independent test-prep resource and is not a law firm. Nothing on this site constitutes legal advice. For legal advice about your immigration case, please contact a licensed immigration attorney.
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Ciudadano Ready. All rights reserved.</span>
+      <span><a href="terms.html">Terms</a> · <a href="privacy-policy.html">Privacy</a></span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script>
+  (function () {
+    const token = new URLSearchParams(window.location.search).get('token');
+    const formEl = document.querySelector('#setpw-form');
+    const invalidEl = document.querySelector('#setpw-invalid');
+    const alreadyEl = document.querySelector('#setpw-already');
+
+    if (!token) {
+      formEl.style.display = 'none';
+      invalidEl.style.display = 'block';
+      document.querySelector('#setpw-invalid-title').textContent = 'Missing link';
+      document.querySelector('#setpw-invalid-message').innerHTML = 'This page needs a token from your email. Please use the link we sent you, or contact <a href="mailto:info@ciudadanoready.com">info@ciudadanoready.com</a>.';
+      return;
+    }
+
+    const STRONG_PASSWORD = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+
+    formEl.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const btn = document.querySelector('#setpw-submit');
+      const errorEl = document.querySelector('#setpw-error');
+      const original = btn.textContent;
+      if (errorEl) errorEl.style.display = 'none';
+
+      const password = document.querySelector('#setpw-password').value;
+      const confirm = document.querySelector('#setpw-confirm').value;
+
+      if (!STRONG_PASSWORD.test(password)) {
+        if (errorEl) {
+          errorEl.textContent = 'Password must be at least 8 characters and include both letters and numbers.';
+          errorEl.style.display = 'block';
+        }
+        return;
+      }
+      if (password !== confirm) {
+        if (errorEl) {
+          errorEl.textContent = 'Passwords do not match.';
+          errorEl.style.display = 'block';
+        }
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Finishing setup…';
+
+      const { data, error } = await supabaseClient.functions.invoke('finish-account-setup', {
+        body: { token, password },
+      });
+
+      if (error || !data) {
+        btn.disabled = false;
+        btn.textContent = original;
+        if (errorEl) {
+          errorEl.textContent = await getEdgeFunctionErrorMessage(error, 'Something went wrong. Please try again.');
+          errorEl.style.display = 'block';
+        }
+        return;
+      }
+
+      // Graceful non-error outcome: someone already finished this via the
+      // fast path (e.g. a different tab). Not a failure -- send to login.
+      if (data.already_claimed) {
+        formEl.style.display = 'none';
+        alreadyEl.style.display = 'block';
+        return;
+      }
+
+      if (!data.ok) {
+        btn.disabled = false;
+        btn.textContent = original;
+        if (errorEl) {
+          errorEl.textContent = data.error || 'Something went wrong. Please try again.';
+          errorEl.style.display = 'block';
+        }
+        return;
+      }
+
+      btn.textContent = 'Logging you in…';
+
+      const { error: signInError } = await supabaseClient.auth.signInWithPassword({ email: data.email, password });
+      if (signInError) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      try {
+        await supabaseClient.functions.invoke('revoke-other-sessions', { body: {} });
+      } catch (_) {
+        // Best-effort, same as the regular login flow.
+      }
+
+      window.location.href = 'dashboard.html';
+    });
+  })();
+</script>
+</body>
+</html>

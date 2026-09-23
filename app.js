@@ -587,38 +587,21 @@ window.bindQuizBox = function bindQuizBox(box) {
   });
 };
 
-// ---- Step flow helper (used by account.html) ---------------------------
-function goToStep(stepNumber) {
-  document.querySelectorAll('[data-step]').forEach((panel) => {
-    panel.style.display = Number(panel.getAttribute('data-step')) === stepNumber ? 'block' : 'none';
-  });
-  document.querySelectorAll('[data-step-stamp]').forEach((stamp) => {
-    const n = Number(stamp.getAttribute('data-step-stamp'));
-    stamp.classList.remove('current', 'done');
-    if (n < stepNumber) stamp.classList.add('done');
-    if (n === stepNumber) stamp.classList.add('current');
-  });
-  document.querySelectorAll('[data-connector]').forEach((c) => {
-    const n = Number(c.getAttribute('data-connector'));
-    c.classList.toggle('done', n < stepNumber);
-  });
-  smoothScrollTo({ top: 0 });
-}
+// ---- Signup (one page: email + password + referral, then Stripe Embedded
+// Checkout mounts inline once those fields are valid). The password never
+// leaves this page as plain data until the moment Stripe confirms payment:
+// it lives only in the `pendingPassword` variable below (in-memory only,
+// never localStorage/sessionStorage, never sent to Stripe -- Stripe only
+// ever sees the client_secret for the Checkout Session, which carries no
+// password field at all) until it's handed to
+// confirm-checkout-and-create-account in the same request that creates the
+// Supabase Auth account. If anything goes wrong before that point, nothing
+// has been persisted anywhere and the customer can simply try again.
+const STRIPE_PUBLISHABLE_KEY = 'pk_test_51TuIHhAEjiOT0gq8jJGFVXa8uEWFHcccrhcdl4bvz4FecnWkXDv9ybdw5oh6HD60kvwUzkdPfB8eOsRNXwnUZKS300D5IVnLXr';
 
-// ---- Signup (real Supabase auth account, then real Stripe Checkout) ----
 document.addEventListener('DOMContentLoaded', () => {
-  // Pre-select whichever plan the visitor clicked on the homepage/pricing
-  // section (?plan=2year), if they landed here that way. Only one plan
-  // exists currently, but this stays generic in case a second plan returns.
-  const planOptions = document.querySelectorAll('.plan-option');
-  if (planOptions.length) {
-    const requestedPlan = new URLSearchParams(window.location.search).get('plan');
-    if (requestedPlan === '2year') {
-      planOptions.forEach((p) => {
-        p.classList.toggle('selected', p.getAttribute('data-plan') === requestedPlan);
-      });
-    }
-  }
+  const signupForm = document.querySelector('#signup-form');
+  if (!signupForm || typeof supabaseClient === 'undefined') return;
 
   // Pre-fill the referral code field from a shared link, e.g.
   // account.html?ref=RJXK482 (see the "Refer a Friend" card in Settings).
@@ -628,59 +611,167 @@ document.addEventListener('DOMContentLoaded', () => {
     if (refFromUrl) referralFieldEl.value = refFromUrl.toUpperCase();
   }
 
-  // Landed back here from a completed Stripe Checkout (success_url) --
-  // show the "check your email" step. This is purely cosmetic: the actual
-  // account creation already happened server-side in the Stripe webhook,
-  // verified against Stripe's signed event, never triggered by this page
-  // load itself.
-  if (new URLSearchParams(window.location.search).get('paid') === 'success' && typeof goToStep === 'function') {
-    goToStep(3);
+  // Stripe redirected back here instead of completing inline. This only
+  // happens for payment methods that require a full-page redirect -- we no
+  // longer have the password in memory after that navigation, so we don't
+  // attempt to finish the account here. The webhook's fallback claim email
+  // picks this purchase up within a few seconds on its own.
+  const returnedSessionId = new URLSearchParams(window.location.search).get('session_id');
+  if (returnedSessionId) {
+    const signupPanel = document.querySelector('#signup-panel');
+    const redirectPanel = document.querySelector('[data-state="redirect-return"]');
+    if (signupPanel) signupPanel.style.display = 'none';
+    if (redirectPanel) redirectPanel.style.display = 'block';
+    return;
   }
 
-  const signupForm = document.querySelector('#signup-form');
-  if (!signupForm || typeof supabaseClient === 'undefined') return;
+  if (typeof Stripe === 'undefined') return;
+  const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
 
-  signupForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const btn = document.querySelector('#signup-submit');
-    const errorEl = document.querySelector('#signup-error');
-    const original = btn.textContent;
+  const emailInput = document.querySelector('#signup-email');
+  const passwordInput = document.querySelector('#signup-password');
+  const termsInput = document.querySelector('#signup-terms');
+  const errorEl = document.querySelector('#signup-error');
+  const placeholderEl = document.querySelector('#checkout-placeholder');
+  const mountEl = document.querySelector('#checkout-mount');
+  const finishingMessageEl = document.querySelector('#finishing-message');
+  const finishingRetryEl = document.querySelector('#finishing-retry');
+  const finishingErrorEl = document.querySelector('#finishing-error');
+  const finishingRetryBtn = document.querySelector('#finishing-retry-btn');
+
+  const isStrongEnough = (pw) => /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(pw || '');
+  const isValidEmail = (email) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email || '');
+
+  let pendingPassword = null;
+  let currentSessionId = null;
+  let embeddedCheckout = null;
+  let checkoutMounted = false;
+
+  function showError(message) {
+    if (!errorEl) return;
+    errorEl.textContent = message;
+    errorEl.style.display = 'block';
+  }
+  function clearError() {
     if (errorEl) errorEl.style.display = 'none';
+  }
 
-    const name = document.querySelector('#signup-name').value;
-    const email = document.querySelector('#signup-email').value;
+  function formIsReadyForCheckout() {
+    return isValidEmail(emailInput.value) && isStrongEnough(passwordInput.value) && termsInput.checked;
+  }
+
+  async function mountCheckoutIfReady() {
+    if (checkoutMounted || !formIsReadyForCheckout()) return;
+    clearError();
+
     const referralInput = document.querySelector('#signup-referral');
     const referralCode = referralInput ? referralInput.value.trim() : '';
-    const selectedPlan = document.querySelector('.plan-option.selected');
-    const plan = selectedPlan ? selectedPlan.getAttribute('data-plan') : '2year';
+    const email = emailInput.value.trim().toLowerCase();
 
-    btn.disabled = true;
-    btn.textContent = 'Redirecting to secure checkout…';
-
-    // Pay-first, and no password is ever collected or stored here. Nothing
-    // is written to our database before payment succeeds --
-    // create-pending-checkout-session only validates the details (including
-    // the "email already in use" check) and creates the Stripe Checkout
-    // session, carrying name/email/plan/referral in the session's own
-    // metadata. stripe-webhook creates the real account the instant a
-    // verified payment comes back, then emails a one-time link so the
-    // customer sets their own password -- Supabase Auth is the only place
-    // that password is ever handled.
     const { data, error } = await supabaseClient.functions.invoke('create-pending-checkout-session', {
-      body: { full_name: name, email: email, plan: plan, referral_code: referralCode || null },
+      body: { email, plan: '2year', referral_code: referralCode || null },
     });
 
-    if (error || !data || !data.url) {
-      btn.disabled = false;
-      btn.textContent = original;
-      if (errorEl) {
-        errorEl.textContent = (data && data.error) || await getEdgeFunctionErrorMessage(error, 'Something went wrong starting checkout. Please try again.');
-        errorEl.style.display = 'block';
+    if (error || !data || !data.client_secret) {
+      showError((data && data.error) || await getEdgeFunctionErrorMessage(error, 'Something went wrong starting checkout. Please try again.'));
+      return;
+    }
+
+    // Only now do we hold onto the password -- right before mounting
+    // payment, and only in this local variable.
+    pendingPassword = passwordInput.value;
+    checkoutMounted = true;
+
+    embeddedCheckout = await stripe.initEmbeddedCheckout({
+      clientSecret: data.client_secret,
+      onComplete: handleCheckoutComplete,
+    });
+
+    if (placeholderEl) placeholderEl.style.display = 'none';
+    if (mountEl) {
+      mountEl.style.display = 'block';
+      embeddedCheckout.mount('#checkout-mount');
+    }
+
+    // Extract the session id from the client_secret (format
+    // "<session_id>_secret_<...>") so we can independently confirm payment
+    // afterward without trusting anything the browser itself decided.
+    currentSessionId = data.client_secret.split('_secret_')[0];
+  }
+
+  async function handleCheckoutComplete() {
+    if (mountEl) mountEl.style.display = 'none';
+    if (finishingMessageEl) finishingMessageEl.style.display = 'block';
+    await finishAccountCreation();
+  }
+
+  async function finishAccountCreation() {
+    if (finishingErrorEl) finishingErrorEl.textContent = '';
+    if (finishingRetryEl) finishingRetryEl.style.display = 'none';
+    if (finishingMessageEl) finishingMessageEl.style.display = 'block';
+
+    const { data, error } = await supabaseClient.functions.invoke('confirm-checkout-and-create-account', {
+      body: { session_id: currentSessionId, password: pendingPassword },
+    });
+
+    if (error || !data || !data.ok) {
+      if (finishingMessageEl) finishingMessageEl.style.display = 'none';
+      if (finishingRetryEl) finishingRetryEl.style.display = 'block';
+      if (finishingErrorEl) {
+        finishingErrorEl.textContent =
+          (data && data.error) ||
+          (await getEdgeFunctionErrorMessage(error, "Payment succeeded, but we couldn't finish setting up your account automatically. Try again, or check your email in a moment for a secure link to finish."));
       }
       return;
     }
 
-    window.location.href = data.url;
+    // Account created and payment claimed. Sign in locally with the same
+    // password that was sitting in memory, then forget it immediately.
+    const email = data.email;
+    const passwordToUse = pendingPassword;
+    pendingPassword = null;
+
+    const { error: signInError } = await supabaseClient.auth.signInWithPassword({ email, password: passwordToUse });
+    if (signInError) {
+      // Extremely unlikely (account was just created with this exact
+      // password) -- fall back to sending them to the login page.
+      window.location.href = 'login.html';
+      return;
+    }
+
+    try {
+      await supabaseClient.functions.invoke('revoke-other-sessions', { body: {} });
+    } catch (_) {
+      // Best-effort, same as the regular login flow.
+    }
+
+    window.location.href = 'dashboard.html';
+  }
+
+  if (finishingRetryBtn) {
+    finishingRetryBtn.addEventListener('click', () => {
+      finishAccountCreation();
+    });
+  }
+
+  // Mount checkout the moment all three fields become valid -- no separate
+  // "continue" click needed, since there's nothing left to validate once
+  // the fields themselves are valid.
+  [emailInput, passwordInput].forEach((el) => {
+    el.addEventListener('blur', mountCheckoutIfReady);
+    el.addEventListener('input', () => {
+      if (checkoutMounted) return; // don't re-trigger once payment is mounted
+      clearError();
+    });
+  });
+  termsInput.addEventListener('change', mountCheckoutIfReady);
+
+  signupForm.addEventListener('submit', (event) => {
+    // The embedded Stripe form submits itself; this page's own form has no
+    // submit button of its own left -- this handler only exists to stop a
+    // stray Enter keypress from doing a full navigation.
+    event.preventDefault();
+    mountCheckoutIfReady();
   });
 });
 

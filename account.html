@@ -7,16 +7,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <style>
-  .flow-wrap { max-width: 620px; margin: 0 auto; padding: 56px 24px 80px; }
-  .plan-option { display:flex; justify-content:space-between; align-items:center; border:1px solid var(--line); border-radius: var(--radius); padding:18px 20px; margin-bottom:14px; cursor:pointer; }
-  .plan-option.selected { border-color: var(--ocean); box-shadow: 0 0 0 2px var(--ocean); }
-  .plan-option input { display:none; }
-  .card-field-icons { display:flex; gap:6px; font-family: var(--font-mono); font-size:0.7rem; color: var(--slate); }
+  .flow-wrap { max-width: 960px; margin: 0 auto; padding: 56px 24px 80px; }
+  .checkout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+  @media (max-width: 760px) {
+    .checkout-grid { grid-template-columns: 1fr; }
+  }
+  .checkout-col-right { border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; min-height: 420px; background: var(--paper-dim); }
+  .checkout-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height: 372px; color: var(--slate); gap: 10px; }
+  .checkout-placeholder svg { opacity: 0.5; }
   .success-check {
     width:64px; height:64px; border-radius:50%; background: var(--forest); color:var(--paper);
     display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin: 0 auto 20px;
   }
-  .sim-note { font-family: var(--font-mono); font-size:0.72rem; color: var(--slate); background: var(--paper-dim); padding:10px 14px; border-radius: var(--radius-sm); margin-bottom:20px; }
+  #signup-password-hint { margin-top: -8px; margin-bottom: 12px; }
 </style>
 <meta name="description" content="Create your Ciudadano Ready account and start your citizenship test prep.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -57,75 +60,67 @@
 </header>
 
 <div class="flow-wrap">
-  <div class="stamp-path text-center" style="justify-content:center; margin-bottom:40px;">
-    <div class="stamp-item"><div class="stamp-circle current" data-step-stamp="1">1</div><span class="stamp-label" data-en="Plan" data-es="Plan">Plan</span></div>
-    <div class="stamp-connector" data-connector="1"></div>
-    <div class="stamp-item"><div class="stamp-circle" data-step-stamp="2">2</div><span class="stamp-label" data-en="Payment" data-es="Pago">Payment</span></div>
-    <div class="stamp-connector" data-connector="2"></div>
-    <div class="stamp-item"><div class="stamp-circle" data-step-stamp="3">3</div><span class="stamp-label" data-en="Done" data-es="Listo">Done</span></div>
+
+  <!-- Main signup + payment panel -->
+  <div id="signup-panel">
+    <h2 class="text-center" data-en="Create your account" data-es="Crea tu cuenta">Create your account</h2>
+    <p class="text-center small muted" data-en="Enter your details, then complete payment securely with Stripe. Your account is created the moment your payment goes through." data-es="Ingresa tus datos y luego completa el pago de forma segura con Stripe. Tu cuenta se crea en el momento en que se confirma tu pago.">Enter your details, then complete payment securely with Stripe. Your account is created the moment your payment goes through.</p>
+
+    <div class="checkout-grid" style="margin-top: 28px;">
+      <div class="checkout-col-left">
+        <form id="signup-form" novalidate>
+          <label for="signup-email">Email</label>
+          <input type="email" id="signup-email" placeholder="jane@example.com" required>
+
+          <label for="signup-password" data-en="Password" data-es="Contraseña">Password</label>
+          <input type="password" id="signup-password" placeholder="••••••••" minlength="8" required>
+          <div id="signup-password-hint" class="small muted" data-en="At least 8 characters, with a letter and a number." data-es="Al menos 8 caracteres, con una letra y un número.">At least 8 characters, with a letter and a number.</div>
+
+          <label for="signup-referral" data-en="Referral Code (optional)" data-es="Código de Referido (opcional)">Referral Code (optional)</label>
+          <input type="text" id="signup-referral" placeholder="e.g. RJXK482" maxlength="32" style="text-transform:uppercase;">
+
+          <label class="flex gap-8 items-center" style="font-weight:400; margin-top:6px;">
+            <input type="checkbox" id="signup-terms" style="width:auto; margin:0;" required>
+            <span class="small">I agree to the <a href="terms.html" target="_blank">Terms of Service</a> and <a href="privacy-policy.html" target="_blank">Privacy Policy</a>.</span>
+          </label>
+
+          <p id="signup-error" class="small" style="color: var(--danger); display:none;"></p>
+
+          <div class="small muted" style="margin-top:16px; padding-top:14px; border-top:1px solid var(--line);">
+            <div style="font-weight:600; color:var(--ink);" data-en="$199.99 one-time payment • 24 months of access • No recurring charges" data-es="$199.99 pago único • 24 meses de acceso • Sin cargos recurrentes">$199.99 one-time payment • 24 months of access • No recurring charges</div>
+            <div style="margin-top:6px;"><span data-en="Due to the immediate delivery of digital course content, purchases are non-refundable." data-es="Debido a la entrega inmediata del contenido digital del curso, las compras no son reembolsables.">Due to the immediate delivery of digital course content, purchases are non-refundable.</span> <a href="terms.html" target="_blank" data-en="See Terms." data-es="Ver Términos.">See Terms.</a></div>
+          </div>
+          <p class="small muted text-center" style="margin-top:14px;" data-en="Secure payment powered by Stripe." data-es="Pago seguro procesado por Stripe.">Secure payment powered by Stripe.</p>
+        </form>
+      </div>
+
+      <div class="checkout-col-right">
+        <div id="checkout-placeholder" class="checkout-placeholder">
+          <p data-en="Enter your email and password to continue to secure payment." data-es="Ingresa tu correo y contraseña para continuar al pago seguro.">Enter your email and password to continue to secure payment.</p>
+        </div>
+        <div id="checkout-mount" style="display:none;"></div>
+        <p id="finishing-message" class="text-center small muted" style="display:none; margin-top:14px;" data-en="Finishing setup…" data-es="Terminando de configurar…">Finishing setup…</p>
+        <div id="finishing-retry" style="display:none; text-align:center; margin-top:10px;">
+          <p id="finishing-error" class="small" style="color: var(--danger);"></p>
+          <button type="button" class="btn btn-primary" id="finishing-retry-btn" data-en="Try Again" data-es="Intentar de nuevo">Try Again</button>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- STEP 1: Plan selection -->
-  <div data-step="1">
-    <h2 class="text-center" data-en="Choose your plan" data-es="Elige tu plan">Choose your plan</h2>
-    <p class="text-center" data-en="Enter your details, then complete payment securely with Stripe. Your account is created the moment payment goes through." data-es="Ingresa tus datos y luego completa el pago de forma segura con Stripe. Tu cuenta se crea en el momento en que se confirma el pago.">Enter your details, then complete payment securely with Stripe. Your account is created the moment payment goes through.</p>
-
-    <label class="plan-option selected" data-plan="2year">
-      <input type="radio" name="plan" checked>
-      <div>
-        <strong data-en="2-Year Plan" data-es="Plan de 2 años">2-Year Plan</strong>
-        <div class="small muted" data-en="Full course access, one payment." data-es="Acceso completo al curso, un solo pago.">Full course access, one payment.</div>
-      </div>
-      <div class="flex flex-col" style="text-align:right;">
-        <strong>$199.99</strong>
-        <span class="badge badge-ocean small" data-en="FULL ACCESS" data-es="ACCESO COMPLETO">FULL ACCESS</span>
-      </div>
-    </label>
-
-    <button class="btn btn-primary btn-block" style="margin-top:20px;" onclick="goToStep(2)" data-en="Continue to Payment" data-es="Continuar al pago">Continue to Payment</button>
-  </div>
-
-  <!-- STEP 2: Account details -->
-  <div data-step="2" style="display:none;">
-    <h2 class="text-center" data-en="Your account details" data-es="Los datos de tu cuenta">Your account details</h2>
-    <p class="text-center small muted" data-en="Next you'll be sent to Stripe's secure checkout. Nothing is created until your payment succeeds." data-es="A continuación irás al pago seguro de Stripe. No se crea nada hasta que tu pago se confirme.">Next you'll be sent to Stripe's secure checkout. Nothing is created until your payment succeeds.</p>
-    <form id="signup-form">
-      <label for="signup-name" data-en="Full Name" data-es="Nombre completo">Full Name</label>
-      <input type="text" id="signup-name" placeholder="Jane Doe" required>
-
-      <label for="signup-email">Email</label>
-      <input type="email" id="signup-email" placeholder="jane@example.com" required>
-
-      <label for="signup-referral" data-en="Referral Code (optional)" data-es="Código de Referido (opcional)">Referral Code (optional)</label>
-      <input type="text" id="signup-referral" placeholder="e.g. RJXK482" maxlength="32" style="text-transform:uppercase;">
-
-      <label class="flex gap-8 items-center" style="font-weight:400; margin-top:6px;">
-        <input type="checkbox" id="signup-terms" style="width:auto; margin:0;" required>
-        <span class="small">I agree to the <a href="terms.html" target="_blank">Terms of Service</a> and <a href="privacy-policy.html" target="_blank">Privacy Policy</a>.</span>
-      </label>
-
-      <p id="signup-error" class="small" style="color: var(--danger); display:none;"></p>
-
-      <div class="small muted" style="margin-top:16px; padding-top:14px; border-top:1px solid var(--line);">
-        <div style="font-weight:600; color:var(--ink);" data-en="$199.99 one-time payment • 24 months of access • No recurring charges" data-es="$199.99 pago único • 24 meses de acceso • Sin cargos recurrentes">$199.99 one-time payment • 24 months of access • No recurring charges</div>
-        <div style="margin-top:6px;"><span data-en="Due to the immediate delivery of digital course content, purchases are non-refundable." data-es="Debido a la entrega inmediata del contenido digital del curso, las compras no son reembolsables.">Due to the immediate delivery of digital course content, purchases are non-refundable.</span> <a href="terms.html" target="_blank" data-en="See Terms." data-es="Ver Términos.">See Terms.</a></div>
-      </div>
-
-      <div class="flex justify-between items-center" style="margin-top:16px;">
-        <button type="button" class="btn btn-ghost" onclick="goToStep(1)" data-en="← Back" data-es="← Atrás">← Back</button>
-        <button type="submit" class="btn btn-primary" id="signup-submit" data-en="Continue to Payment" data-es="Continuar al pago">Continue to Payment</button>
-      </div>
-      <p class="small muted text-center" style="margin-top:10px;" data-en="Secure payment powered by Stripe." data-es="Pago seguro procesado por Stripe.">Secure payment powered by Stripe.</p>
-    </form>
-  </div>
-
-  <!-- STEP 3: Payment received, set-password email sent -->
-  <div data-step="3" style="display:none;" class="text-center">
+  <!-- Shown when Stripe redirected back to this page instead of completing
+       inline (rare non-card payment methods). We don't have the password in
+       memory anymore after a full navigation, so we deliberately don't try
+       to finish the account here -- the same fallback that handles any
+       other interrupted signup (the "Finish Setting Up Your Account" email)
+       takes care of it within a minute or so. -->
+  <div data-state="redirect-return" style="display:none;" class="text-center">
     <div class="success-check">✓</div>
     <h2 data-en="Payment received!" data-es="¡Pago recibido!">Payment received!</h2>
-    <p data-en="We've emailed you a secure link to set your password and access your course. Check your inbox (and spam folder, just in case)." data-es="Te enviamos un correo con un enlace seguro para crear tu contraseña y acceder a tu curso. Revisa tu bandeja de entrada (y la carpeta de spam, por si acaso).">We've emailed you a secure link to set your password and access your course. Check your inbox (and spam folder, just in case).</p>
-    <a href="login.html" class="btn btn-ghost" data-en="Already set your password? Log In →" data-es="¿Ya creaste tu contraseña? Iniciar sesión →">Already set your password? Log In →</a>
+    <p data-en="We're finishing setting up your account. If it's not ready in a minute, check your inbox (and spam folder) for a secure link to finish -- or just try logging in." data-es="Estamos terminando de configurar tu cuenta. Si no está lista en un minuto, revisa tu bandeja de entrada (y la carpeta de spam) para ver un enlace seguro para terminar, o simplemente intenta iniciar sesión.">We're finishing setting up your account. If it's not ready in a minute, check your inbox (and spam folder) for a secure link to finish -- or just try logging in.</p>
+    <a href="login.html" class="btn btn-ghost" data-en="Log In →" data-es="Iniciar sesión →">Log In →</a>
   </div>
+
 </div>
 
 <footer class="site-footer">
@@ -140,6 +135,7 @@
   </div>
 </footer>
 
+<script src="https://js.stripe.com/v3/"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-client.js"></script>
 <script src="app.js"></script>
