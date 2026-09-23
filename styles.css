@@ -179,8 +179,24 @@ img { max-width: 100%; display: block; }
   padding: 0 24px;
 }
 
-.section { padding: 72px 0; }
+.section { padding: 64px 0; }
+.section-tight { padding: 56px 0; }
 .section-dim { background: var(--paper-dim); }
+.section-navy {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 88px 0;
+}
+.section-navy .eyebrow { color: var(--ocean-deep); }
+[data-theme="dark"] .section-navy .eyebrow { color: var(--ocean); }
+.section-navy h2, .section-navy h3 { color: var(--paper); }
+.section-navy p { color: #B7BCC4; }
+.section-navy .small.muted { color: #9CA3AF; }
+.section-navy .pricing-checklist li { color: var(--paper); }
+.section-navy .pricing-checklist .check-mark { color: #6FCF9E; }
+.section-teal-wash {
+  background: color-mix(in srgb, var(--ocean) 7%, var(--paper));
+}
 
 /* --------------------------------------------------------------------
    Hero flag background (waving, fades out on scroll)
@@ -653,13 +669,16 @@ textarea { resize: vertical; min-height: 120px; }
 /* --------------------------------------------------------------------
    Quiz components
    -------------------------------------------------------------------- */
-.quiz-box, .quiz-box-home { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 28px; }
+.quiz-box { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 28px; }
 /* .quiz-box-home is a separate class (not .quiz-box) specifically so the
    homepage sample question is NOT auto-bound by app.js's site-wide
    `document.querySelectorAll('.quiz-box').forEach(bindQuizBox)` call --
    it gets its own small script (index.html) with select-then-check-answer
    plus retry-on-incorrect, without touching bindQuizBox's real-quiz
-   behavior used everywhere else on the site. */
+   behavior used everywhere else on the site. Visually it's deliberately
+   lighter than .quiz-box (no border/shadow) so it reads as part of the
+   homepage section rather than a boxed widget dropped onto it. */
+.quiz-box-home { padding: 4px 0; }
 .check-answer-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .quiz-option.selected { border-color: var(--ocean); }
 .quiz-option {
@@ -1175,16 +1194,17 @@ tr:last-child td { border-bottom: none; }
    not literal screenshots, built from the same tokens/components used
    elsewhere on the site (badges, progress bars, stamp circles). */
 .mini-q-progress { font-family: var(--font-mono); font-size: 0.72rem; color: var(--slate); margin-bottom: 10px; }
-.mini-q-card { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 16px; background: var(--surface); }
+.mini-q-card { padding: 0; }
 .mini-q-card h4 { margin: 0 0 10px; font-size: 0.98rem; }
-.mini-q-option { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; margin-bottom: 6px; color: var(--ink); }
-.mini-q-option.is-correct { border-color: var(--forest); color: var(--forest); background: rgba(47,107,79,0.08); font-weight: 600; }
+.mini-q-option { border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; margin-bottom: 6px; color: var(--ink); background: var(--paper-dim); }
+.mini-q-option.is-correct { color: var(--forest); background: rgba(47,107,79,0.1); font-weight: 600; }
 
 .mini-interview-bubble { border-radius: 12px; padding: 10px 14px; font-size: 0.85rem; max-width: 88%; margin-bottom: 10px; }
-.mini-interview-bubble.officer { background: var(--paper-dim); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.mini-interview-bubble.officer { background: var(--paper-dim); border-bottom-left-radius: 4px; }
 .mini-interview-bubble.you { background: var(--ocean); color: var(--paper); margin-left: auto; border-bottom-right-radius: 4px; }
 
-.mini-lesson-card { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 16px; background: var(--surface); }
+.mini-lesson-card { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.mini-lesson-card:last-child { border-bottom: none; }
 .mini-lesson-card h4 { margin: 0 0 6px; font-size: 0.95rem; }
 .mini-lesson-card p { margin: 0; font-size: 0.85rem; color: var(--slate); }
 
@@ -1256,7 +1276,6 @@ tr:last-child td { border-bottom: none; }
 /* Final CTA */
 .final-cta-card {
   text-align: center;
-  max-width: 560px;
+  max-width: 480px;
   margin: 0 auto;
-  padding: 40px 32px;
 }
