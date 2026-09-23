@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resend Setup Email | Ciudadano Ready</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .login-wrap { max-width: 420px; margin: 0 auto; padding: 64px 24px 100px; }
+</style>
+<meta name="description" content="Resend your CiudadanoReady account setup email.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav">
+    <a href="index.html" class="logo">Ciudadano<span class="dot">Ready</span></a>
+    <div class="nav-right"></div>
+  </nav>
+</header>
+
+<div class="login-wrap">
+  <span class="eyebrow text-center" style="display:block; text-align:center;" data-en="ACCOUNT SETUP" data-es="CONFIGURACIÓN DE CUENTA">ACCOUNT SETUP</span>
+  <h2 class="text-center" data-en="Didn't get your setup email?" data-es="¿No recibiste tu correo de configuración?">Didn't get your setup email?</h2>
+  <p class="text-center small muted" data-en="Enter the email you used at checkout and we'll resend your account setup link. This will not charge you again or create a new account." data-es="Ingresa el correo que usaste al pagar y te reenviaremos tu enlace de configuración de cuenta. Esto no te cobrará de nuevo ni creará una cuenta nueva.">Enter the email you used at checkout and we'll resend your account setup link. This will not charge you again or create a new account.</p>
+
+  <form id="resend-form" class="card card-pad" style="margin-top:24px;">
+    <label for="resend-email">Email</label>
+    <input type="email" id="resend-email" placeholder="jane@example.com" required>
+
+    <p id="resend-error" class="small" style="color: var(--danger); display:none;"></p>
+
+    <button type="submit" class="btn btn-primary btn-block" id="resend-submit" style="margin-top:8px;" data-en="Resend Setup Email" data-es="Reenviar Correo">Resend Setup Email</button>
+  </form>
+
+  <div id="resend-sent" class="card card-pad text-center" style="display:none; margin-top:24px;">
+    <div class="stamp-circle" style="width:64px; height:64px; font-size:1.3rem; margin:0 auto 16px; border-width:3px; border-color:var(--forest); color:var(--forest);">✓</div>
+    <h2 data-en="Check your email" data-es="Revisa tu correo">Check your email</h2>
+    <p class="small" data-en="If a purchase exists for that email and setup isn't finished yet, we've sent a new setup link. Check your inbox (and spam folder, just in case)." data-es="Si existe una compra con ese correo y la configuración no está terminada, te enviamos un nuevo enlace de configuración. Revisa tu bandeja de entrada (y la carpeta de spam, por si acaso).">If a purchase exists for that email and setup isn't finished yet, we've sent a new setup link. Check your inbox (and spam folder, just in case).</p>
+  </div>
+
+  <p class="small text-center" style="margin-top:20px;"><a href="login.html" data-en="← Back to Log In" data-es="← Volver a Iniciar Sesión">← Back to Log In</a></p>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-disclaimer">
+      <strong>Legal disclaimer:</strong> Ciudadano Ready is an independent test-prep resource and is not a law firm. Nothing on this site constitutes legal advice. For legal advice about your immigration case, please contact a licensed immigration attorney.
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Ciudadano Ready. All rights reserved.</span>
+      <span><a href="terms.html">Terms</a> · <a href="privacy-policy.html">Privacy</a></span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<script>
+  (function () {
+    const form = document.querySelector('#resend-form');
+    const sentEl = document.querySelector('#resend-sent');
+    const errorEl = document.querySelector('#resend-error');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const btn = document.querySelector('#resend-submit');
+      if (errorEl) errorEl.style.display = 'none';
+
+      const email = document.querySelector('#resend-email').value.trim();
+      if (!email) return;
+
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+
+      // Same non-enumerating pattern as forgot-password.html: always show
+      // the same "check your email" outcome, whether or not an account
+      // exists or is already verified. resend_setup_email itself always
+      // returns { ok: true } for the same reason, and is rate-limited and
+      // idempotent server-side (see _send_verification_email_internal).
+      try {
+        await supabaseClient.rpc('resend_setup_email', { p_email: email });
+      } catch (err) {
+        // Even a thrown error here is treated the same way -- no
+        // account-existence signal leaks either way.
+      }
+
+      form.style.display = 'none';
+      sentEl.style.display = 'block';
+    });
+  })();
+</script>
+</body>
+</html>

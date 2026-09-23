@@ -1076,3 +1076,115 @@ tr:last-child td { border-bottom: none; }
   color: var(--ocean);
   text-decoration: underline;
 }
+
+/* --------------------------------------------------------------------
+   Homepage "See What's Inside" product preview + offer (replaces the old
+   pricing-only section). Left: a small auto-cycling "island" that previews
+   four real parts of the product. Right: the single $199.99 offer. Reuses
+   .card/.badge/.eyebrow/.btn-primary rather than introducing new visual
+   language, so it stays native to the rest of the site.
+   -------------------------------------------------------------------- */
+.preview-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 32px;
+  align-items: stretch;
+  margin-top: 28px;
+}
+@media (max-width: 860px) {
+  .preview-grid { grid-template-columns: 1fr; }
+}
+
+.island-frame {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.island-chrome {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper-dim);
+}
+.island-chrome .dot-btn { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+.island-chrome .url-pill {
+  margin-left: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--slate);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 3px 12px;
+}
+.island-viewport {
+  position: relative;
+  min-height: 260px;
+  flex: 1;
+}
+.island-slide {
+  position: absolute;
+  inset: 0;
+  padding: 24px 24px 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease;
+  display: flex;
+  flex-direction: column;
+}
+.island-slide.active { opacity: 1; visibility: visible; position: relative; }
+.island-caption {
+  padding: 16px 24px 22px;
+  border-top: 1px solid var(--line);
+}
+.island-caption p { margin: 6px 0 0; }
+
+.island-dots {
+  display: flex;
+  gap: 8px;
+  padding: 0 24px 18px;
+}
+.island-dot {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--slate);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.island-dot:hover { border-color: var(--ocean); color: var(--ocean); }
+.island-dot.active { border-color: var(--ocean); color: var(--ocean); font-weight: 600; }
+
+/* Mini in-slide mockups -- small stylized recreations of the real screens,
+   not literal screenshots, built from the same tokens/components used
+   elsewhere on the site (badges, progress bars, stamp circles). */
+.mini-q-progress { font-family: var(--font-mono); font-size: 0.72rem; color: var(--slate); margin-bottom: 10px; }
+.mini-q-card { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 16px; background: var(--surface); }
+.mini-q-card h4 { margin: 0 0 10px; font-size: 0.98rem; }
+.mini-q-option { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; margin-bottom: 6px; color: var(--ink); }
+.mini-q-option.is-correct { border-color: var(--forest); color: var(--forest); background: rgba(47,107,79,0.08); font-weight: 600; }
+
+.mini-interview-bubble { border-radius: 12px; padding: 10px 14px; font-size: 0.85rem; max-width: 88%; margin-bottom: 10px; }
+.mini-interview-bubble.officer { background: var(--paper-dim); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.mini-interview-bubble.you { background: var(--ocean); color: var(--paper); margin-left: auto; border-bottom-right-radius: 4px; }
+
+.mini-lesson-card { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 16px; background: var(--surface); }
+.mini-lesson-card h4 { margin: 0 0 6px; font-size: 0.95rem; }
+.mini-lesson-card p { margin: 0; font-size: 0.85rem; color: var(--slate); }
+
+.mini-dash-row { display: flex; gap: 12px; margin-bottom: 14px; }
+.mini-dash-stat { flex: 1; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--surface); text-align: center; }
+.mini-dash-stat .num { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 700; color: var(--ocean); display: block; }
+.mini-dash-stat .lbl { font-size: 0.68rem; color: var(--slate); text-transform: uppercase; letter-spacing: 0.04em; font-family: var(--font-mono); }
+.mini-dash-bar-track { height: 8px; border-radius: 8px; background: var(--paper-dim); overflow: hidden; margin-top: 4px; }
+.mini-dash-bar-fill { height: 100%; background: var(--ocean); border-radius: 8px; }
+
+.offer-card { display: flex; flex-direction: column; justify-content: center; }
