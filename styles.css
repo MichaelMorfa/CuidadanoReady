@@ -1131,13 +1131,13 @@ tr:last-child td { border-bottom: none; }
 }
 .island-viewport {
   position: relative;
-  min-height: 260px;
+  min-height: 190px;
   flex: 1;
 }
 .island-slide {
   position: absolute;
   inset: 0;
-  padding: 24px 24px 20px;
+  padding: 18px 20px 14px;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.4s ease;
@@ -1146,7 +1146,7 @@ tr:last-child td { border-bottom: none; }
 }
 .island-slide.active { opacity: 1; visibility: visible; position: relative; }
 .island-caption {
-  padding: 16px 24px 22px;
+  padding: 12px 20px 16px;
   border-top: 1px solid var(--line);
 }
 .island-caption p { margin: 6px 0 0; }
@@ -1198,29 +1198,12 @@ tr:last-child td { border-bottom: none; }
 .offer-card { display: flex; flex-direction: column; justify-content: center; }
 
 /* --------------------------------------------------------------------
-   Homepage restructure additions: trust strip, condensed course
-   timeline, differentiator cards, pricing checklist, FAQ preview,
-   final CTA. All built from existing tokens/components (.card, .badge,
-   .eyebrow, .stamp-path, .grid-3, .btn-primary) -- no new color palette.
+   Homepage restructure additions: condensed course timeline,
+   differentiator cards, pricing checklist, FAQ preview, final CTA.
+   All built from existing tokens/components (.card, .badge, .eyebrow,
+   .stamp-path, .grid-3, .btn-primary) -- no new color palette.
    -------------------------------------------------------------------- */
-.trust-strip {
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
-  padding: 14px 0;
-}
-.trust-strip-text {
-  margin: 0;
-  text-align: center;
-  font-family: var(--font-mono);
-  font-size: 0.74rem;
-  letter-spacing: 0.02em;
-  color: var(--slate);
-}
-.trust-strip-dot { color: var(--ocean); margin: 0 10px; }
-@media (max-width: 640px) {
-  .trust-strip-text { font-size: 0.68rem; line-height: 1.8; }
-  .trust-strip-dot { margin: 0 6px; }
-}
+.section-tight { padding: 48px 0; }
 
 /* Condensed 7-stage timeline (replaces the old detailed 7-card section).
    Reuses .stamp-path exactly like the hero roadmap, just full-width and
