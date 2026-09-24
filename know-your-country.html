@@ -7,6 +7,7 @@
 <title>Know Your Country | Ciudadano Ready</title>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="member-identity.css">
 <style>
   /* ===== Member Area theme (matches dashboard.html / lesson.html) ===== */
   body { background: var(--paper-dim); }
@@ -118,7 +119,7 @@
 <meta name="twitter:description" content="The story behind the U.S. citizenship test: real American history in plain language.">
 <meta name="twitter:image" content="https://ciudadanoready.com/og-image.png">
 </head>
-<body data-auth-required="true" data-kyc-page="true">
+<body data-auth-required="true" data-kyc-page="true" data-area="history">
 
 <div class="app-shell">
   <div class="sidebar-backdrop"></div>
@@ -162,6 +163,7 @@
     <div class="app-topbar">
       <div class="flex gap-16 items-center">
         <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
+        <span class="area-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9M9 21V9M15 21V9M19 21V9"/><path d="M2 9l10-6 10 6"/></svg></span>
         <div>
           <span class="eyebrow" style="margin-bottom:0;" data-en="BACKGROUND" data-es="CONTEXTO">BACKGROUND</span>
           <h3 style="margin:0;" data-en="Know Your Country" data-es="Conoce Tu País">Know Your Country</h3>

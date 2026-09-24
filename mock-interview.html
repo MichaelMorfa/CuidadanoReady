@@ -7,6 +7,7 @@
 <title>Mock Interview | Ciudadano Ready</title>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="member-identity.css">
 <style>
   /* ===== Member Area theme (matches dashboard.html / lesson.html / practice-quiz.html) ===== */
   body { background: var(--paper-dim); }
@@ -162,7 +163,7 @@
 <meta name="twitter:description" content="Practice a simulated citizenship interview, one question at a time.">
 <meta name="twitter:image" content="https://ciudadanoready.com/og-image.png">
 </head>
-<body data-auth-required="true" data-mock-interview-page="true">
+<body data-auth-required="true" data-mock-interview-page="true" data-area="interview">
 
 <div class="app-shell">
   <div class="sidebar-backdrop"></div>
@@ -206,6 +207,7 @@
     <div class="app-topbar">
       <div class="flex gap-16 items-center">
         <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
+        <span class="area-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v5M9 22h6"/></svg></span>
         <div>
           <span class="eyebrow" style="margin-bottom:0;" data-en="PRACTICE" data-es="PRÁCTICA">PRACTICE</span>
           <h1 style="margin:0;" data-en="Mock Interview" data-es="Entrevista Simulada">Mock Interview</h1>

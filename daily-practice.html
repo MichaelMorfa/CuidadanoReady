@@ -7,6 +7,7 @@
 <title>10 Minute English | Ciudadano Ready</title>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="member-identity.css">
 <style>
   /* ===== Member Area theme (matches dashboard.html / mock-interview.html) ===== */
   body { background: var(--paper-dim); }
@@ -116,7 +117,7 @@
 <meta name="twitter:description" content="A quick daily 10-minute mix of vocabulary, civics questions, and reading practice.">
 <meta name="twitter:image" content="https://ciudadanoready.com/og-image.png">
 </head>
-<body data-auth-required="true" data-daily-practice-page="true">
+<body data-auth-required="true" data-daily-practice-page="true" data-area="daily">
 
 <div class="app-shell">
   <div class="sidebar-backdrop"></div>
@@ -160,6 +161,7 @@
     <div class="app-topbar">
       <div class="flex gap-16 items-center">
         <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
+        <span class="area-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span>
         <div>
           <span class="eyebrow" style="margin-bottom:0;" data-en="PRACTICE" data-es="PRÁCTICA">PRACTICE</span>
           <h1 style="margin:0;" data-en="10 Minute English" data-es="10 Minutos de Inglés">10 Minute English</h1>

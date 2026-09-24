@@ -7,6 +7,7 @@
 <title>My Progress | Ciudadano Ready</title>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="member-identity.css">
 <style>
   /* ===== Member Area theme (matches dashboard.html) ===== */
   body { background: var(--paper-dim); }
@@ -109,7 +110,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
 </head>
-<body data-auth-required="true" data-progress-page="true">
+<body data-auth-required="true" data-progress-page="true" data-area="progress">
 
 <div class="app-shell">
   <div class="sidebar-backdrop"></div>
@@ -153,6 +154,7 @@
     <div class="app-topbar">
       <div class="flex gap-16 items-center">
         <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
+        <span class="area-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></span>
         <div>
           <span class="eyebrow" style="margin-bottom:0;" data-en="YOUR PREP" data-es="TU PREPARACIÓN">YOUR PREP</span>
           <h1 style="margin:0;" data-en="My Progress" data-es="Mi Progreso">My Progress</h1>

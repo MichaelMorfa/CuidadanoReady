@@ -1,0 +1,87 @@
+/* ============================================================
+   MEMBER AREA VISUAL IDENTITY SYSTEM
+   Approved after prototype review (see /preview prototypes).
+   Additive layer loaded after styles.css (and after each page's own
+   inline theme block) on the 8 pages listed in the audit: Dashboard,
+   one Course Module, Know Your Country, 10 Minute English, Flashcards,
+   Mock Interview, Reading & Writing, My Progress.
+
+   Rules:
+   - No new hardcoded colors -- every --area-accent is derived from the
+     existing brand tokens (--ocean, --forest, --ink, --slate, or the
+     amber already used for .course-complete-card) via color-mix.
+   - Never touches the semantic success/error treatment used for
+     correct/incorrect feedback anywhere in the app (.quiz-option,
+     .dp-quiz-option-btn, .module-quiz-review-icon, .pq-review-icon,
+     .mi-review-icon, .rw-review-mark, and the pass/fail badges) --
+     those keep using --forest/--danger exactly as before.
+   - Targets only element classes/ids that member.js already renders
+     consistently; adds no markup that requires new JS to populate.
+   ============================================================ */
+
+/* ---- Per-area accent tokens ---- */
+body[data-area="hub"]        { --area-accent: var(--forest); --area-accent-soft: color-mix(in srgb, var(--forest) 10%, var(--paper)); }
+body[data-area="course"]     { --area-accent: var(--forest); --area-accent-soft: color-mix(in srgb, var(--forest) 10%, var(--paper)); }
+body[data-area="history"]    { --area-accent: color-mix(in srgb, var(--ocean-deep) 55%, var(--ink) 45%); --area-accent-soft: color-mix(in srgb, var(--ocean-deep) 8%, var(--paper)); }
+body[data-area="daily"]      { --area-accent: #B08A2E; --area-accent-soft: #FBF6EC; }
+body[data-area="flashcards"] { --area-accent: var(--ocean); --area-accent-soft: color-mix(in srgb, var(--ocean) 8%, var(--paper)); }
+body[data-area="interview"]  { --area-accent: var(--ink); --area-accent-soft: color-mix(in srgb, var(--ink) 6%, var(--paper)); }
+body[data-area="workbook"]   { --area-accent: color-mix(in srgb, var(--slate) 70%, var(--ink) 30%); --area-accent-soft: color-mix(in srgb, var(--slate) 8%, var(--paper)); }
+body[data-area="progress"]   { --area-accent: var(--ocean-deep); --area-accent-soft: color-mix(in srgb, var(--ocean-deep) 8%, var(--paper)); }
+
+[data-theme="dark"] body[data-area="daily"]     { --area-accent: #D9AF55; --area-accent-soft: rgba(176,138,46,0.12); }
+[data-theme="dark"] body[data-area="interview"] { --area-accent: var(--paper); --area-accent-soft: rgba(255,255,255,0.05); }
+
+/* ---- Active nav now reflects each area's accent (identity + nav clarity) ---- */
+body[data-area] .app-nav a.active { color: var(--area-accent); background: var(--area-accent-soft); border-left-color: var(--area-accent); }
+
+/* ---- Eyebrow micro-labels pick up the area accent. Semantic pass/fail
+   badges use their own dedicated selectors elsewhere and are untouched. ---- */
+body[data-area] .eyebrow { color: var(--area-accent); }
+
+/* ---- Small identity icon in the static topbar shell (next to the
+   JS-filled title). Pure markup/CSS, no JS dependency. ---- */
+.area-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+  background: var(--area-accent-soft, var(--paper-dim)); color: var(--area-accent, var(--forest));
+}
+.area-icon svg { width: 19px; height: 19px; }
+
+/* ---- Course (lesson.html): module number badge picks up the accent
+   (currently forest already, so no visible change -- future-proofs it). ---- */
+body[data-area="course"] .module-nav-badge { background: var(--area-accent); }
+
+/* ---- Know Your Country: editorial touches on existing elements ---- */
+body[data-area="history"] .kyc-unit-heading .kyc-unit-num { color: var(--area-accent); }
+body[data-area="history"] .kyc-audio-lang-btn.active { background: var(--area-accent); border-color: var(--area-accent); }
+body[data-area="history"] .kyc-reading-body h4.lesson-subhead { color: var(--area-accent); }
+
+/* ---- 10 Minute English: streak/habit warmth on the existing item card ---- */
+body[data-area="daily"] .dp-item-card { border-top: 3px solid var(--area-accent); }
+body[data-area="daily"] .dp-intro-mix-item { border-color: var(--area-accent); color: var(--area-accent); }
+
+/* ---- Flashcards: card-as-hero gets the ocean accent ---- */
+body[data-area="flashcards"] .fc-face-back { background: var(--area-accent-soft); border-color: var(--area-accent); }
+body[data-area="flashcards"] .fc-face-back h3 { color: var(--area-accent); }
+body[data-area="flashcards"] .fc-answer-list li::before { color: var(--area-accent); }
+body[data-area="flashcards"] .fc-face-audio-btn { color: var(--area-accent); }
+body[data-area="flashcards"] .fc-picker-count { color: var(--area-accent); }
+body[data-area="flashcards"] .btn-primary { background: var(--area-accent); }
+body[data-area="flashcards"] .btn-primary:hover { background: var(--ocean-deep); }
+
+/* ---- Mock Interview: calmer, more formal, single-focus feel ---- */
+body[data-area="interview"] .app-content { background: var(--area-accent-soft); }
+body[data-area="interview"] .mi-question-card { padding: 40px 44px; max-width: 640px; margin-left: auto; margin-right: auto; }
+body[data-area="interview"] .mi-question-card h3 { font-family: var(--font-serif); font-size: 1.4rem; }
+
+/* ---- Reading & Writing: lined-sheet workbook feel on the existing cards ---- */
+body[data-area="workbook"] .rw-read-card,
+body[data-area="workbook"] .rw-write-card {
+  background-image: repeating-linear-gradient(to bottom, transparent, transparent 33px, var(--line) 34px);
+}
+body[data-area="workbook"] .rw-prompt-btn.active { background: var(--area-accent); border-color: var(--area-accent); }
+
+/* ---- My Progress: analytical blue instead of the default forest fill ---- */
+body[data-area="progress"] .progress-bar-fill { background: var(--area-accent); }
+body[data-area="progress"] .readiness-hero { border-top: 3px solid var(--area-accent); }

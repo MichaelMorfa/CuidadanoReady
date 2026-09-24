@@ -7,6 +7,7 @@
 <title>My Dashboard | Ciudadano Ready</title>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="member-identity.css">
 <style>
   /* ===== Member Area theme =====
      Distinct from the marketing site on purpose: soft grey background, flatter
@@ -87,7 +88,7 @@
 <meta name="twitter:description" content="Your Ciudadano Ready member dashboard.">
 <meta name="twitter:image" content="https://ciudadanoready.com/og-image.png">
 </head>
-<body data-auth-required="true" data-dashboard-page="true">
+<body data-auth-required="true" data-dashboard-page="true" data-area="hub">
 
 <div class="app-shell">
   <div class="sidebar-backdrop"></div>
@@ -131,6 +132,7 @@
     <div class="app-topbar">
       <div class="flex gap-16 items-center">
         <button class="app-sidebar-toggle" aria-label="Menu">☰</button>
+        <span class="area-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg></span>
         <div>
           <span class="eyebrow" style="margin-bottom:0;" data-en="WELCOME BACK" data-es="BIENVENIDO DE NUEVO">WELCOME BACK</span>
           <h1 style="margin:0;" id="dashboard-user-name">…</h1>
