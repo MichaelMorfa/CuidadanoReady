@@ -1228,14 +1228,14 @@ tr:last-child td { border-bottom: none; }
 .section-tight { padding: 48px 0; }
 
 /* Compact trust line under the hero -- a single quiet line, not a banner. */
-.trust-line { padding: 14px 0; border-bottom: 1px solid var(--line); }
+.trust-line { padding: 14px 0; background: var(--ink); }
 .trust-line p {
   margin: 0;
   text-align: center;
   font-family: var(--font-mono);
   font-size: 0.74rem;
   letter-spacing: 0.02em;
-  color: var(--slate);
+  color: #B7BCC4;
 }
 @media (max-width: 640px) { .trust-line p { font-size: 0.66rem; line-height: 1.8; } }
 
