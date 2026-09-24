@@ -680,7 +680,7 @@ textarea { resize: vertical; min-height: 120px; }
    behavior used everywhere else on the site. Visually it's deliberately
    lighter than .quiz-box (no border/shadow) so it reads as part of the
    homepage section rather than a boxed widget dropped onto it. */
-.quiz-box-home { padding: 4px 0; }
+.quiz-box-home { padding: 20px; border-radius: var(--radius); background: var(--paper-dim); }
 .check-answer-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .quiz-option.selected { border-color: var(--ocean); }
 .quiz-option {
@@ -1289,22 +1289,6 @@ tr:last-child td { border-bottom: none; }
   color: #B7BCC4;
 }
 @media (max-width: 640px) { .trust-line p { font-size: 0.66rem; line-height: 1.8; } }
-
-/* How It Works -- three plain numbered steps, no cards */
-.how-it-works-step { text-align: left; }
-.how-it-works-num {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  border: 2px solid var(--ocean);
-  color: var(--ocean);
-  font-family: var(--font-mono);
-  font-weight: 600;
-  margin-bottom: 12px;
-}
-.how-it-works-step h3 { margin: 0 0 6px; font-size: 1.05rem; }
 
 /* See What's Inside checklist */
 .see-inside-checklist {
