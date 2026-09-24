@@ -136,30 +136,43 @@
 
         <div class="island-viewport">
           <div class="island-slide active" data-slide="dashboard">
-            <span class="badge badge-ocean" data-en="DASHBOARD" data-es="PANEL">DASHBOARD</span>
-            <div class="mini-dash-row" style="margin-top:14px;">
+            <div class="mini-dash-header">
+              <span class="badge badge-ocean" data-en="DASHBOARD" data-es="PANEL">DASHBOARD</span>
+              <span class="mini-dash-ring" style="--pct:68;"><span class="mini-dash-ring-num">68%</span></span>
+            </div>
+            <div class="mini-dash-row" style="margin-top:12px;">
               <div class="mini-dash-stat">
                 <span class="num">12</span>
                 <span class="lbl" data-en="Day Streak" data-es="Días Seguidos">Day Streak</span>
               </div>
               <div class="mini-dash-stat">
-                <span class="num">68%</span>
-                <span class="lbl" data-en="Course Progress" data-es="Progreso del Curso">Course Progress</span>
+                <span class="num">7</span>
+                <span class="lbl" data-en="Badges Earned" data-es="Insignias Ganadas">Badges Earned</span>
               </div>
             </div>
-            <p class="small muted" style="margin-bottom:4px;" data-en="Stage 5: Interview &amp; Exam Prep" data-es="Etapa 5: Preparación para la Entrevista">Stage 5: Interview &amp; Exam Prep</p>
-            <div class="mini-dash-bar-track"><div class="mini-dash-bar-fill" style="width:68%;"></div></div>
+            <div class="mini-dash-continue">
+              <div>
+                <span class="small muted" style="display:block;" data-en="CONTINUE" data-es="CONTINUAR">CONTINUE</span>
+                <span data-en="Stage 5: Interview &amp; Exam Prep" data-es="Etapa 5: Preparación para la Entrevista">Stage 5: Interview &amp; Exam Prep</span>
+              </div>
+              <span class="mini-dash-continue-arrow" aria-hidden="true">→</span>
+            </div>
           </div>
 
           <div class="island-slide" data-slide="lessons">
             <span class="badge badge-ocean" data-en="LESSONS" data-es="LECCIONES">LESSONS</span>
-            <div class="mini-lesson-card" style="margin-top:14px;">
+            <div class="mini-video-card" style="margin-top:12px;">
+              <div class="mini-video-thumb">
+                <span class="mini-video-play" aria-hidden="true">▶</span>
+              </div>
+              <div class="mini-video-info">
+                <h4 data-en="A Welcome From Our Attorney" data-es="Un Mensaje de Nuestra Abogada">A Welcome From Our Attorney</h4>
+                <p data-en="Ingrid Morfa, immigration attorney &amp; co-founder, introduces the course." data-es="Ingrid Morfa, abogada de inmigración y cofundadora, presenta el curso.">Ingrid Morfa, immigration attorney &amp; co-founder, introduces the course.</p>
+              </div>
+            </div>
+            <div class="mini-lesson-card" style="margin-top:6px;">
               <h4 data-en="Stage 3: N-400 Application" data-es="Etapa 3: Solicitud N-400">Stage 3: N-400 Application</h4>
               <p data-en="Educational walkthrough of the N-400: sections, terminology, and the types of questions you may encounter." data-es="Recorrido educativo por el Formulario N-400: secciones, terminología y los tipos de preguntas que puedas encontrar.">Educational walkthrough of the N-400: sections, terminology, and the types of questions you may encounter.</p>
-            </div>
-            <div class="mini-lesson-card" style="margin-top:10px;">
-              <h4 data-en="Stage 5: Interview &amp; Exam Prep" data-es="Etapa 5: Preparación para la Entrevista">Stage 5: Interview &amp; Exam Prep</h4>
-              <p data-en="Step-by-step lessons that build toward the interview and exam, at your own pace." data-es="Lecciones paso a paso que te preparan para la entrevista y el examen, a tu propio ritmo.">Step-by-step lessons that build toward the interview and exam, at your own pace.</p>
             </div>
           </div>
 
@@ -204,7 +217,7 @@
       <li><span class="check-mark" aria-hidden="true">✓</span><span data-en="Progress tracking" data-es="Seguimiento de progreso">Progress tracking</span></li>
     </ul>
     <div class="text-center" style="margin-top:20px;">
-      <a href="course.html" class="btn btn-ghost" data-en="Explore the Course →" data-es="Explora el Curso →">Explore the Course →</a>
+      <a href="course.html" class="btn btn-primary" data-en="Explore the Course →" data-es="Explora el Curso →">Explore the Course →</a>
     </div>
   </div>
 </section>
@@ -219,7 +232,7 @@
     var order = ['dashboard', 'lessons', 'reading-writing', 'know-your-country'];
     var captions = {
       dashboard: { en: 'See course progress, practice activity, study streaks, and areas that may deserve additional study.', es: 'Consulta el progreso del curso, la actividad de práctica, las rachas de estudio y las áreas que podrían necesitar más estudio.' },
-      lessons: { en: 'Step-by-step lessons that walk you through every stage, from the N-400 to the interview and exam.', es: 'Lecciones paso a paso que te guían por cada etapa, desde el N-400 hasta la entrevista y el examen.' },
+      lessons: { en: 'Step-by-step lessons with a personal video welcome from our co-founder attorney, guiding you from the N-400 to the interview.', es: 'Lecciones paso a paso con un video de bienvenida personal de nuestra cofundadora abogada, que te guía desde el N-400 hasta la entrevista.' },
       'reading-writing': { en: 'Practice the reading and writing skills you\'ll need for the English portion of the test.', es: 'Practica las habilidades de lectura y escritura que necesitarás para la parte de inglés del examen.' },
       'know-your-country': { en: 'Go beyond memorization with real history and context behind the civics questions.', es: 'Ve más allá de la memorización con historia real y el contexto detrás de las preguntas cívicas.' }
     };

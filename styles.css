@@ -1152,7 +1152,7 @@ tr:last-child td { border-bottom: none; }
 }
 .island-viewport {
   position: relative;
-  min-height: 190px;
+  min-height: 225px;
   flex: 1;
 }
 .island-slide {
@@ -1210,12 +1210,63 @@ tr:last-child td { border-bottom: none; }
 .mini-lesson-card h4 { margin: 0 0 6px; font-size: 0.95rem; }
 .mini-lesson-card p { margin: 0; font-size: 0.85rem; color: var(--slate); }
 
-.mini-dash-row { display: flex; gap: 12px; margin-bottom: 14px; }
+.mini-dash-header { display: flex; align-items: center; justify-content: space-between; }
+.mini-dash-ring {
+  --pct: 0;
+  position: relative;
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: conic-gradient(var(--ocean) calc(var(--pct) * 1%), var(--paper-dim) 0);
+  display: flex; align-items: center; justify-content: center;
+}
+.mini-dash-ring::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--surface);
+}
+.mini-dash-ring-num { position: relative; font-family: var(--font-mono); font-size: 0.62rem; font-weight: 700; color: var(--ocean); }
+.mini-dash-row { display: flex; gap: 12px; margin-bottom: 12px; }
 .mini-dash-stat { flex: 1; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--surface); text-align: center; }
 .mini-dash-stat .num { font-family: var(--font-serif); font-size: 1.3rem; font-weight: 700; color: var(--ocean); display: block; }
 .mini-dash-stat .lbl { font-size: 0.68rem; color: var(--slate); text-transform: uppercase; letter-spacing: 0.04em; font-family: var(--font-mono); }
 .mini-dash-bar-track { height: 8px; border-radius: 8px; background: var(--paper-dim); overflow: hidden; margin-top: 4px; }
 .mini-dash-bar-fill { height: 100%; background: var(--ocean); border-radius: 8px; }
+.mini-dash-continue {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: var(--ocean);
+  color: var(--paper);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 0.85rem; font-weight: 600;
+}
+.mini-dash-continue .small.muted { color: rgba(255,255,255,0.75); font-size: 0.62rem; }
+.mini-dash-continue-arrow { font-size: 1.1rem; flex-shrink: 0; }
+
+/* Lesson video card -- represents the attorney welcome video in the
+   lessons list. Stylized thumbnail (not a real screenshot), with a play
+   button, matching the "personal welcome from our co-founder, an
+   immigration attorney" content already established on the course page. */
+.mini-video-card { display: flex; gap: 12px; align-items: center; }
+.mini-video-thumb {
+  flex-shrink: 0;
+  width: 64px; height: 46px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--ocean-deep), var(--ocean));
+  display: flex; align-items: center; justify-content: center;
+}
+.mini-video-play {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  color: var(--ocean-deep);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.6rem;
+  padding-left: 2px;
+}
+.mini-video-info h4 { margin: 0 0 2px; font-size: 0.9rem; }
+.mini-video-info p { margin: 0; font-size: 0.78rem; color: var(--slate); }
 
 .offer-card { display: flex; flex-direction: column; justify-content: center; }
 
@@ -1228,14 +1279,14 @@ tr:last-child td { border-bottom: none; }
 .section-tight { padding: 48px 0; }
 
 /* Compact trust line under the hero -- a single quiet line, not a banner. */
-.trust-line { padding: 14px 0; background: var(--ink); }
+.trust-line { padding: 14px 0; background: var(--ocean-deep); }
 .trust-line p {
   margin: 0;
   text-align: center;
   font-family: var(--font-mono);
   font-size: 0.74rem;
   letter-spacing: 0.02em;
-  color: #B7BCC4;
+  color: #E1EDF5;
 }
 @media (max-width: 640px) { .trust-line p { font-size: 0.66rem; line-height: 1.8; } }
 
