@@ -679,8 +679,11 @@ textarea { resize: vertical; min-height: 120px; }
    plus retry-on-incorrect, without touching bindQuizBox's real-quiz
    behavior used everywhere else on the site. Visually it's deliberately
    lighter than .quiz-box (no border/shadow) so it reads as part of the
-   homepage section rather than a boxed widget dropped onto it. */
-.quiz-box-home { padding: 20px; border-radius: var(--radius); background: var(--paper-dim); }
+   homepage section rather than a boxed widget dropped onto it. The grey
+   comes from the section itself (.section-dim on the "Try It Yourself"
+   section), not this box, so the box stays transparent and just sits on
+   that background. */
+.quiz-box-home { padding: 4px 0; }
 .check-answer-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .quiz-option.selected { border-color: var(--ocean); }
 .quiz-option {
